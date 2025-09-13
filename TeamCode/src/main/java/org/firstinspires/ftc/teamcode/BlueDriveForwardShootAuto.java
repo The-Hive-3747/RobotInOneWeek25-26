@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Autonomous
-public class DriveForwardAuto extends LinearOpMode {
+public class BlueDriveForwardShootAuto extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
     @Override
