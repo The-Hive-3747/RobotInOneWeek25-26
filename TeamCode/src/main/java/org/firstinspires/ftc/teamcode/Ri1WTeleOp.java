@@ -29,7 +29,7 @@ public class Ri1WTeleOp extends LinearOpMode {
         DcMotor shootMotor = hardwareMap.get(DcMotor.class, "shootMotor");
         odo.setOffsets(-5.4, 0, DistanceUnit.INCH);
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
         odo.resetPosAndIMU();
 
         telemetry.addData("Status", "Initialized");
@@ -43,6 +43,8 @@ public class Ri1WTeleOp extends LinearOpMode {
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         shootMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        //TODO: Put Encoder On shootMotor
+        shootMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         waitForStart();
 
@@ -54,7 +56,7 @@ public class Ri1WTeleOp extends LinearOpMode {
 
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x/0.5;
+            double rx = gamepad1.right_stick_x * 0.5;
             String pivotState = "DEFAULT";
 
 
