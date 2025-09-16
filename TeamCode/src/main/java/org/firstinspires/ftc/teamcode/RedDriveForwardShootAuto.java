@@ -48,29 +48,41 @@ public class RedDriveForwardShootAuto extends LinearOpMode {
                 backRightMotor.setPower(0);
                 frontRightMotor.setPower(0);
             }
-            if (runtime.seconds() > 3.5 && runtime.seconds() < 4.25) {
+            if (runtime.seconds() > 3.5 && runtime.seconds() < 4.3) {
                 frontRightMotor.setPower(0.3);
                 backRightMotor.setPower(0.3);
                 frontLeftMotor.setPower(0);
                 backLeftMotor.setPower(0);
             }
-            if (runtime.seconds() > 4.25 && runtime.seconds() < 8.8){
+            if (runtime.seconds() > 4.3 && runtime.seconds() < 9.3){
                 frontLeftMotor.setPower(0);
                 backLeftMotor.setPower(0);
                 frontRightMotor.setPower(0);
                 backRightMotor.setPower(0);
-                shootMotor.setPower(1.0);
+                shootMotor.setPower(0.85);
             }
-            if(runtime.seconds() > 8.8 && runtime.seconds() < 10.8){
+            if(runtime.seconds() > 9.3 && runtime.seconds() < 10.8){
                 pivotServo.setPosition(0.6);
             }
-            if (runtime.seconds() > 10.8){
+            if (runtime.seconds() > 10.8 && runtime.seconds() < 12.8){
                 shootMotor.setPower(0.0);
                 frontLeftMotor.setPower(0.0);
                 backLeftMotor.setPower(0.0);
                 frontRightMotor.setPower(0.0);
                 backRightMotor.setPower(0.0);
                 pivotServo.setPosition(0.3);
+            }
+            if (runtime.seconds() > 12.8 && runtime.seconds() < 14.15){
+                frontLeftMotor.setPower(0.3);
+                backLeftMotor.setPower(-0.3);
+                frontRightMotor.setPower(-0.3);
+                backRightMotor.setPower(0.3);
+            }
+            if(runtime.seconds() > 14.15){
+                frontLeftMotor.setPower(0);
+                backLeftMotor.setPower(0);
+                frontRightMotor.setPower(0);
+                backRightMotor.setPower(0);
             }
         }
     }
