@@ -1,40 +1,42 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1;
-
 import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.sql.Wrapper;
 
 import dev.frozenmilk.dairy.core.FeatureRegistrar;
 import dev.frozenmilk.dairy.core.dependency.Dependency;
 import dev.frozenmilk.dairy.core.dependency.annotation.SingleAnnotation;
-import dev.frozenmilk.dairy.core.util.controller.calculation.pid.DoubleComponent;
+import dev.frozenmilk.dairy.core.util.supplier.numeric.MotionComponentSupplier;
+import dev.frozenmilk.dairy.core.wrapper.Wrapper;
 import dev.frozenmilk.mercurial.Mercurial;
 import dev.frozenmilk.mercurial.bindings.BoundGamepad;
 import dev.frozenmilk.mercurial.commands.Lambda;
 import dev.frozenmilk.mercurial.subsystems.Subsystem;
 import dev.frozenmilk.mercurial.subsystems.SubsystemObjectCell;
-import kotlin.annotation.MustBeDocumented;
+import dev.frozenmilk.util.units.angle.Angle;
+import dev.frozenmilk.util.units.angle.Angles;
+import dev.frozenmilk.util.units.distance.Distance;
+import dev.frozenmilk.util.units.distance.DistanceUnits;
+import dev.frozenmilk.util.units.position.DistancePose2D;
+import dev.frozenmilk.util.units.position.DistanceVector2D;
 
-
-public class FieldCentricDrive implements Subsystem {
+public class P2PTestDrive implements Subsystem {
 
     private Dependency<?> dependencies = Subsystem.DEFAULT_DEPENDENCY
             .and(new SingleAnnotation<>(Mercurial.Attach.class));
-    public static final FieldCentricDrive INSTANCE = new FieldCentricDrive();
+    public static final P2PTestDrive INSTANCE = new P2PTestDrive();
 
     private final SubsystemObjectCell<CachedMotor> frontLeft = subsystemCell(() ->
             new CachedMotor(FeatureRegistrar.getActiveOpMode().hardwareMap, "frontLeftMotor"));
@@ -47,7 +49,7 @@ public class FieldCentricDrive implements Subsystem {
     private final SubsystemObjectCell<GoBildaPinpointDriver> odo = subsystemCell(() ->
             FeatureRegistrar.getActiveOpMode().hardwareMap.get(GoBildaPinpointDriver.class, "odo"));
 
-    private FieldCentricDrive() {}
+    private P2PTestDrive() {}
 
     @NonNull
     @Override
@@ -62,7 +64,6 @@ public class FieldCentricDrive implements Subsystem {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.TYPE)
-    @MustBeDocumented
     @Inherited
     public @interface Attach {}
 
@@ -72,8 +73,8 @@ public class FieldCentricDrive implements Subsystem {
         getBackRight().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         getBackLeft().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         getFrontRight().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        getFrontRight().setDirection(DcMotorSimple.Direction.REVERSE);
-        getBackRight().setDirection(DcMotorSimple.Direction.REVERSE);
+        getFrontRight().setDirection(DcMotorSimple.Direction.FORWARD);
+        getBackRight().setDirection(DcMotorSimple.Direction.FORWARD);
         getFrontLeft().setDirection(DcMotorSimple.Direction.REVERSE);
         getBackLeft().setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -91,16 +92,106 @@ public class FieldCentricDrive implements Subsystem {
         backRight.invalidate();
     }
 
-
     public CachedMotor getFrontLeft() { return frontLeft.get(); }
     public CachedMotor getBackLeft() { return backLeft.get(); }
     public CachedMotor getFrontRight() { return frontRight.get(); }
     public CachedMotor getBackRight() { return backRight.get(); }
     public GoBildaPinpointDriver getOdo() { return odo.get(); }
 
-
     @Override
     public void preUserInitLoopHook(@NonNull dev.frozenmilk.dairy.core.wrapper.Wrapper opmode) {}
+
+
+    private final DistancePose2D targetPose = new DistancePose2D(
+            new DistanceVector2D(DistanceUnits.MILLIMETER, 10000, 100),
+            Angles.deg(5)
+    );
+
+    private final P2PFeedforward controller = new P2PFeedforward(
+            0.2, // kP
+            0.005, // kD
+            0.1 // kV (start small, tune)
+    ); // Tune this!
+
+    private boolean goToPoint = false;
+    private long lastUpdateTime = System.nanoTime();
+
+    public Lambda driveToPointCommand(BoundGamepad gamepad) {
+        return new Lambda("go-to-point")
+                .setInit(() -> {
+                    controller.reset();
+                    goToPoint = false;
+                })
+                .setExecute(() -> {
+                    getOdo().update();
+
+                    gamepad.a().onTrue(
+                            new Lambda("goToPoint")
+                                    .setInit(() -> {
+                                        goToPoint = true;
+                                        controller.reset();
+                                    })
+                    );
+
+
+
+
+                    DistancePose2D currentPose = new DistancePose2D(
+                            new DistanceVector2D(new Distance(DistanceUnits.MILLIMETER, getOdo().getPosX(DistanceUnit.MM)), new Distance(DistanceUnits.MILLIMETER, getOdo().getPosY(DistanceUnit.MM))),
+                            Angles.deg(getOdo().getHeading(AngleUnit.DEGREES)));
+
+                    if (goToPoint) {
+                        long currentTime = System.nanoTime();
+                        double deltaTime = (currentTime - lastUpdateTime) / 1e9;
+                        lastUpdateTime = currentTime;
+
+                        MotionComponentSupplier<DistancePose2D> state = (motionComponents) -> currentPose;
+                        MotionComponentSupplier<DistancePose2D> target = (motionComponents) -> targetPose;
+                        MotionComponentSupplier<DistancePose2D> error = (motionComponents) -> targetPose.minus(currentPose);
+
+                        controller.update(new DistancePose2D(), state, target, error, deltaTime);
+                        DistancePose2D output = controller.evaluate(new DistancePose2D(), state, target, error, deltaTime);
+
+                        double xPower = output.getVector2D().getX().getValue();
+                        double yPower = output.getVector2D().getY().getValue();
+                        double turnPower = output.getHeading().getValue();
+
+                        // Normalize powers if necessary
+                        double max = Math.max(Math.abs(xPower) + Math.abs(yPower) + Math.abs(turnPower), 1);
+                        xPower /= max;
+                        yPower /= max;
+                        turnPower /= max;
+
+                        // Basic field-centric correction
+                        double botHeading = currentPose.getHeading().getValue(); // radians
+                        double rotX = xPower * Math.cos(-botHeading) - yPower * Math.sin(-botHeading);
+                        double rotY = xPower * Math.sin(-botHeading) + yPower * Math.cos(-botHeading);
+
+                        rotX *= 1.1; // strafe correction
+
+                        double fl = rotY + rotX + turnPower;
+                        double bl = rotY - rotX + turnPower;
+                        double fr = rotY - rotX - turnPower;
+                        double br = rotY + rotX - turnPower;
+
+                        getFrontLeft().setPower(fl);
+                        getBackLeft().setPower(bl);
+                        getFrontRight().setPower(fr);
+                        getBackRight().setPower(br);
+
+                        // Stop if we're close enough
+                        if (targetPose.minus(currentPose).getVector2D().getMagnitude().getValue() < 50 &&
+                                Math.abs(targetPose.getHeading().getValue() - currentPose.getHeading().getValue()) < Math.toRadians(5)) {
+                            getFrontLeft().setPower(0);
+                            getBackLeft().setPower(0);
+                            getFrontRight().setPower(0);
+                            getBackRight().setPower(0);
+                            goToPoint = false;
+                        }
+                    }
+                })
+                .setFinish(() -> false);
+    }
 
     public Lambda robotCentricDriveCommand(BoundGamepad gamepad) {
         return new Lambda("mec-drive-robo-centric")
@@ -114,7 +205,7 @@ public class FieldCentricDrive implements Subsystem {
                     getOdo().update();
                     double y = -gamepad.leftStickY().state(); //y
                     double x = -gamepad.leftStickX().state();
-                    double rx = 0.5 * -gamepad.rightStickX().state(); //rx
+                    double rx = -gamepad.rightStickX().state(); //rx
 
                     double botHeading = getOdo().getHeading(AngleUnit.RADIANS);
                     double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
