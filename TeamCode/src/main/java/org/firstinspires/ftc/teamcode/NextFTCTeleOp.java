@@ -11,6 +11,7 @@ import dev.nextftc.bindings.BindingManager;
 import dev.nextftc.bindings.Button;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.ftc.*;
+import dev.nextftc.hardware.driving.MecanumDriverControlled;
 
 @TeleOp
 public class NextFTCTeleOp extends NextFTCOpMode {
