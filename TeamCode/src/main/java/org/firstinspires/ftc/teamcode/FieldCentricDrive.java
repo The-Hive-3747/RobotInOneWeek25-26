@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -11,7 +12,6 @@ import dev.nextftc.core.components.Component;
 import dev.nextftc.hardware.impl.MotorEx;
 
 public class FieldCentricDrive implements Component {
-    HardwareMap hm;
     GoBildaPinpointDriver odo;
     MotorEx frontLeft, frontRight, backLeft, backRight;
     Gamepad gamepad;
