@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import static dev.nextftc.bindings.Bindings.*;
 
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -24,6 +25,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     FieldCentricDrive drive;
     double SHOOT_POWER = 0.6;
     GoBildaPinpointDriver odo;
+    Limelight3A limelight;
 
     @Override
     public void onInit() {
@@ -37,6 +39,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         DcMotor shootMotor = hardwareMap.get(DcMotor.class, "shootMotor");
         shootMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(0);
+        limelight.start();
 
         g1X.whenBecomesTrue(() -> shootMotor.setPower(SHOOT_POWER));
         g1Y.whenBecomesTrue(() -> shootMotor.setPower(0));
