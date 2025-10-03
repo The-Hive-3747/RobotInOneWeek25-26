@@ -2,17 +2,22 @@ package org.firstinspires.ftc.teamcode;
 
 import static dev.nextftc.bindings.Bindings.*;
 
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.hardware.limelightvision.LLResult;
 
 import dev.nextftc.bindings.BindingManager;
 import dev.nextftc.bindings.Button;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.ftc.*;
 import dev.nextftc.hardware.driving.MecanumDriverControlled;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 @TeleOp
 public class NextFTCTeleOp extends NextFTCOpMode {
@@ -26,6 +31,10 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     double SHOOT_POWER = 0.6;
     GoBildaPinpointDriver odo;
     Limelight3A limelight;
+    double x;
+    double y;
+    double z;
+    double horizDistance;
 
     @Override
     public void onInit() {
@@ -60,9 +69,27 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 .whenBecomesFalse(() -> {
                     pivotServo.setPosition(0.6);
                 });
+
     }
     @Override
     public void onUpdate() {
+        LLResult result = limelight.getLatestResult();
+        if (result != null && result.isValid() && !result.getFiducialResults().isEmpty()) {
+            LLResultTypes.FiducialResult fiducial = result.getFiducialResults().get(0);
+            Pose3D botPose = fiducial.getRobotPoseTargetSpace();
+            y = botPose.getPosition().y;
+            z = botPose.getPosition().z;
+            x = botPose.getPosition().x;
+            horizDistance = Math.sqrt(x*x + y*y);
+            //ActiveOpMode.telemetry().addData("horizontal distance", horizDistance);
+            ActiveOpMode.telemetry().addData("april tag", fiducial.getFiducialId());
+            ActiveOpMode.telemetry().addData("z distance", z);
+            ActiveOpMode.telemetry().addData("x distance", x);
+            ActiveOpMode.telemetry().addData("y distance", y);
+
+        }
+
+
         BindingManager.update();
         drive.update();
         telemetry.update();
