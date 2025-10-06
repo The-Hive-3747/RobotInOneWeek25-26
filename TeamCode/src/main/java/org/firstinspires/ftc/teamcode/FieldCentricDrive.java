@@ -37,11 +37,11 @@ public class FieldCentricDrive implements Component {
         backRight.reverse();
     }
 
-    public void update() {
+    public void update(double correct) {
                     odo.update();
                     double y = gamepad.left_stick_y; //y
                     double x = -gamepad.left_stick_x;
-                    double rx = 0.5 * -gamepad.right_stick_x; //rx
+                    double rx = 0.5 * -gamepad.right_stick_x + correct; //rx
 
                     double botHeading = odo.getHeading(AngleUnit.RADIANS);
                     double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);

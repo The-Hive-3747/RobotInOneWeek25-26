@@ -44,11 +44,11 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g1Down = button(() -> gamepad1.dpad_down);
         Button g1LT = button(() -> gamepad1.left_trigger > 0.1);
 
-        Servo pivotServo = hardwareMap.get(Servo.class, "pivotServo");
+        /*Servo pivotServo = hardwareMap.get(Servo.class, "pivotServo");
         DcMotor shootMotor = hardwareMap.get(DcMotor.class, "shootMotor");
-        shootMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        shootMotor.setDirection(DcMotorSimple.Direction.REVERSE);*/
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        /*limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(0);
         limelight.start();
 
@@ -68,12 +68,12 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 })
                 .whenBecomesFalse(() -> {
                     pivotServo.setPosition(0.6);
-                });
+                });*/
 
     }
     @Override
     public void onUpdate() {
-        LLResult result = limelight.getLatestResult();
+        /*LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid() && !result.getFiducialResults().isEmpty()) {
             LLResultTypes.FiducialResult fiducial = result.getFiducialResults().get(0);
             Pose3D botPose = fiducial.getRobotPoseTargetSpace();
@@ -87,11 +87,11 @@ public class NextFTCTeleOp extends NextFTCOpMode {
             ActiveOpMode.telemetry().addData("x distance", x);
             ActiveOpMode.telemetry().addData("y distance", y);
 
-        }
+        }*/
 
 
         BindingManager.update();
-        drive.update();
+        drive.update(0.0);
         telemetry.update();
     }
 }

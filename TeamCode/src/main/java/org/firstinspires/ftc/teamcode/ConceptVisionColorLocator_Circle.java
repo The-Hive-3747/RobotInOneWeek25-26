@@ -27,6 +27,7 @@ import android.util.Size;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -37,6 +38,12 @@ import org.firstinspires.ftc.vision.opencv.ColorRange;
 import org.firstinspires.ftc.vision.opencv.ImageRegion;
 
 import java.util.List;
+
+import dev.nextftc.control.ControlSystem;
+import dev.nextftc.control.KineticState;
+import dev.nextftc.control.feedback.AngleType;
+import dev.nextftc.core.components.BindingsComponent;
+import dev.nextftc.ftc.NextFTCOpMode;
 
 /*
  * This OpMode illustrates how to use a video source (camera) to locate specifically colored regions.
@@ -69,10 +76,23 @@ import java.util.List;
  */
 
 //@Disabled
+
 @TeleOp(name = "Concept: Vision Color-Locator (Circle)", group = "Concept")
-public class ConceptVisionColorLocator_Circle extends LinearOpMode {
+public class ConceptVisionColorLocator_Circle extends NextFTCOpMode {
+    {
+        addComponents(
+                drive = new FieldCentricDrive()
+        );
+    }
+    FieldCentricDrive drive;
+    public ColorBlobLocatorProcessor purpleLocator, greenLocator;
+    double p = 0.01;
+    double i = 0.0;
+    double d = 0.0;
+    ControlSystem controller;
+
     @Override
-    public void runOpMode() {
+    public void onInit() {
         /* Build a "Color Locator" vision processor based on the ColorBlobLocatorProcessor class.
          * - Specify the color range you are looking for. Use a predefined color, or create your own
          *
@@ -129,7 +149,7 @@ public class ConceptVisionColorLocator_Circle extends LinearOpMode {
          *        OPENING:    Will Erode and then Dilate which will make small noise blobs go away
          *        CLOSING:    Will Dilate and then Erode which will tend to fill in any small holes in blob edges.
          */
-        ColorBlobLocatorProcessor purpleLocator = new ColorBlobLocatorProcessor.Builder()
+         purpleLocator = new ColorBlobLocatorProcessor.Builder()
                 .setTargetColorRange(ColorRange.ARTIFACT_PURPLE)   // Use a predefined color match
                 .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)
                 .setRoi(ImageRegion.entireFrame())
@@ -144,7 +164,7 @@ public class ConceptVisionColorLocator_Circle extends LinearOpMode {
                 .setMorphOperationType(ColorBlobLocatorProcessor.MorphOperationType.CLOSING)
 
                 .build();
-        ColorBlobLocatorProcessor greenLocator = new ColorBlobLocatorProcessor.Builder()
+        greenLocator = new ColorBlobLocatorProcessor.Builder()
                 .setTargetColorRange(ColorRange.ARTIFACT_GREEN)   // Use a predefined color match
                 .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)
                 .setRoi(ImageRegion.entireFrame())
@@ -173,18 +193,25 @@ public class ConceptVisionColorLocator_Circle extends LinearOpMode {
          *      .setCamera(BuiltinCameraDirection.BACK)    ... for a Phone Camera
          */
         VisionPortal portal = new VisionPortal.Builder()
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .addProcessors(greenLocator, purpleLocator)
                 .setCameraResolution(new Size(320, 240))
-                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
                 .enableLiveView(true)
                 .build();
 
         telemetry.setMsTransmissionInterval(100);   // Speed up telemetry updates for debugging.
-        telemetry.setDisplayFormat(Telemetry.DisplayFormat.MONOSPACE);
 
-        // WARNING:  To view the stream preview on the Driver Station, this code runs in INIT mode.
-        while (opModeIsActive() || opModeInInit()) {
-            telemetry.addData("preview on/off", "... Camera Stream\n");
+        controller = ControlSystem.builder()
+                .angular(AngleType.DEGREES,
+                    feedback -> feedback.posPid(0.005, 0, 0)
+                )
+                .build();
+
+        controller.setGoal(new KineticState(0.0));
+    }
+    @Override
+    public void onUpdate() {
 
             // Read the current list
             List<ColorBlobLocatorProcessor.Blob> blobs = purpleLocator.getBlobs();
@@ -224,11 +251,11 @@ public class ConceptVisionColorLocator_Circle extends LinearOpMode {
              */
             ColorBlobLocatorProcessor.Util.filterByCriteria(
                     ColorBlobLocatorProcessor.BlobCriteria.BY_CONTOUR_AREA,
-                    50, 20000, blobs);  // filter out very small blobs.
+                    100, 20000, blobs);  // filter out very small blobs.
 
             ColorBlobLocatorProcessor.Util.filterByCriteria(
                     ColorBlobLocatorProcessor.BlobCriteria.BY_CIRCULARITY,
-                    0.6, 1, blobs);     /* filter out non-circular blobs.
+                    0.5, 1, blobs);     /* filter out non-circular blobs.
              * NOTE: You may want to adjust the minimum value depending on your use case.
              * Circularity values will be affected by shadows, and will therefore vary based
              * on the location of the camera on your robot and venue lighting. It is strongly
@@ -254,8 +281,14 @@ public class ConceptVisionColorLocator_Circle extends LinearOpMode {
                         b.getCircularity(), (int) circleFit.getRadius(), (int) circleFit.getX(), (int) circleFit.getY()));
             }
 
+            if (!blobs.isEmpty()) {
+                controller.setGoal(new KineticState(160));//-(160-blobs.get(0).getCircle().getX())));
+                drive.update(controller.calculate(new KineticState(blobs.get(0).getCircle().getX())));
+            } else { controller.setGoal(new KineticState(0)); drive.update(0.0); }
+
+
+
             telemetry.update();
             sleep(100); // Match the telemetry update interval.
         }
     }
-}
