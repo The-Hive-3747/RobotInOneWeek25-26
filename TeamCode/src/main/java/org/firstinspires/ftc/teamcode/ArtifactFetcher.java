@@ -54,7 +54,7 @@ public class ArtifactFetcher extends NextFTCOpMode {
                 .setMorphOperationType(ColorBlobLocatorProcessor.MorphOperationType.CLOSING)
 
                 .build();
-        greenLocator = new ColorBlobLocatorProcessor.Builder() // creating a new PURPLE color blob locator. this is an sdk example!
+        greenLocator = new ColorBlobLocatorProcessor.Builder() // creating a new GREEN color blob locator. this is an sdk example!
                 .setTargetColorRange(ColorRange.ARTIFACT_GREEN)   // Use a predefined color match
                 .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)
                 .setRoi(ImageRegion.entireFrame()) // use the entire camera frame
