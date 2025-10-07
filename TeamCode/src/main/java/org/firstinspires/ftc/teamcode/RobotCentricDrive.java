@@ -1,17 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.Gamepad;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.core.components.Component;
+import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.hardware.impl.MotorEx;
 
-public class FieldCentricDrive implements Component {
+public class RobotCentricDrive implements Component {
     GoBildaPinpointDriver odo;
     MotorEx frontLeft, frontRight, backLeft, backRight;
     Gamepad gamepad;
@@ -37,23 +35,17 @@ public class FieldCentricDrive implements Component {
         backRight.reverse();
     }
 
-    public void update() {
+    public void update(double correctR, double correctY, double correctX) {
                     odo.update();
-                    double y = gamepad.left_stick_y ; //y
-                    double x = -gamepad.left_stick_x;
-                    double rx = 0.5 * -gamepad.right_stick_x; //rx
+                    double y = -correctY; //y
+                    double x = correctX;
+                    double rx = 0.5 * correctR; //rx
 
-                    double botHeading = odo.getHeading(AngleUnit.RADIANS);
-                    double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
-                    double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
-
-                    rotX = rotX * 1.1;
-
-                    double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
-                    double frontLeftPower = (rotY + rotX + rx) / denominator;
-                    double backLeftPower = (rotY - rotX + rx) / denominator;
-                    double frontRightPower = (rotY - rotX - rx) / denominator;
-                    double backRightPower = (rotY + rotX - rx) / denominator;
+                    double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+                    double frontLeftPower = (y + x + rx) / denominator;
+                    double backLeftPower = (y - x + rx) / denominator;
+                    double frontRightPower = (y - x - rx) / denominator;
+                    double backRightPower = (y + x - rx) / denominator;
 
                     frontLeft.setPower(frontLeftPower);
                     frontRight.setPower(frontRightPower);

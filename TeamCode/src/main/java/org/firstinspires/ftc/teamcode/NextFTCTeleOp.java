@@ -91,7 +91,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
 
         BindingManager.update();
-        drive.update(0.0);
+        drive.update();
         telemetry.update();
     }
 }
