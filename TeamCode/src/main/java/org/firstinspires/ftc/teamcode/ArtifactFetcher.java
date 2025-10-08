@@ -152,7 +152,7 @@ public class ArtifactFetcher extends NextFTCOpMode {
                 rotController.setGoal(new KineticState(0));
                 yController.setGoal(new KineticState(0));
                 xController.setGoal(new KineticState(0));
-                drive.update(0.0, 0.0, 0.0);
+                drive.update(0.2, 0.0, 0.0);
             }
 
             telemetry.update();
