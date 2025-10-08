@@ -25,9 +25,11 @@ import dev.nextftc.ftc.NextFTCOpMode;
 public class ArtifactFetcher extends NextFTCOpMode {
     {
         addComponents(
-                drive = new RobotCentricDrive() // adding robot centric drive component so that the robot can drive
+                drive = new RobotCentricDrive(), // adding robot centric drive component so that the robot can drive
+                intake = new ChoppedIntake() //yerassyl: i added new component named intake
         );
     }
+    ChoppedIntake intake;
     RobotCentricDrive drive;
     public ColorBlobLocatorProcessor purpleLocator, greenLocator;
     ControlSystem rotController, yController, xController;
@@ -36,6 +38,7 @@ public class ArtifactFetcher extends NextFTCOpMode {
     public double Px = 0.002;
     public double camCenter = 160;
     public double blobRadGoal = 50;
+    public double INTAKE_ACTIVATION_RADIUS = 45;
 
     @Override
     public void onInit() {
@@ -54,7 +57,7 @@ public class ArtifactFetcher extends NextFTCOpMode {
                 .setMorphOperationType(ColorBlobLocatorProcessor.MorphOperationType.CLOSING)
 
                 .build();
-        greenLocator = new ColorBlobLocatorProcessor.Builder() // creating a new PURPLE color blob locator. this is an sdk example!
+        greenLocator = new ColorBlobLocatorProcessor.Builder() // creating a new GREEN color blob locator. this is an sdk example!
                 .setTargetColorRange(ColorRange.ARTIFACT_GREEN)   // Use a predefined color match
                 .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)
                 .setRoi(ImageRegion.entireFrame()) // use the entire camera frame
@@ -147,14 +150,23 @@ public class ArtifactFetcher extends NextFTCOpMode {
                         yController.calculate(new KineticState(blobs.get(0).getCircle().getRadius())),
                         xController.calculate(new KineticState(blobs.get(0).getCircle().getX()))
                 );
+                if (blobs.get(0).getCircle().getRadius() > INTAKE_ACTIVATION_RADIUS && intake.getStoredArtifact() == ChoppedIntake.ArtifactColor.NONE) {
+                    intake.run(0.7);
+                } else {
+                    intake.stop();
+                }
             } else {
                 // if there are no blobs, my pids shouldnt be trying to do anything and my robot shouldnt drive on its own
                 rotController.setGoal(new KineticState(0));
                 yController.setGoal(new KineticState(0));
                 xController.setGoal(new KineticState(0));
                 drive.update(0.2, 0.0, 0.0);
+<<<<<<< HEAD
+=======
+                intake.stop();
+>>>>>>> 42737d47fd60156d89ae6543d0ac0f2dd83469a2
             }
-
+            telemetry.addData("Artifact", intake.getStoredArtifact());
             telemetry.update();
         }
     }
