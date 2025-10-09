@@ -15,6 +15,10 @@ public class ChoppedIntake implements Component {
         PURPLE,
         GREEN
     }
+    public int alpha =0;
+    public int red = 0;
+    public int green =0;
+    public int blue = 0;
     private ArtifactColor storedArtifact = ArtifactColor.NONE;
     private boolean artifactDetectedThisRun = false;
 
@@ -28,37 +32,37 @@ public class ChoppedIntake implements Component {
     }
     public void run(double power) {
         intakeMotor.setPower(power);
+        colorSensor.enableLed(true);
         if (power > 0) {
             checkForArtifact();
         }
     }
     public void stop() {
         intakeMotor.setPower(0);
-        artifactDetectedThisRun = false;
+        colorSensor.enableLed(false);
     }
     private void checkForArtifact() {
-        if (artifactDetectedThisRun) {
-            return;
-        }
-        if (colorSensor.alpha() > 200) {
-            int red = colorSensor.red();
-            int green = colorSensor.green();
-            int blue = colorSensor.blue();
-
-            if (blue > red && blue > green) {
-                storedArtifact = ArtifactColor.PURPLE;
-                artifactDetectedThisRun = true;
-            } else if (green > red && green > blue) {
-                storedArtifact = ArtifactColor.GREEN;
-                artifactDetectedThisRun = true;
+        alpha = colorSensor.alpha();
+        red = colorSensor.red();
+        blue = colorSensor.blue();
+        green = colorSensor.green();
+        if (storedArtifact == ArtifactColor.NONE) {
+            if(alpha>500) {
+                if (blue >red && blue >green) {
+                    storedArtifact = ArtifactColor.PURPLE;
+                }
+                else if (green > red && green>blue) {
+                    storedArtifact = ArtifactColor.GREEN;
+                }
             }
         }
+
     }
     public ArtifactColor getStoredArtifact() {
         return storedArtifact;
     }
     public void reset() {
         storedArtifact = ArtifactColor.NONE;
-        artifactDetectedThisRun = false;
+        //artifactDetectedThisRun = false;
     }
 }
