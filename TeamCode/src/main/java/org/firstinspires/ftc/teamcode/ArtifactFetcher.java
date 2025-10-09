@@ -26,11 +26,13 @@ public class ArtifactFetcher extends NextFTCOpMode {
     {
         addComponents(
                 drive = new RobotCentricDrive(), // adding robot centric drive component so that the robot can drive
-                intake = new ChoppedIntake() //yerassyl: i added new component named intake
+                light = new GBLight()
+                //intake = new ChoppedIntake() //yerassyl: i added new component named intake
         );
     }
-    ChoppedIntake intake;
+    //ChoppedIntake intake;
     RobotCentricDrive drive;
+    GBLight light;
     public ColorBlobLocatorProcessor purpleLocator, greenLocator;
     ControlSystem rotController, yController, xController;
     public double Pr = 0.003;
@@ -64,12 +66,12 @@ public class ArtifactFetcher extends NextFTCOpMode {
                 .setDrawContours(true)   // Show contours on the Stream Preview
                 .setBoxFitColor(0)       // Disable the drawing of rectangles
                 .setCircleFitColor(Color.rgb(255, 255, 0)) // Draw a circle
-                .setBlurSize(5)          // Smooth the transitions between different colors in image
+                //.setBlurSize(5)          // Smooth the transitions between different colors in image
 
                 // the following options have been added to fill in perimeter holes.
-                .setDilateSize(15)       // Expand blobs to fill any divots on the edges
-                .setErodeSize(15)        // Shrink blobs back to original size
-                .setMorphOperationType(ColorBlobLocatorProcessor.MorphOperationType.CLOSING)
+                //.setDilateSize(15)       // Expand blobs to fill any divots on the edges
+                //.setErodeSize(15)        // Shrink blobs back to original size
+                //.setMorphOperationType(ColorBlobLocatorProcessor.MorphOperationType.CLOSING)
 
                 .build();
 
@@ -108,13 +110,17 @@ public class ArtifactFetcher extends NextFTCOpMode {
             blobs.addAll(greenLocator.getBlobs());
 
             // you can filter blobs to remove unwanted data & distractions. these are from the SDK
-            ColorBlobLocatorProcessor.Util.filterByCriteria(
+            /*ColorBlobLocatorProcessor.Util.filterByCriteria(
                     ColorBlobLocatorProcessor.BlobCriteria.BY_CONTOUR_AREA, // contour area is the size the blob takes
                     100, 20000, blobs);  // filter out very small blobs.
 
             ColorBlobLocatorProcessor.Util.filterByCriteria(
                     ColorBlobLocatorProcessor.BlobCriteria.BY_CIRCULARITY, // circularity is how circular the blob is
-                    0.5, 1, blobs);     // filter out non-circular blobs.
+                    0.5, 1, blobs);     // filter out non-circular blobs.*/
+
+            ColorBlobLocatorProcessor.Util.filterByCriteria(
+                    ColorBlobLocatorProcessor.BlobCriteria.BY_ASPECT_RATIO, 0.5, 1, blobs
+            );
 
             // I want to sort the blobs so that the robot focuses on the largest blob first.
             // remember, contour area is the size of the blob
@@ -142,31 +148,28 @@ public class ArtifactFetcher extends NextFTCOpMode {
 
                 // drive is my robot centric drive. i feed it my y, x, and rot, and it moves the robot!
                 // it works the same way as moving ur joystick
-                drive.update(
+                /*drive.update(
                         // out of my list of sorted blobs, get the first one (in an array that's 0), get the circle, and get the lateral x.
                         // it's going to try to get the x to be equal to 160 (the center of the camera)
                         rotController.calculate(new KineticState(blobs.get(0).getCircle().getX())),
                         // same thing, but it's trying to change the radius
                         yController.calculate(new KineticState(blobs.get(0).getCircle().getRadius())),
                         xController.calculate(new KineticState(blobs.get(0).getCircle().getX()))
-                );
-                if (blobs.get(0).getCircle().getRadius() > INTAKE_ACTIVATION_RADIUS && intake.getStoredArtifact() == ChoppedIntake.ArtifactColor.NONE) {
+                );*/
+                /*if (blobs.get(0).getCircle().getRadius() > INTAKE_ACTIVATION_RADIUS && intake.getStoredArtifact() == ChoppedIntake.ArtifactColor.NONE) {
                     intake.run(0.7);
                 } else {
                     intake.stop();
-                }
+                }*/
             } else {
                 // if there are no blobs, my pids shouldnt be trying to do anything and my robot shouldnt drive on its own
                 rotController.setGoal(new KineticState(0));
                 yController.setGoal(new KineticState(0));
                 xController.setGoal(new KineticState(0));
-                drive.update(0.2, 0.0, 0.0);
-<<<<<<< HEAD
-=======
-                intake.stop();
->>>>>>> 42737d47fd60156d89ae6543d0ac0f2dd83469a2
+                //drive.update(0.4, 0.0, 0.0);
+                //intake.stop();
             }
-            telemetry.addData("Artifact", intake.getStoredArtifact());
+            //telemetry.addData("Artifact", intake.getStoredArtifact());
             telemetry.update();
         }
     }

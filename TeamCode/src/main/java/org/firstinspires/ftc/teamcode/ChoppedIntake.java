@@ -20,7 +20,8 @@ public class ChoppedIntake implements Component {
     private ArtifactColor storedArtifact = ArtifactColor.NONE;
     private boolean artifactDetectedThisRun = false;
 
-    public void init() {
+    @Override
+    public void postInit() {
         intakeMotor = ActiveOpMode.hardwareMap().get(DcMotor.class, "intakeMotor");
         colorSensor = ActiveOpMode.hardwareMap().get(ColorSensor.class, "colorSensor");
 
