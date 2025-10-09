@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.pathing;
 
 import dev.nextftc.ftc.NextFTCOpMode;
 
