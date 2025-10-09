@@ -30,11 +30,11 @@ public class ArtifactFetcher extends NextFTCOpMode {
     {
         addComponents(
                 drive = new RobotCentricDrive(), // adding robot centric drive component so that the robot can drive
-                light = new GBLight(),
-                intake = new ChoppedIntake() //yerassyl: i added new component named intake
+                light = new GBLight()
+                //,intake = new ChoppedIntake() //yerassyl: i added new component named intake
         );
     }
-    ChoppedIntake intake;
+    //ChoppedIntake intake;
     RobotCentricDrive drive;
     GBLight light;
     public ColorBlobLocatorProcessor purpleLocator, greenLocator;
@@ -157,21 +157,25 @@ public class ArtifactFetcher extends NextFTCOpMode {
                         yController.calculate(new KineticState(blobs.get(0).getCircle().getRadius())),
                         xController.calculate(new KineticState(blobs.get(0).getCircle().getX()))
                 );
-                if (blobs.get(0).getCircle().getRadius() > INTAKE_ACTIVATION_RADIUS && intake.getStoredArtifact() == ChoppedIntake.ArtifactColor.NONE) {
+               /* if (blobs.get(0).getCircle().getRadius() > INTAKE_ACTIVATION_RADIUS && intake.getStoredArtifact() == ChoppedIntake.ArtifactColor.NONE) {
                     intake.run(0.7);
                 } else {
                     intake.stop();
-                }
+                } */
             } else {
                 // if there are no blobs, my pids shouldnt be trying to do anything and my robot shouldnt drive on its own
                 rotController.setGoal(new KineticState(0));
                 yController.setGoal(new KineticState(0));
                 xController.setGoal(new KineticState(0));
                 drive.update(0.4, 0.0, 0.0);
-                intake.stop();
+                //intake.stop();
             }
-            telemetry.addData("Artifact", intake.getStoredArtifact());
-            telemetry.addData("Color Sensor val", String.valueOf(intake.alpha), intake.red, intake.blue, intake.green);
+            /*if (gamepad1.a && intake.getStoredArtifact() != ChoppedIntake.ArtifactColor.NONE) {
+                intake.reset();
+                telemetry.addData("Intake is Reset","yes");
+            }*/
+            //telemetry.addData("Artifact", intake.getStoredArtifact());
+            //telemetry.addData("Color Sensor val", String.valueOf(intake.alpha), intake.red, intake.blue, intake.green);
             telemetry.update();
         }
     }
