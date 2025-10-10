@@ -8,11 +8,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.SortOrder;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.subsystems.ChoppedIntake;
 import org.firstinspires.ftc.teamcode.helpers.GBLight;
 import org.firstinspires.ftc.teamcode.subsystems.RobotCentricDrive;
-import org.firstinspires.ftc.teamcode.vision.CustomCamera;
-import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.teamcode.vision.opencv.BlobCamera;
 import org.firstinspires.ftc.teamcode.vision.opencv.Circle;
 import org.firstinspires.ftc.teamcode.vision.opencv.ColorBlobLocatorProcessor;
 import org.firstinspires.ftc.teamcode.vision.opencv.ColorRange;
@@ -79,11 +77,11 @@ public class ArtifactFetcher extends NextFTCOpMode {
 
                 .build();
 
-        CustomCamera portal = new CustomCamera.Builder() // Building a new vision portal
+        BlobCamera portal = new BlobCamera.Builder() // Building a new vision portal
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1")) // setting the camera
                 .addProcessors(greenLocator, purpleLocator) // adding the two processors i just made
                 .setCameraResolution(new Size(320, 240)) // setting the resolution of the camera. lower resolution = faster looptimes
-                .setStreamFormat(CustomCamera.StreamFormat.MJPEG) // have to use MJPEG for the OV camera
+                .setStreamFormat(BlobCamera.StreamFormat.MJPEG) // have to use MJPEG for the OV camera
                 .enableLiveView(true)
                 .build();
 

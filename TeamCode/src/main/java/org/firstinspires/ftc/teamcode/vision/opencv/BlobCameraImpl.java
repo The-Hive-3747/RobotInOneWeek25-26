@@ -54,7 +54,6 @@ import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibra
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibrationIdentity;
 import org.firstinspires.ftc.robotcore.internal.camera.delegating.SwitchableCameraName;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-import org.firstinspires.ftc.teamcode.vision.CustomCamera;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.Mat;
 import org.openftc.easyopencv.OpenCvCamera;
@@ -68,7 +67,7 @@ import org.openftc.easyopencv.TimestampedOpenCvPipeline;
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 
-public class CustomCameraImpl extends CustomCamera
+public class BlobCameraImpl extends BlobCamera
 {
     protected OpenCvCamera camera;
     protected final int cameraMonitorViewId;
@@ -109,9 +108,9 @@ public class CustomCameraImpl extends CustomCamera
         }
     }
 
-    public CustomCameraImpl(CameraName camera, int cameraMonitorViewId, boolean autoPauseCameraMonitor,
-                            Size cameraResolution, CustomCamera.StreamFormat webcamStreamFormat, boolean autoStartStream, boolean showStats,
-                            VisionProcessor[] processors)
+    public BlobCameraImpl(CameraName camera, int cameraMonitorViewId, boolean autoPauseCameraMonitor,
+                          Size cameraResolution, BlobCamera.StreamFormat webcamStreamFormat, boolean autoStartStream, boolean showStats,
+                          VisionProcessor[] processors)
     {
         synchronized (viewUseMtx)
         {
@@ -119,7 +118,7 @@ public class CustomCameraImpl extends CustomCamera
             {
                 if (viewsInUse.contains(cameraMonitorViewId))
                 {
-                    if (cameraMonitorViewId == CustomCamera.DEFAULT_VIEW_CONTAINER_ID)
+                    if (cameraMonitorViewId == BlobCamera.DEFAULT_VIEW_CONTAINER_ID)
                     {
                         throw new IllegalStateException("When using multiple vision portals, you MUST use setLiveViewContainerId(int), NOT enableLiveView(bool)");
                     }
