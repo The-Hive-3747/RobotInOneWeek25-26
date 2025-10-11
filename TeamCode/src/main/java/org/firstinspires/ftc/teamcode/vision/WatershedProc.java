@@ -14,37 +14,38 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class WatershedProc implements VisionProcessor {
+public class WatershedProc extends OpenCvPipeline {
 
-    public static final Scalar LOWER_GREEN = new Scalar(40, 100, 100);
-    public static final Scalar UPPER_GREEN = new Scalar(80, 255, 255);
+    public static final Scalar LOWER_GREEN = new Scalar(40, 50, 50);
+    public static final Scalar UPPER_GREEN = new Scalar(100, 255, 255);
+
+    private volatile int numObjectsFound = 0;
+    private List<MatOfPoint> finalContours = new ArrayList<>();
 
     private static final double SURE_FG_THRESHOLD_RATIO = 0.5;
 
-    private Mat hsvMat, mask, opening, sureBg, distTransform, sureFg, unknown, markers;
-    private List<MatOfPoint> finalContours = new ArrayList<>();
-    private long lastProcTimeMs = 0;
+    private Mat hsvMat = new Mat();
+    private Mat mask  = new Mat();
+    private Mat opening = new Mat();
+    private Mat sureBg = new Mat();
+    private Mat distTransform = new Mat();
+    private Mat sureFg = new Mat();
+    private Mat unknown = new Mat();
+    private Mat markers = new Mat();
+    private Mat gray = new Mat();
+    private Mat inputForWatershed = new Mat();
+    private Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3,3));
+
+
 
     @Override
-    public void init(int width, int height, CameraCalibration calibration) {
-        hsvMat = new Mat();
-        mask = new Mat();
-        opening = new Mat();
-        sureBg = new Mat();
-        distTransform = new Mat();
-        sureFg = new Mat();
-        unknown = new Mat();
-        markers = new Mat();
-    }
-
-    @Override
-    public Object processFrame(Mat frame, long captureTimeNanos) {
-        long startTime = System.nanoTime();
-        Imgproc.cvtColor(frame, hsvMat, Imgproc.COLOR_RGB2HSV);
+    public Mat processFrame(Mat input) {
+        Imgproc.cvtColor(input, hsvMat, Imgproc.COLOR_RGB2HSV);
         Core.inRange(hsvMat, LOWER_GREEN, UPPER_GREEN, mask);
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3,3));
         Imgproc.morphologyEx(mask, opening, Imgproc.MORPH_OPEN, kernel, new Point(-1,-1),2);
@@ -58,54 +59,34 @@ public class WatershedProc implements VisionProcessor {
         Core.add(markers, new Scalar(1), markers);
         markers.setTo(new Scalar(0), unknown);
 
-        Imgproc.watershed(frame, markers);
+        //Imgproc.watershed(input, markers);
+
+        Imgproc.cvtColor(input, gray, Imgproc.COLOR_RGB2GRAY);
+        Imgproc.cvtColor(gray, inputForWatershed, Imgproc.COLOR_GRAY2RGB);
+        Imgproc.watershed(inputForWatershed, markers);
+
 
         finalContours.clear();
-
         int numObjects = (int) Core.minMaxLoc(markers).maxVal;
 
         for (int i = 2; i<=numObjects; i++) {
             Mat componentMask = new Mat(markers.size(), CvType.CV_8UC1);
-            try {
-                Core.compare(markers, new Scalar(i), componentMask, Core.CMP_EQ);
-                List<MatOfPoint> contours = new ArrayList<>();
-                Imgproc.findContours(componentMask, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-                finalContours.addAll(contours);
-            } finally {
-                componentMask.release();
-            }
+            Core.compare(markers, new Scalar(i), componentMask, Core.CMP_EQ);
+            List<MatOfPoint> contours = new ArrayList<>();
+            Imgproc.findContours(componentMask, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+            finalContours.addAll(contours);
+            componentMask.release();
         }
 
-        long endTime = System.nanoTime();
-        lastProcTimeMs = (endTime - startTime) / 1_000_000;
+        numObjectsFound = finalContours.size();
 
-        return finalContours;
+        Imgproc.drawContours(input, finalContours, -1, new Scalar(255,255,0), 2);
+
+        return input;
     }
 
-    @Override public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
-        Paint contourPaint = new Paint();
-        contourPaint.setColor(Color.YELLOW);
-        contourPaint.setStyle(Paint.Style.STROKE);
-        contourPaint.setStrokeWidth(5 * scaleCanvasDensity);
-        Paint textPaint = new Paint();
-        textPaint.setColor(Color.CYAN);
-        textPaint.setTextSize(40 * scaleCanvasDensity); // Draw all the final contours
-        for (MatOfPoint contour : finalContours) {
-            // Scale and draw the contour
-            Point[] points = contour.toArray();
-            for (int i = 0; i < points.length; i++) {
-                points[i].x *= scaleBmpPxToCanvasPx;
-                points[i].y *= scaleBmpPxToCanvasPx;
-            }
-            for (int i = 0; i < points.length; i++) {
-                canvas.drawLine((float)points[i].x, (float)points[i].y, (float)points[(i + 1) % points.length].x, (float)points[(i + 1) % points.length].y, contourPaint);
-            }
-        } // Display the number of objects found
-        if (userContext != null) {
-            canvas.drawText(String.format("%d objects found", (int) userContext), 50, 100, textPaint);
-        }
-
-        canvas.drawText(String.format("Time: %d ms", lastProcTimeMs), 50, 150, textPaint);
+    public int getNumObjectsFound() {
+        return numObjectsFound;
     }
 
 }

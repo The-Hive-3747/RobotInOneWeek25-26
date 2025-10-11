@@ -13,15 +13,15 @@ import org.openftc.easyopencv.OpenCvWebcam;
 import dev.nextftc.ftc.NextFTCOpMode;
 
 @TeleOp
-public class CustomCamera extends NextFTCOpMode {
-    WatershedProc watershedProc;
+public class ColorTuningPipelineImpl extends NextFTCOpMode {
+    ColorTuningPipeline colorTune;
     @Override
     public void onInit() {
-        watershedProc = new WatershedProc();
+        colorTune = new ColorTuningPipeline();
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
         OpenCvWebcam camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
-        camera.setPipeline(watershedProc);
+        camera.setPipeline(colorTune);
 
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
@@ -40,7 +40,6 @@ public class CustomCamera extends NextFTCOpMode {
 
     @Override
     public void onUpdate() {
-        telemetry.addData("num obj found", watershedProc.getNumObjectsFound());
         telemetry.update();
     }
 }
