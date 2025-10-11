@@ -83,70 +83,78 @@ public class WatershedProc extends OpenCvPipeline {
 
     @Override
     public Mat processFrame(Mat input) {
-        Imgproc.cvtColor(input, hsvMat, Imgproc.COLOR_RGB2HSV);
-        Core.inRange(hsvMat, LOWER_GREEN, UPPER_GREEN, mask);
 
-        Imgproc.morphologyEx(mask, opening, Imgproc.MORPH_OPEN, kernel, new Point(-1,-1),MORPH_OPEN_ITERATIONS);
+        Mat inputCopy = input.clone();
+        //if (input.equals(inputCopy))
+        try {
+            Imgproc.cvtColor(inputCopy, hsvMat, Imgproc.COLOR_RGB2HSV);
+            Core.inRange(hsvMat, LOWER_GREEN, UPPER_GREEN, mask);
 
-        Imgproc.distanceTransform(opening,distTransform,Imgproc.DIST_L2,5);
-        Core.normalize(distTransform, distTransform, 0, 1, Core.NORM_MINMAX);
-        Imgproc.threshold(distTransform, sureFg, SEPARATION_THRESHOLD, 1, Imgproc.THRESH_BINARY);
-        sureFg.convertTo(sureFg, CvType.CV_8U);
-        Imgproc.connectedComponents(sureFg, markers);
+            Imgproc.morphologyEx(mask, opening, Imgproc.MORPH_OPEN, kernel, new Point(-1, -1), MORPH_OPEN_ITERATIONS);
 
-        Imgproc.dilate(opening, sureBg, kernel, new Point(-1,-1), 3);
-        Core.subtract(sureBg, sureFg, unknown);
-        Core.add(markers, new Scalar(1), markers);
-        markers.setTo(new Scalar(0), unknown);
-        Imgproc.cvtColor(input, gray, Imgproc.COLOR_GRAY2RGB);
-        Imgproc.cvtColor(gray, inputForWatershed, Imgproc.COLOR_GRAY2RGB);
-        Imgproc.watershed(inputForWatershed, markers);
+            Imgproc.distanceTransform(opening, distTransform, Imgproc.DIST_L2, 5);
+            Core.normalize(distTransform, distTransform, 0, 1, Core.NORM_MINMAX);
+            Imgproc.threshold(distTransform, sureFg, SEPARATION_THRESHOLD, 1, Imgproc.THRESH_BINARY);
+            sureFg.convertTo(sureFg, CvType.CV_8U);
+            Imgproc.connectedComponents(sureFg, markers);
 
-        List<DetectedArtifact> currentArtifacts = new ArrayList<>();
-        int numObjects = (int) Core.minMaxLoc(markers).maxVal;
+            Imgproc.dilate(opening, sureBg, kernel, new Point(-1, -1), 3);
+            Core.subtract(sureBg, sureFg, unknown);
+            Core.add(markers, new Scalar(1), markers);
+            markers.setTo(new Scalar(0), unknown);
+            Imgproc.cvtColor(inputCopy, gray, Imgproc.COLOR_GRAY2RGB);
+            Imgproc.cvtColor(gray, inputForWatershed, Imgproc.COLOR_GRAY2RGB);
+            Imgproc.watershed(inputForWatershed, markers);
 
-        for (int i = 2; i <= numObjects; i++) {
-            Mat componentMask = new Mat(markers.size(), CvType.CV_8UC1);
-            Core.compare(markers, new Scalar(i), componentMask, Core.CMP_EQ);
+            List<DetectedArtifact> currentArtifacts = new ArrayList<>();
+            int numObjects = (int) Core.minMaxLoc(markers).maxVal;
 
-            List<MatOfPoint> contours = new ArrayList<>();
-            Imgproc.findContours(componentMask, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+            for (int i = 2; i <= numObjects; i++) {
+                Mat componentMask = new Mat(markers.size(), CvType.CV_8UC1);
+                Core.compare(markers, new Scalar(i), componentMask, Core.CMP_EQ);
 
-            if (!contours.isEmpty()) {
-                MatOfPoint contour = contours.get(0);
-                double area = Imgproc.contourArea(contour);
-                RotatedRect rotatedRect = Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray()));
+                List<MatOfPoint> contours = new ArrayList<>();
+                Imgproc.findContours(componentMask, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-                currentArtifacts.add(new DetectedArtifact(rotatedRect.center, area, rotatedRect.size.width, rotatedRect.size.height));
+                if (!contours.isEmpty()) {
+                    MatOfPoint contour = contours.get(0);
+                    double area = Imgproc.contourArea(contour);
+                    RotatedRect rotatedRect = Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray()));
 
-                Point[] vertices = new Point[4];
-                rotatedRect.points(vertices);
-                for (int j = 0; j<4; j++) {
-                    Imgproc.line(input, vertices[j], vertices[(j+1)%4], new Scalar(0,255,0), 2);
+                    currentArtifacts.add(new DetectedArtifact(rotatedRect.center, area, rotatedRect.size.width, rotatedRect.size.height));
+
+                    Point[] vertices = new Point[4];
+                    rotatedRect.points(vertices);
+                    for (int j = 0; j < 4; j++) {
+                        Imgproc.line(inputCopy, vertices[j], vertices[(j + 1) % 4], new Scalar(0, 255, 0), 2);
+                    }
+                    Imgproc.putText(inputCopy, String.format("W:%.0f H:%.0f", rotatedRect.size.width, rotatedRect.size.height), rotatedRect.center, Imgproc.FONT_ITALIC, 0.5, new Scalar(255, 255, 255), 1);
                 }
-                Imgproc.putText(input, String.format("W:%.0f H:%.0f", rotatedRect.size.width, rotatedRect.size.height), rotatedRect.center, Imgproc.FONT_ITALIC, 0.5, new Scalar(255,255,255), 1);
+                componentMask.release();
             }
-            componentMask.release();
-        }
 
-        this.detectedArtifacts = currentArtifacts;
-        Imgproc.putText(input, "Found: " + detectedArtifacts.size(), new Point(10,30), Imgproc.FONT_ITALIC, 0.7, new Scalar(255,255,255), 2);
+            this.detectedArtifacts = currentArtifacts;
+            Imgproc.putText(inputCopy, "Found: " + detectedArtifacts.size(), new Point(10, 30), Imgproc.FONT_ITALIC, 0.7, new Scalar(255, 255, 255), 2);
 
 
-
-        switch (VIEW_MODE) {
-            case COLOR_MASK: return mask;
-            case NOISE_REDUCTION: return opening;
-            case ARTIFACT_CORES:
-                sureFg.convertTo(sureFg, CvType.CV_8U, 255);
-                return sureFg;
-            case INPUT_WATERSHED:
-                return inputForWatershed;
-            case WATERSHED:
-                return markers;
-            case FINAL:
-            default:
-                return input;
+            switch (VIEW_MODE) {
+                case COLOR_MASK:
+                    return mask;
+                case NOISE_REDUCTION:
+                    return opening;
+                case ARTIFACT_CORES:
+                    sureFg.convertTo(sureFg, CvType.CV_8U, 255);
+                    return sureFg;
+                case INPUT_WATERSHED:
+                    return inputForWatershed;
+                case WATERSHED:
+                    return markers;
+                case FINAL:
+                default:
+                    return inputCopy;
+            }
+        } finally {
+            inputCopy.release();
         }
     }
 

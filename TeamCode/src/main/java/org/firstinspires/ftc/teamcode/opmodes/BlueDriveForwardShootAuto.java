@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.telemetry.PanelsTelemetry;
-import com.bylazar.telemetry.TelemetryManager;
+//import com.bylazar.configurables.annotations.Configurable;
+//import com.bylazar.telemetry.PanelsTelemetry;
+//import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -103,14 +103,14 @@ public class BlueDriveForwardShootAuto extends LinearOpMode {
         }
     }
 
-    @Configurable
+    //@Configurable
     @TeleOp
     public static class PedroTeleOp extends OpMode {
         private Follower follower;
         public static Pose startingPose;
         private boolean automatedDrive;
         private Supplier<PathChain> pathChain;
-        private TelemetryManager telemetryM;
+        //private TelemetryManager telemetryM;
         private boolean slowMode = false;
         private double slowModeMultiplier = 0.5; //subject to change;
         Limelight3A limelight;
@@ -120,7 +120,7 @@ public class BlueDriveForwardShootAuto extends LinearOpMode {
             follower = Constants.createFollower(hardwareMap);
             follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
             follower.update();
-            telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+            //telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
             limelight = hardwareMap.get(Limelight3A.class, "limelight");
             limelight.pipelineSwitch(0);
             limelight.start();
