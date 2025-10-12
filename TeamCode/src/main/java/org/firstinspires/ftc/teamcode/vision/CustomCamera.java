@@ -23,13 +23,14 @@ public class CustomCamera extends NextFTCOpMode {
 
     boolean hasBeenChanged = false;
     WatershedProc watershedProc;
+    OpenCvWebcam camera;
     @Override
     public void onInit() {
         watershedProc = new WatershedProc();
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
-        OpenCvWebcam camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
-        camera.setPipeline(watershedProc);
+        camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
+
 
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
@@ -44,10 +45,12 @@ public class CustomCamera extends NextFTCOpMode {
         });
 
         telemetry.addLine("loaded!");
+        telemetry.update();
     }
 
     @Override
     public void onUpdate() {
+        camera.setPipeline(watershedProc);
         if (gamepad1.dpad_right && !hasBeenChanged) {
             watershedProc.changeViewMode();
             hasBeenChanged = true;

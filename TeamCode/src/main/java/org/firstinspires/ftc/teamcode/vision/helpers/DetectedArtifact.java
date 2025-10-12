@@ -14,4 +14,6 @@ public class DetectedArtifact {
         this.width = width;
         this.height = height;
     }
+
+
 }
