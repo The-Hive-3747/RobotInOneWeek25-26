@@ -49,10 +49,10 @@ public class FieldCentricDrive implements Component {
                     rotX = rotX * 1.1;
 
                     double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
-                    double frontLeftPower = (rotY + rotX + rx) / denominator;
-                    double backLeftPower = (rotY - rotX + rx) / denominator;
-                    double frontRightPower = (rotY - rotX - rx) / denominator;
-                    double backRightPower = (rotY + rotX - rx) / denominator;
+                    double frontLeftPower = (rotY + rotX + rx) / denominator;//rotY + rotX + rx
+                    double backLeftPower = (rotY - rotX + rx) / denominator;//rotY - rotX + rx
+                    double frontRightPower = (rotY - rotX - rx) / denominator;//rotY - rotX - rx
+                    double backRightPower = (rotY + rotX - rx) / denominator;//rotY + rotX - rx
 
                     frontLeft.setPower(frontLeftPower);
                     frontRight.setPower(frontRightPower);
@@ -60,5 +60,8 @@ public class FieldCentricDrive implements Component {
                     backLeft.setPower(backLeftPower);
 
                     ActiveOpMode.telemetry().addData("heading", odo.getHeading(AngleUnit.DEGREES));
-                }
+                    ActiveOpMode.telemetry().addData("Position X", odo.getPosX(DistanceUnit.INCH));
+                    ActiveOpMode.telemetry().addData("Position Y", odo.getPosY(DistanceUnit.INCH));
+
+    }
     }

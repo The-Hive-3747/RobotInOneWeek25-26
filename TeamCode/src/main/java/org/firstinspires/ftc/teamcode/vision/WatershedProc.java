@@ -27,15 +27,20 @@ public class WatershedProc extends OpenCvPipeline {
         FINAL
     }
 
+    public enum ArtifactColor {
+        GREEN,
+        PURPLE
+    }
+
     public static DebugView VIEW_MODE = DebugView.FINAL;
 
-    public static final Scalar LOWER_GREEN = new Scalar(75, 65, 65);
-    public static final Scalar UPPER_GREEN = new Scalar(100, 255, 255);
+    public static final Scalar LOWER_GREEN = new Scalar(120, 80, 100);
+    public static final Scalar UPPER_GREEN = new Scalar(255, 255, 150);
 
-    private volatile int numObjectsFound = 0;
-    private List<MatOfPoint> finalContours = new ArrayList<>();
+    public static final Scalar LOWER_PURPLE = new Scalar(100, 30, 60);
+    public static final Scalar UPPER_PURPLE = new Scalar(255, 90, 255);
 
-    private static final double SEPARATION_THRESHOLD = 0.7;
+    private static final double SEPARATION_THRESHOLD = 0.6;
     private static final int MORPH_OPEN_ITERATIONS = 10;
     private static final double POSITION_THRESHOLD = 50.0; // Max distance to match same artifact (pixels)
 
@@ -50,8 +55,12 @@ public class WatershedProc extends OpenCvPipeline {
     private Mat componentMask = new Mat();
     private Mat sureFgEroded = new Mat();
     private Mat inputCopy = new Mat();
+    private Mat greenMask = new Mat();
+    private Mat purpleMask = new Mat();
     boolean hasLooped = true;
     private Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
+    private Mat dilateElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15, 15));
+    private Mat erodeElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15, 15));
 
     public volatile List<TrackedArtifact> detectedArtifacts = new ArrayList<>();
     private int nextArtifactId = 0;
@@ -63,14 +72,16 @@ public class WatershedProc extends OpenCvPipeline {
         public double width;
         public double height;
         public int framesTracked;
+        public ArtifactColor color;
 
-        public TrackedArtifact(int id, Point position, double area, double width, double height) {
+        public TrackedArtifact(int id, Point position, double area, double width, double height, ArtifactColor color) {
             this.id = id;
             this.position = position;
             this.area = area;
             this.width = width;
             this.height = height;
             this.framesTracked = 1;
+            this.color = color;
         }
     }
 
@@ -129,29 +140,90 @@ public class WatershedProc extends OpenCvPipeline {
         return null;
     }
 
+    private void processArtifactColor(Mat inputFrame, Mat colorMask, ArtifactColor color, List<TrackedArtifact> newDetections) {
+        Imgproc.morphologyEx(colorMask, opening, Imgproc.MORPH_OPEN, kernel, new Point(-1, -1), MORPH_OPEN_ITERATIONS);
+        Imgproc.GaussianBlur(opening, opening, new Size(5, 5), 0);
+        Imgproc.distanceTransform(opening, distTransform, Imgproc.DIST_L2, 3);
+        Imgproc.erode(opening, sureFgEroded, kernel, new Point(-1, -1), 2);
+        Imgproc.distanceTransform(opening, distTransform, Imgproc.DIST_L2, 5);
+        Core.normalize(distTransform, distTransform, 0, 1, Core.NORM_MINMAX);
+        Imgproc.threshold(distTransform, sureFg, SEPARATION_THRESHOLD, 1, Imgproc.THRESH_BINARY);
+        sureFg.convertTo(sureFg, CvType.CV_8U, 255);
+        Imgproc.connectedComponents(sureFg, markers);
+
+        Imgproc.dilate(opening, sureBg, kernel, new Point(-1, -1), 3);
+        Core.subtract(sureBg, sureFg, unknown);
+        Core.add(markers, new Scalar(1), markers);
+        markers.setTo(new Scalar(0), unknown);
+
+        Mat inputFrameWorkCopy = new Mat();
+        inputFrame.copyTo(inputFrameWorkCopy);
+
+        if (inputFrameWorkCopy.channels() == 1) {
+            Imgproc.cvtColor(inputFrameWorkCopy, inputFrameWorkCopy, Imgproc.COLOR_GRAY2RGB);
+        } else if (inputFrameWorkCopy.channels() == 4) {
+            Imgproc.cvtColor(inputFrameWorkCopy, inputFrameWorkCopy, Imgproc.COLOR_RGBA2RGB);
+        } else if (inputFrameWorkCopy.channels() == 3 && inputFrameWorkCopy.depth() != CvType.CV_8U) {
+            inputFrameWorkCopy.convertTo(inputFrameWorkCopy, CvType.CV_8UC3, 255.0);
+        }
+
+        if (inputFrameWorkCopy != null && !inputFrameWorkCopy.empty() &&
+                markers != null && !markers.empty() &&
+                inputFrameWorkCopy.size().equals(markers.size()) &&
+                inputFrameWorkCopy.type() == CvType.CV_8UC3 &&
+                markers.type() == CvType.CV_32SC1) {
+            Imgproc.watershed(inputFrameWorkCopy, markers);
+        }
+
+        int numObjects = (int) Core.minMaxLoc(markers).maxVal;
+
+        for (int i = 2; i <= numObjects; i++) {
+            componentMask.setTo(new Scalar(0));
+            Core.compare(markers, new Scalar(i), componentMask, Core.CMP_EQ);
+
+            List<MatOfPoint> contours = new ArrayList<>();
+            Imgproc.findContours(componentMask, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+            if (!contours.isEmpty()) {
+                MatOfPoint contour = contours.get(0);
+                double area = Imgproc.contourArea(contour);
+                RotatedRect rotatedRect = Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray()));
+
+                TrackedArtifact matched = matchArtifactToExisting(rotatedRect.center, area, rotatedRect.size.width, rotatedRect.size.height);
+                if (matched == null) {
+                    matched = new TrackedArtifact(nextArtifactId++, rotatedRect.center, area, rotatedRect.size.width, rotatedRect.size.height, color);
+                }
+                newDetections.add(matched);
+
+                Scalar lineColor = (color == ArtifactColor.GREEN) ? new Scalar(0, 255, 0) : new Scalar(255, 0, 255);
+                Point[] vertices = new Point[4];
+                rotatedRect.points(vertices);
+                for (int j = 0; j < 4; j++) {
+                    Imgproc.line(inputCopy, vertices[j], vertices[(j + 1) % 4], lineColor, 2);
+                }
+                String colorStr = (color == ArtifactColor.GREEN) ? "G" : "P";
+                Imgproc.putText(inputCopy, String.format("ID:%d %s W:%.0f H:%.0f", matched.id, colorStr, rotatedRect.size.width, rotatedRect.size.height), rotatedRect.center, Imgproc.FONT_ITALIC, 0.5, new Scalar(255, 255, 255), 1);
+            }
+        }
+
+        inputFrameWorkCopy.release();
+    }
+
     @Override
     public Mat processFrame(Mat input) {
         hasLooped = false;
         input.copyTo(inputCopy);
 
         try {
-            Imgproc.cvtColor(inputCopy, hsvMat, Imgproc.COLOR_RGB2HSV);
-            Core.inRange(hsvMat, LOWER_GREEN, UPPER_GREEN, mask);
 
-            Imgproc.morphologyEx(mask, opening, Imgproc.MORPH_OPEN, kernel, new Point(-1, -1), MORPH_OPEN_ITERATIONS);
-            Imgproc.GaussianBlur(opening, opening, new Size(5, 5), 0);
-            Imgproc.distanceTransform(opening, distTransform, Imgproc.DIST_L2, 3);
-            Imgproc.erode(opening, sureFgEroded, kernel, new Point(-1, -1), 2);
-            Imgproc.distanceTransform(opening, distTransform, Imgproc.DIST_L2, 5);
-            Core.normalize(distTransform, distTransform, 0, 1, Core.NORM_MINMAX);
-            Imgproc.threshold(distTransform, sureFg, SEPARATION_THRESHOLD, 1, Imgproc.THRESH_BINARY);
-            sureFg.convertTo(sureFg, CvType.CV_8U, 255);
-            Imgproc.connectedComponents(sureFg, markers);
+            Imgproc.dilate(inputCopy, inputCopy, dilateElement);
+            Imgproc.erode(inputCopy, inputCopy, erodeElement);
+            Imgproc.cvtColor(inputCopy, hsvMat, Imgproc.COLOR_RGB2HSV_FULL);
+            greenMask = new Mat();
+            purpleMask = new Mat();
 
-            Imgproc.dilate(opening, sureBg, kernel, new Point(-1, -1), 3);
-            Core.subtract(sureBg, sureFg, unknown);
-            Core.add(markers, new Scalar(1), markers);
-            markers.setTo(new Scalar(0), unknown);
+            Core.inRange(hsvMat, LOWER_GREEN, UPPER_GREEN, greenMask);
+            Core.inRange(hsvMat, LOWER_PURPLE, UPPER_PURPLE, purpleMask);
 
             if (inputCopy.channels() == 1) {
                 Imgproc.cvtColor(inputCopy, inputCopy, Imgproc.COLOR_GRAY2RGB);
@@ -161,52 +233,21 @@ public class WatershedProc extends OpenCvPipeline {
                 inputCopy.convertTo(inputCopy, CvType.CV_8UC3, 255.0);
             }
 
-            if (inputCopy != null && !inputCopy.empty() &&
-                    markers != null && !markers.empty() &&
-                    inputCopy.size().equals(markers.size()) &&
-                    inputCopy.type() == CvType.CV_8UC3 &&
-                    markers.type() == CvType.CV_32SC1) {
-                Imgproc.watershed(inputCopy, markers);
-            }
-
             List<TrackedArtifact> newDetections = new ArrayList<>();
-            int numObjects = (int) Core.minMaxLoc(markers).maxVal;
 
-            for (int i = 2; i <= numObjects; i++) {
-                componentMask = new Mat(markers.size(), CvType.CV_8UC1);
-                Core.compare(markers, new Scalar(i), componentMask, Core.CMP_EQ);
-
-                List<MatOfPoint> contours = new ArrayList<>();
-                Imgproc.findContours(componentMask, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-                if (!contours.isEmpty()) {
-                    MatOfPoint contour = contours.get(0);
-                    double area = Imgproc.contourArea(contour);
-                    RotatedRect rotatedRect = Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray()));
-
-                    TrackedArtifact matched = matchArtifactToExisting(rotatedRect.center, area, rotatedRect.size.width, rotatedRect.size.height);
-                    if (matched == null) {
-                        matched = new TrackedArtifact(nextArtifactId++, rotatedRect.center, area, rotatedRect.size.width, rotatedRect.size.height);
-                    }
-                    newDetections.add(matched);
-
-                    Point[] vertices = new Point[4];
-                    rotatedRect.points(vertices);
-                    for (int j = 0; j < 4; j++) {
-                        Imgproc.line(inputCopy, vertices[j], vertices[(j + 1) % 4], new Scalar(0, 255, 0), 2);
-                    }
-                    Imgproc.putText(inputCopy, String.format("ID:%d W:%.0f H:%.0f", matched.id, rotatedRect.size.width, rotatedRect.size.height), rotatedRect.center, Imgproc.FONT_ITALIC, 0.5, new Scalar(255, 255, 255), 1);
-                }
-            }
+            processArtifactColor(inputCopy, greenMask, ArtifactColor.GREEN, newDetections);
+            processArtifactColor(inputCopy, purpleMask, ArtifactColor.PURPLE, newDetections);
 
             this.detectedArtifacts = newDetections;
             Imgproc.putText(inputCopy, "Found: " + detectedArtifacts.size(), new Point(10, 30), Imgproc.FONT_ITALIC, 0.7, new Scalar(255, 255, 255), 2);
 
+
+
             switch (VIEW_MODE) {
                 case COLOR_MASK:
-                    return mask;
+                    return purpleMask;
                 case NOISE_REDUCTION:
-                    return opening;
+                    return hsvMat;
                 case ARTIFACT_CORES:
                     sureFg.convertTo(sureFg, CvType.CV_8U, 255);
                     return sureFg;
