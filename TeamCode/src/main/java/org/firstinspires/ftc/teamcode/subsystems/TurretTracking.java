@@ -1,0 +1,67 @@
+package org.firstinspires.ftc.teamcode.subsystems;
+
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
+
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+
+import dev.nextftc.core.components.Component;
+import dev.nextftc.ftc.ActiveOpMode;
+
+public class TurretTracking implements Component{
+    private Limelight3A limelight;
+    double x;
+    double y;
+    double z;
+    double center;
+    double centerP;
+    double horizDistance;
+    private DcMotor turretMotor;
+    @Override
+    public void preInit() {
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        turretMotor = hardwareMap.get(DcMotor.class, "turret");
+    }
+    @Override
+    public void postInit() {
+        limelight.pipelineSwitch(0);
+        limelight.start();
+
+
+    }
+    public void update() {
+
+        LLResult result = limelight.getLatestResult();
+        if (result != null && result.isValid() && !result.getFiducialResults().isEmpty()) {
+            LLResultTypes.FiducialResult fiducial = result.getFiducialResults().get(0);
+            Pose3D botPose = fiducial.getRobotPoseTargetSpace();
+            centerP = fiducial.getTargetXPixels();
+            center = fiducial.getTargetXDegrees();
+            y = botPose.getPosition().y;
+            z = botPose.getPosition().z;
+            x = botPose.getPosition().x;
+
+            horizDistance = Math.sqrt(x*x + y*y);
+
+            if (center>5) {
+                turretMotor.setPower(0.3);
+            }else if (center<-5) {
+                turretMotor.setPower(-0.3);
+            }else {
+                turretMotor.setPower(0);
+            }
+
+            ActiveOpMode.telemetry().addData("horizontal distance", horizDistance);
+            ActiveOpMode.telemetry().addData("april tag", fiducial.getFiducialId());
+            ActiveOpMode.telemetry().addData("z distance", z);
+            ActiveOpMode.telemetry().addData("x distance", x);
+            ActiveOpMode.telemetry().addData("y distance", y);
+            ActiveOpMode.telemetry().addData("center distance", center);
+        }
+
+    }
+    }
