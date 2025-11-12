@@ -28,13 +28,13 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         addComponents(
                 drive = new FieldCentricDrive(),
                 flywheel = new Flywheel(),
-                //tracking = new TurretTracking(),
+                tracking = new TurretTracking(),
                 BindingsComponent.INSTANCE
         );
     }
     FieldCentricDrive drive;
     Flywheel flywheel;
-    //TurretTracking tracking;
+    TurretTracking tracking;
     double FLYWHEEL_POWER = 0.8;//0.7;//0.6
     double FLYWHEEL_VEL = 3500; // IN RPM
     double INTAKE_POWER = 0.9;
@@ -56,11 +56,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g2Y = button(() -> gamepad2.y);
         Button g2B = button(() -> gamepad2.b);
         Button g2A = button(() -> gamepad2.a);
-        Button g2LeftStickYPositive = button(() -> (gamepad2.left_stick_y > 0.1));
-        Button g2LeftStickYNegative = button(() -> (gamepad2.left_stick_y < 0.2));
         Button g2Up = button(() -> gamepad2.dpad_up);
         Button g2Down = button(() -> gamepad2.dpad_down);
-        Button g1LT = button(() -> gamepad1.left_trigger > 0.1);
         Button g1Right = button(() -> gamepad1.dpad_right);
         Button g1Left = button(() -> gamepad1.dpad_left);
 
@@ -119,23 +116,31 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         g2Up.whenBecomesTrue(
                 () -> {
-                    HOOD_POSITION = hoodServo.getPosition() >= 0.9 ? 1 : HOOD_POSITION+0.1;
+                    if (hoodServo.getPosition() >= 0.9) {
+                        HOOD_POSITION = 1;
+                    } else {
+                        HOOD_POSITION += 0.1;
+                    }
                     hoodServo.setPosition(HOOD_POSITION);
                 }
         );
 
         g2Down.whenBecomesTrue(
                 () -> {
-                    HOOD_POSITION = hoodServo.getPosition() <= 0.1 ? 0 : HOOD_POSITION-0.1;
+                    if (hoodServo.getPosition() <= 0.1) {
+                        HOOD_POSITION = 0;
+                    } else {
+                        HOOD_POSITION -= 0.1;
+                    }
                     hoodServo.setPosition(HOOD_POSITION);
                 }
-
         );
 
 
     }
     @Override
     public void onUpdate() {
+        tracking.update();
         flywheel.update();
         BindingManager.update();
         drive.update();

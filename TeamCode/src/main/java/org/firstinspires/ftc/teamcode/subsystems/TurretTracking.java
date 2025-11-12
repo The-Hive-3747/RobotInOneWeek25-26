@@ -23,8 +23,8 @@ public class TurretTracking implements Component{
     private DcMotor turretMotor;
     @Override
     public void preInit() {
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        turretMotor = hardwareMap.get(DcMotor.class, "turret");
+        limelight = ActiveOpMode.hardwareMap().get(Limelight3A.class, "limelight");
+        turretMotor = ActiveOpMode.hardwareMap().get(DcMotor.class, "turret");
     }
     @Override
     public void postInit() {
