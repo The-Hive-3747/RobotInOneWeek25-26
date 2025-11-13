@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.bylazar.telemetry.PanelsTelemetry;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
