@@ -49,8 +49,8 @@ public class FieldCentricDrive implements Component {
                     rotX = rotX * 1.1;
 
                     double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
-                    double frontLeftPower = (rotY - rotX + rx) / denominator;//rotY + rotX + rx
-                    double backLeftPower = (rotY + rotX + rx) / denominator;//rotY - rotX + rx
+                    double frontLeftPower = (rotY + rotX + rx) / denominator;//rotY + rotX + rx
+                    double backLeftPower = (rotY - rotX + rx) / denominator;//rotY - rotX + rx
                     double frontRightPower = (rotY - rotX - rx) / denominator;//rotY - rotX - rx
                     double backRightPower = (rotY + rotX - rx) / denominator;//rotY + rotX - rx
 

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pathing;
 
+import com.pedropathing.control.FilteredPIDFCoefficients;
+import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.FollowerBuilder;
@@ -14,20 +16,25 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(12.10) //V2 robot mass
-            .forwardZeroPowerAcceleration(-40.29);
+            .mass(12.65)//V2 robot mass
+            .lateralZeroPowerAcceleration(-87.57)
+            .forwardZeroPowerAcceleration(-52.34)
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.08, 0, 0, 0))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.0185, 0, 0.00012, 0.6, 0.01))
+            .centripetalScaling(0.001);
+
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
             .rightFrontMotorName("frontRightMotor")
             .rightRearMotorName("backRightMotor")
             .leftRearMotorName("backLeftMotor")
             .leftFrontMotorName("frontLeftMotor")
-            .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE);
-            //.xVelocity(75.21)
-            //.yVelocity(36.74);
+            .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .xVelocity(61.45)
+            .yVelocity(50.45);
 
 
     public static PinpointConstants localizerConstants = new PinpointConstants()

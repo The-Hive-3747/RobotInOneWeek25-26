@@ -2,6 +2,10 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import static dev.nextftc.bindings.Bindings.button;
 
+import com.pedropathing.Drivetrain;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.follower.FollowerConstants;
+import com.pedropathing.localization.Localizer;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,11 +15,15 @@ import com.qualcomm.robotcore.hardware.Servo;
 import dev.nextftc.bindings.BindingManager;
 import dev.nextftc.bindings.Button;
 import dev.nextftc.core.components.BindingsComponent;
+import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.*;
+import dev.nextftc.hardware.driving.DriverControlledCommand;
 
+import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.helpers.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
+import org.firstinspires.ftc.teamcode.subsystems.Hood;
 import org.firstinspires.ftc.teamcode.subsystems.TurretTracking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,12 +34,14 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
     {
         addComponents(
+                hood = new Hood(),
                 drive = new FieldCentricDrive(),
                 flywheel = new Flywheel(),
                 tracking = new TurretTracking(),
                 BindingsComponent.INSTANCE
         );
     }
+    Hood hood;
     FieldCentricDrive drive;
     Flywheel flywheel;
     TurretTracking tracking;
@@ -47,6 +57,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     private CRServo rightFireServo;
     private CRServo sideWheelServo;
     private Servo hoodServo;
+    Follower follower;
 
 
 
@@ -63,7 +74,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         DcMotor flywheelMotor = hardwareMap.get(DcMotor.class, "flywheel");
         DcMotor turretMotor = hardwareMap.get(DcMotor.class, "turret");
-        hoodServo = hardwareMap.get(Servo.class, "hoodServo");
+        //hoodServo = hardwareMap.get(Servo.class, "hoodServo");
         flywheelMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
         intakeMotor = hardwareMap.get(DcMotor.class, "transfer");
@@ -114,6 +125,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         g1Left.whenTrue(() -> turretMotor.setPower(-0.4))
                 .whenFalse(() -> turretMotor.setPower(0.0));
 
+/*
         g2Up.whenBecomesTrue(
                 () -> {
                     if (hoodServo.getPosition() >= 0.9) {
@@ -134,16 +146,17 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                     }
                     hoodServo.setPosition(HOOD_POSITION);
                 }
-        );
+        );*/
 
 
     }
     @Override
     public void onUpdate() {
+        hood.update();
         tracking.update();
         flywheel.update();
         BindingManager.update();
-        drive.update();
+        //drive.update();
         telemetry.update();
     }
 }
