@@ -1,8 +1,13 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
+
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
+import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.hardware.impl.MotorEx;
@@ -13,16 +18,20 @@ public class Flywheel implements Component {
 
     MotorEx flywheel;
     static double GOBILDA_MOTOR_TICKS_PER_REVOLUTION = 28.0;
-    static double correct;
-    static double flywheelVel;
+    static double correct, flywheelVel, targetVel, currentRPM;
     static double SECONDS_TO_MINUTES = 60.0;
+    static double pastRPM = 0;
+    static double shotCount = 0;
     ControlSystem flywheelController;
-    static double targetVel;
+    Servo flipper;
+
+    double autoTargetVel = 3500;
     double kV = 0.0004;
     double kP = 0.1;
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
-        flywheel = new MotorEx("flywheel");
+        flywheel = new MotorEx("flywheel").reversed();
+        flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
 
         // a control system is NextFTC's way to build.. control systems!
         flywheelController = ControlSystem.builder()
@@ -45,7 +54,7 @@ public class Flywheel implements Component {
         // NEED TO DO SOME MATH HERE!!!
         // getVelocity() returns a val in Ticks Per Second, so we divide by the Ticks Per Seconds by Ticks Per Revolution
         // Then we get Revolutions Per Second, so we need to multiply by 60 to convert it to Revolutions Per Minute (RPM)
-        return (flywheel.getVelocity() / GOBILDA_MOTOR_TICKS_PER_REVOLUTION)*SECONDS_TO_MINUTES;
+        return -(flywheel.getVelocity() / GOBILDA_MOTOR_TICKS_PER_REVOLUTION)*SECONDS_TO_MINUTES;
     }
 
     // sets the target velocity! since we don't care abt the position of the flywheel, we can just set it to 0
@@ -71,11 +80,46 @@ public class Flywheel implements Component {
                 correct = correct;
             }
         } else {
-            correct = 0;
+            correct = 0.4;
         }
         flywheel.setPower(correct); // set the motor power!
         ActiveOpMode.telemetry().addData("flywheel power", correct);
         ActiveOpMode.telemetry().addData("flywheel vel", flywheelVel);
         ActiveOpMode.telemetry().addData("flywheel target vel", targetVel);
+        ActiveOpMode.telemetry().addData("balls shot", shotCount);
     }
+
+    public Command startFlywheel = new LambdaCommand()
+            .setStart(() -> {
+                this.setTargetVel(autoTargetVel);
+                    })
+            .setIsDone(() -> true);;
+    public Command stopFlywheel = new LambdaCommand()
+            .setStart(() -> {
+                this.setTargetVel(0);
+            })
+            .setIsDone(() -> true);;
+
+    public Command shootAllThree = new LambdaCommand()
+            .setStart(()->{
+                ActiveOpMode.telemetry().addData("flywheel vel", flywheelVel);
+            })
+            .setUpdate(() -> {
+                currentRPM = this.getVel();
+                if (pastRPM == 0) { pastRPM = currentRPM; }
+                if (pastRPM - currentRPM >= 150) { shotCount++; }
+                if (targetVel - currentRPM < 200) {
+                    flipper.setPosition(0.27);
+                } else {
+                    flipper.setPosition(0.4);
+                }
+                pastRPM = currentRPM;
+            })
+            .setStop(interrupted -> {
+                //this.setTargetVel(0);
+                flipper.setPosition(0.4);
+                pastRPM = 0;
+                shotCount = 0;
+            })
+            .setIsDone(() -> (shotCount == 3));
 }

@@ -12,11 +12,16 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.pathing.CustomDrawing;
 import org.firstinspires.ftc.teamcode.pathing.Tuning;
+import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
 
 import java.nio.file.Paths;
 
 import dev.nextftc.core.commands.groups.CommandGroup;
+import dev.nextftc.core.commands.groups.ParallelDeadlineGroup;
+import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
+import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
@@ -27,10 +32,14 @@ import dev.nextftc.hardware.impl.MotorEx;
 public class FrontBlueAuto extends NextFTCOpMode {
     {
         addComponents(
-                new PedroComponent(Constants::createFollower)
+                new PedroComponent(Constants::createFollower),
+                flywheel = new Flywheel(),
+                intake = new Intake()
         );
     }
     CommandGroup autonomous;
+    Flywheel flywheel;
+    Intake intake;
     Paths paths;
     MotorEx frontLeft, frontRight, backLeft, backRight;
 
@@ -49,7 +58,20 @@ public class FrontBlueAuto extends NextFTCOpMode {
         PedroComponent.follower().setStartingPose(startingPose);
 
         autonomous = new SequentialGroup(
-            new FollowPath(toShootFromStart)        //new FollowPath(lineUpForIntake1),
+                //new ParallelDeadlineGroup(
+                  //      new FollowPath(toShootFromStart),
+                        //intake.startIntake,
+                    //    intake.startTransfer,
+                      //  flywheel.startFlywheel
+                //),
+                intake.startIntake,
+                flywheel.startFlywheel,
+                intake.startTransfer,
+
+                new FollowPath(toShootFromStart),
+                flywheel.shootAllThree,
+
+                new FollowPath(lineUpForIntake1)
                 //new FollowPath(intake1),
                 //new FollowPath(toShootFromIntake1),
                 //new FollowPath(lineUpForIntake2),
@@ -66,21 +88,20 @@ public class FrontBlueAuto extends NextFTCOpMode {
     public void onUpdate() {
         autonomous.schedule();
         telemetry.addData("pose", PedroComponent.follower().getPose());
-        CustomDrawing.drawDebug(PedroComponent.follower());
+        flywheel.update();
         telemetry.update();
-        telemetryM.update(telemetry);
     }
 
 
 
     public static class FrontBlueAutoPaths {
         public static void getPaths(Follower follower) {
-            startingPose = new Pose(123.423, 123.323);
-            shootingPose = new Pose(100.530, 100.431);
-            intake1StartPose = new Pose(100.530, 83.262);
-            intake1EndPose = new Pose(130.623, 83.262);
-            intake2StartPose = new Pose(99.607, 59.631);
-            intake2EndPose = new Pose(131.361, 59.631);
+            startingPose = new Pose(140, 140, Math.toRadians(45));
+            shootingPose = new Pose(110, 110);
+            intake1StartPose = new Pose(120, 110);
+            intake1EndPose = new Pose(140, 110);
+            intake2StartPose = new Pose(99.607, 90);
+            intake2EndPose = new Pose(131.361, 90);
             intake2CurvePose = new Pose(91.484, 53.538);
             parkPose = new Pose(125.638, 101.169);
             shootAngle = Math.toRadians(50);
@@ -91,7 +112,7 @@ public class FrontBlueAuto extends NextFTCOpMode {
                     .addPath(
                             new BezierLine(startingPose, shootingPose)
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(38), shootAngle)
+                    .setLinearHeadingInterpolation(Math.toRadians(45), shootAngle)
                     .build();
 
             lineUpForIntake1 = follower

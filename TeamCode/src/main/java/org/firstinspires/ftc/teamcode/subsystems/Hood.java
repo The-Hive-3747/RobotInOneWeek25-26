@@ -18,9 +18,9 @@ public class Hood implements Component {
     }
 
     public void update() {
-        if (ActiveOpMode.gamepad1().dpad_up) {
+        if (ActiveOpMode.gamepad2().dpad_up) {
             hood.setPower(1.0);
-        } else if (ActiveOpMode.gamepad1().dpad_down){
+        } else if (ActiveOpMode.gamepad2().dpad_down){
             hood.setPower(-1);
         } else {
             hood.setPower(0.0);

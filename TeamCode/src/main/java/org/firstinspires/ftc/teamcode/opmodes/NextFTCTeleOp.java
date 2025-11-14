@@ -46,7 +46,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     Flywheel flywheel;
     TurretTracking tracking;
     double FLYWHEEL_POWER = 0.8;//0.7;//0.6
-    double FLYWHEEL_VEL = 3500; // IN RPM
+    double FLYWHEEL_VEL = 2000; // IN RPM
     double INTAKE_POWER = 0.9;
     private double HOOD_POSITION = 0.0;
     GoBildaPinpointDriver odo;
@@ -75,7 +75,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         DcMotor flywheelMotor = hardwareMap.get(DcMotor.class, "flywheel");
         DcMotor turretMotor = hardwareMap.get(DcMotor.class, "turret");
         //hoodServo = hardwareMap.get(Servo.class, "hoodServo");
-        flywheelMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
         intakeMotor = hardwareMap.get(DcMotor.class, "transfer");
         flipper = hardwareMap.get(Servo.class, "flipper");
@@ -125,28 +125,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         g1Left.whenTrue(() -> turretMotor.setPower(-0.4))
                 .whenFalse(() -> turretMotor.setPower(0.0));
 
-/*
-        g2Up.whenBecomesTrue(
-                () -> {
-                    if (hoodServo.getPosition() >= 0.9) {
-                        HOOD_POSITION = 1;
-                    } else {
-                        HOOD_POSITION += 0.1;
-                    }
-                    hoodServo.setPosition(HOOD_POSITION);
-                }
-        );
 
-        g2Down.whenBecomesTrue(
-                () -> {
-                    if (hoodServo.getPosition() <= 0.1) {
-                        HOOD_POSITION = 0;
-                    } else {
-                        HOOD_POSITION -= 0.1;
-                    }
-                    hoodServo.setPosition(HOOD_POSITION);
-                }
-        );*/
 
 
     }
@@ -156,7 +135,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         tracking.update();
         flywheel.update();
         BindingManager.update();
-        //drive.update();
+        drive.update();
         telemetry.update();
     }
 }

@@ -9,8 +9,11 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
+import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
+import dev.nextftc.hardware.impl.MotorEx;
 
 public class TurretTracking implements Component{
     private Limelight3A limelight;
@@ -20,18 +23,14 @@ public class TurretTracking implements Component{
     double center;
     double centerP;
     double horizDistance;
-    private DcMotor turretMotor;
-    @Override
-    public void preInit() {
-        limelight = ActiveOpMode.hardwareMap().get(Limelight3A.class, "limelight");
-        turretMotor = ActiveOpMode.hardwareMap().get(DcMotor.class, "turret");
-    }
+    private MotorEx turretMotor;
+
     @Override
     public void postInit() {
+        limelight = ActiveOpMode.hardwareMap().get(Limelight3A.class, "limelight");
+        turretMotor = new MotorEx("turret").brakeMode();
         limelight.pipelineSwitch(0);
         limelight.start();
-
-
     }
     public void update() {
 
@@ -64,4 +63,10 @@ public class TurretTracking implements Component{
         }
 
     }
+
+    Command holdTurret = new LambdaCommand()
+            .setStart(() -> {
+                turretMotor.setPower(0);
+            })
+            .setIsDone(() -> true);
     }
