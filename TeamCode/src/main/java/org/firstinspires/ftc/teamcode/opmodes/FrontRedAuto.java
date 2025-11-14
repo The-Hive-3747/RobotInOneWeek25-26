@@ -28,8 +28,8 @@ import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.hardware.impl.MotorEx;
 
 
-@Autonomous(name = "frontBlueAuto")
-public class FrontBlueAuto extends NextFTCOpMode {
+@Autonomous(name = "front red auto")
+public class FrontRedAuto extends NextFTCOpMode {
     {
         addComponents(
                 new PedroComponent(Constants::createFollower),
