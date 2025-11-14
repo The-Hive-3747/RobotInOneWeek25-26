@@ -101,10 +101,9 @@ public class Flywheel implements Component {
             .setIsDone(() -> true);;
 
     public Command shootAllThree = new LambdaCommand()
-            .setStart(()->{
-                ActiveOpMode.telemetry().addData("flywheel vel", flywheelVel);
-            })
             .setUpdate(() -> {
+                ActiveOpMode.telemetry().addData("Shooting, VEL", flywheelVel);
+                ActiveOpMode.telemetry().addData("Target, VEL", targetVel);
                 currentRPM = this.getVel();
                 if (pastRPM == 0) { pastRPM = currentRPM; }
                 if (pastRPM - currentRPM >= 150) { shotCount++; }

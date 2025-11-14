@@ -69,7 +69,8 @@ public class FrontBlueAuto extends NextFTCOpMode {
                 intake.startTransfer,
 
                 new FollowPath(toShootFromStart),
-                flywheel.shootAllThree,
+                flywheel.stopFlywheel,
+                //flywheel.shootAllThree,
 
                 new FollowPath(lineUpForIntake1)
                 //new FollowPath(intake1),
