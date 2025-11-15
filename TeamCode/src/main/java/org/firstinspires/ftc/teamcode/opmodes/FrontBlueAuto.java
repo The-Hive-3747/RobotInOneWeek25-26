@@ -98,7 +98,7 @@ public class FrontRedAuto extends NextFTCOpMode {
             parkPose = new Pose(19, 40);
             toShootCurvePose = new Pose(44,72);
             shootAngle = Math.toRadians(130);
-            parkAngle = Math.toRadians(270);
+            parkAngle = Math.toRadians(90);
 
             toShootFromStart = follower
                     .pathBuilder()
