@@ -25,25 +25,18 @@ public class TurretTracking implements Component{
     private MotorEx turretMotor;
     ControlSystem turretPID;
     int initTag;
-    int aprilTag;
+    int targetTagID;
 
     @Override
     public void postInit() {
         limelight = ActiveOpMode.hardwareMap().get(Limelight3A.class, "limelight");
         turretMotor = new MotorEx("turret");
+        turretMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         turretMotor.zero();
         limelight.pipelineSwitch(0);
         limelight.start();
-        LLResult result = limelight.getLatestResult();
-        if (result != null && result.isValid() && !result.getFiducialResults().isEmpty()) {
-            LLResultTypes.FiducialResult fiducial = result.getFiducialResults().get(0);
-            initTag = fiducial.getFiducialId();
-            if (initTag == 24 || initTag == 20) {
-                aprilTag = initTag;
-            }
-        }
-
-
+        center = 0;
+        targetTagID=24;
         turretPID = new ControlSystemBuilder()
                 .posPid(0.1)
                 .build();
@@ -52,20 +45,33 @@ public class TurretTracking implements Component{
         );
     }
 
+    public void setAllianceColor(boolean isRed) {
+        if (isRed) { 
+            targetTagID = 24; 
+        } else {
+            targetTagID = 20;
+        }
+    }
+
     public void update() {
 
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid() && !result.getFiducialResults().isEmpty()) {
-            LLResultTypes.FiducialResult fiducial = result.getFiducialResults().get(0);
-            Pose3D botPose = fiducial.getRobotPoseTargetSpace();
-            centerP = fiducial.getTargetXPixels();
-            center = fiducial.getTargetXDegrees();
-            y = botPose.getPosition().y;
-            z = botPose.getPosition().z;
-            x = botPose.getPosition().x;
-
-            horizDistance = Math.sqrt(x*x + y*y);
-
+            for (int i = 0; i < result.getFiducialResults().size(); i++) {
+                if (result.getFiducialResults().get(i).getFudicialId() == targetTagID) {
+                    LLResultTypes.FiducialResult fiducial = result.getFiducialResults().get(0);
+                    Pose3D botPose = fiducial.getRobotPoseTargetSpace();
+                    centerP = fiducial.getTargetXPixels();
+                    center = fiducial.getTargetXDegrees();
+                    y = botPose.getPosition().y;
+                    z = botPose.getPosition().z;
+                    x = botPose.getPosition().x;
+                    horizDistance = Math.sqrt(x*x + y*y);
+                    break;
+                }
+            }
+            
+            
             correct = turretPID.calculate(
                     new KineticState(center)
             );
@@ -82,7 +88,7 @@ public class TurretTracking implements Component{
             ActiveOpMode.telemetry().addData("x distance", x);
             ActiveOpMode.telemetry().addData("y distance", y);
             ActiveOpMode.telemetry().addData("center distance", center);
-            ActiveOpMode.telemetry().addData("AprilTag", aprilTag);
+            ActiveOpMode.telemetry().addData("AprilTag", targetTagID);
 
         }
 
