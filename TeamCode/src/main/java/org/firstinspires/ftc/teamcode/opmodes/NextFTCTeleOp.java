@@ -126,6 +126,10 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         g1Left.whenTrue(() -> turretMotor.setPower(-0.4))
                 .whenFalse(() -> turretMotor.setPower(0.0));
 
+        g2Up.whenTrue(() -> flywheel.setHoodPos(flywheel.getHoodPos()+1));
+
+        g2Down.whenTrue(() -> flywheel.setHoodPos(flywheel.getHoodPos()-1);
+
 
 
 
