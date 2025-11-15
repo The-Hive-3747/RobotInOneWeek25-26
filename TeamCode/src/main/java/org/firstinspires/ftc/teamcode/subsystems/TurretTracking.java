@@ -25,7 +25,7 @@ public class TurretTracking implements Component{
     double centerP;
     double horizDistance;
     private DcMotor turretMotor;
-    int apriltag;
+    int aprilTag;
 
     @Override
     public void postInit() {
