@@ -41,7 +41,7 @@ public class Flywheel implements Component {
         light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
         hood = ActiveOpMode.hardwareMap().get(CRServo.class, "hoodServo");
         flywheelLeft = new MotorEx("flywheelLeft").reversed();
-        flywheelRight = new MotorEx("flywheelRight");
+        flywheelRight = new MotorEx("flywheelRight").zero();
 
         flywheels = new MotorGroup(flywheelLeft, flywheelRight);
         flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
