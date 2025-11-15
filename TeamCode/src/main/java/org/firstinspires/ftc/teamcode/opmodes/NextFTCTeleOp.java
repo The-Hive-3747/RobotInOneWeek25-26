@@ -46,7 +46,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     Flywheel flywheel;
     TurretTracking tracking;
     double FLYWHEEL_POWER = 0.8;//0.7;//0.6
-    double FLYWHEEL_VEL = 2000; // IN RPM
+    double FLYWHEEL_VEL = 1300; // IN RPM
     double INTAKE_POWER = 0.9;
     private double HOOD_POSITION = 0.0;
     GoBildaPinpointDriver odo;
@@ -72,7 +72,6 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g1Right = button(() -> gamepad1.dpad_right);
         Button g1Left = button(() -> gamepad1.dpad_left);
 
-        DcMotor flywheelMotor = hardwareMap.get(DcMotor.class, "flywheel");
         DcMotor turretMotor = hardwareMap.get(DcMotor.class, "turret");
         //hoodServo = hardwareMap.get(Servo.class, "hoodServo");
 
@@ -83,7 +82,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         rightFireServo = hardwareMap.get(CRServo.class, "right_firewheel");
         sideWheelServo = hardwareMap.get(CRServo.class, "side-wheel");
         sideWheelServo.setDirection(CRServo.Direction.REVERSE);
-        rightFireServo.setDirection(CRServo.Direction.REVERSE);
+
+        leftFireServo.setDirection(CRServo.Direction.REVERSE);
+        turretMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         intakeMotor.setDirection(DcMotor.Direction.REVERSE);
 
         g2Y.toggleOnBecomesTrue()
@@ -106,18 +107,18 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         g2A.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
                     leftFireServo.setPower(FIRE_POWER);
-                    rightFireServo.setPower(FIRE_POWER);
+                    //rightFireServo.setPower(FIRE_POWER);
                     sideWheelServo.setPower(FIRE_POWER);
                 })
                 .whenBecomesFalse(() -> {
                     leftFireServo.setPower(0);
-                    rightFireServo.setPower(0);
+                    //rightFireServo.setPower(0);
                     sideWheelServo.setPower(0);
                 });
 
 
-        g2B.whenTrue(() -> flipper.setPosition(0.27))
-                .whenFalse(() -> flipper.setPosition(0.4));
+        g2B.whenTrue(() -> flipper.setPosition(0.1))
+                .whenFalse(() -> flipper.setPosition(0.52));
 
         g1Right.whenTrue(() -> turretMotor.setPower(0.4))
                 .whenFalse(() -> turretMotor.setPower(0.0));
@@ -132,10 +133,16 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     @Override
     public void onUpdate() {
         hood.update();
-        tracking.update();
+        //tracking.update();
         flywheel.update();
         BindingManager.update();
         drive.update();
+        telemetry.addData("X2 intake on/off","");
+        telemetry.addData("Y2 flywheel on/off","");
+        telemetry.addData("B2 hold flipper up/down","");
+        telemetry.addData("A2 transfer on/off","");
+        telemetry.addLine("Up2 & Down2 for hood");
+        telemetry.addLine("Left1 & Right1 for turret");
         telemetry.update();
     }
 }

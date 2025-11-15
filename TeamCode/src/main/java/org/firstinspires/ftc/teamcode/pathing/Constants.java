@@ -22,8 +22,8 @@ public class Constants {
             .useSecondaryDrivePIDF(true)
             .lateralZeroPowerAcceleration(-37.32)//-87.57
             .forwardZeroPowerAcceleration(-35.8)//-52.34
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.25, 0, 0.005, 0))//(0.03, 0, 0, 0))
-            .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.15, 0, 0.00, 0))//(0.1, 0, 0.01, 0))//just a guess
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.35, 0, 0.005, 0))//(0.03, 0, 0, 0))
+            .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.2, 0, 0.001, 0))//(0.1, 0, 0.01, 0))//just a guess
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.5,0,0.000,0.6,0.015))//(0.09, 0, 0.0001, 0.0, 0.00))
             .secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(0.09, 0, 0.000005, 0.6, 0.01))//(0.001, 0, 0.00001, 0, 0.01))//just a guess
             .centripetalScaling(0.0005)//(0.001)
@@ -54,9 +54,10 @@ public class Constants {
             .hardwareMapName("odo")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
-    public static PathConstraints pathConstraints = new PathConstraints(0.85, 0.5, 0.1, 0.009, 50, 1.25, 10, 1);//(0.95, 100, 1, 1);
+    // defaults: (0.995, 0.1, 0.1, 0.007, 100, 1, 10, 1);
+    public static PathConstraints pathConstraints = new PathConstraints(0.9, 0.2, 0.2, 0.1, 50, 0.8, 10, 1);//(0.95, 100, 1, 1);
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)

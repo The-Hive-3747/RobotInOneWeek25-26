@@ -1,8 +1,9 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
@@ -10,28 +11,45 @@ import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
+import dev.nextftc.hardware.controllable.MotorGroup;
 import dev.nextftc.hardware.impl.MotorEx;
 
 
 // This is a component file for the flywheel / shooter.
 public class Flywheel implements Component {
 
-    MotorEx flywheel;
-    static double GOBILDA_MOTOR_TICKS_PER_REVOLUTION = 28.0;
-    static double correct, flywheelVel, targetVel, currentRPM;
+    MotorEx flywheelLeft, flywheelRight;
+    static double GOBILDA_TICKS_PER_REVOLUTION = 4096;
+    static double correct, flywheelVel, targetVel, currentRPM, targetHoodPos, oldPos, currentPos, color;
     static double SECONDS_TO_MINUTES = 60.0;
+    MotorGroup flywheels;
     static double pastRPM = 0;
     static double shotCount = 0;
-    ControlSystem flywheelController;
+    static boolean shotCountJustChanged = false;
+    private ElapsedTime shotTimer = new ElapsedTime();
+    private ElapsedTime colorTimer = new ElapsedTime();
+    ControlSystem flywheelController, hoodController;
+    Servo light;
+    CRServo hood;
     Servo flipper;
 
-    double autoTargetVel = 3500;
+    double autoTargetVel = 1100;
     double kV = 0.0004;
     double kP = 0.1;
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
-        flywheel = new MotorEx("flywheel").reversed();
+        light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
+        hood = ActiveOpMode.hardwareMap().get(CRServo.class, "hoodServo");
+        flywheelLeft = new MotorEx("flywheelLeft").reversed();
+        flywheelRight = new MotorEx("flywheelRight");
+
+        flywheels = new MotorGroup(flywheelLeft, flywheelRight);
         flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
+
+        hoodController = ControlSystem.builder()
+                .posPid(0.1)
+                .build();
+        targetHoodPos = 0;
 
         // a control system is NextFTC's way to build.. control systems!
         flywheelController = ControlSystem.builder()
@@ -43,18 +61,19 @@ public class Flywheel implements Component {
 
     // sets motor power DONT use this method normally, its not smart
     public void setPower(double power) {
-        flywheel.setPower(power);
+        flywheels.setPower(power);
     }
     // gets motor power
     public double getPower() {
-        return flywheel.getPower();
+        return flywheels.getPower();
+
     }
     // gets motor velocity. needs to convert from TPS (ticks per second) to RPM
     public double getVel() {
         // NEED TO DO SOME MATH HERE!!!
         // getVelocity() returns a val in Ticks Per Second, so we divide by the Ticks Per Seconds by Ticks Per Revolution
         // Then we get Revolutions Per Second, so we need to multiply by 60 to convert it to Revolutions Per Minute (RPM)
-        return -(flywheel.getVelocity() / GOBILDA_MOTOR_TICKS_PER_REVOLUTION)*SECONDS_TO_MINUTES;
+        return (flywheelRight.getVelocity()); // GOBILDA_TICKS_PER_REVOLUTION)*SECONDS_TO_MINUTES;
     }
 
     // sets the target velocity! since we don't care abt the position of the flywheel, we can just set it to 0
@@ -62,6 +81,20 @@ public class Flywheel implements Component {
     public void setTargetVel(double vel) {
         targetVel = vel;
         flywheelController.setGoal(new KineticState(0, targetVel));
+    }
+
+    public void rainbowLight(boolean on) {
+        if (on) {
+            if (colorTimer.milliseconds() > 150) {
+                color += 0.001;
+                if (color>0.772) {
+                    color = 0.279;
+                }
+            }
+            light.setPosition(color);
+        } else {
+            light.setPosition(0);
+        }
     }
 
 
@@ -73,20 +106,28 @@ public class Flywheel implements Component {
                 new KineticState(0, flywheelVel) // a KineticState is NextFTC's way of storing position, velocity, and acceleration all in one variable
         );
         // setting constraints on our motor power so its not above 1 and not below 0
-        if (correct > 0) {
-            if (correct >= 1) {
-                correct = 1;
+        if (targetVel != 0) {
+            if (correct > 0) {
+                if (correct >= 1) {
+                    correct = 1;
+                }
             } else {
-                correct = correct;
+                correct = 0.8;
             }
-        } else {
-            correct = 0.4;
+            flywheels.setPower(correct); // set the motor power!
         }
-        flywheel.setPower(correct); // set the motor power!
+        if (Math.abs(targetVel - flywheelVel) < 150) {
+            this.rainbowLight(true);
+        } else {
+            this.rainbowLight(false);
+        }
+
         ActiveOpMode.telemetry().addData("flywheel power", correct);
         ActiveOpMode.telemetry().addData("flywheel vel", flywheelVel);
         ActiveOpMode.telemetry().addData("flywheel target vel", targetVel);
         ActiveOpMode.telemetry().addData("balls shot", shotCount);
+        ActiveOpMode.telemetry().addData("leftvel", flywheelLeft.getVelocity());
+        ActiveOpMode.telemetry().addData("rightVel", -flywheelRight.getVelocity());
     }
 
     public Command startFlywheel = new LambdaCommand()
@@ -98,27 +139,30 @@ public class Flywheel implements Component {
             .setStart(() -> {
                 this.setTargetVel(0);
             })
-            .setIsDone(() -> true);;
+            .setIsDone(() -> true);
+
+    public Command resetShotTimer = new LambdaCommand()
+            .setStart(() -> {
+                shotTimer.reset();
+            })
+            .setIsDone(() -> true);
 
     public Command shootAllThree = new LambdaCommand()
+            .setStart(() -> {
+                ActiveOpMode.telemetry().addLine("flywheel is shootinggg");
+
+            })
             .setUpdate(() -> {
-                ActiveOpMode.telemetry().addData("Shooting, VEL", flywheelVel);
-                ActiveOpMode.telemetry().addData("Target, VEL", targetVel);
                 currentRPM = this.getVel();
-                if (pastRPM == 0) { pastRPM = currentRPM; }
-                if (pastRPM - currentRPM >= 150) { shotCount++; }
-                if (targetVel - currentRPM < 200) {
-                    flipper.setPosition(0.27);
+                if ((targetVel - currentRPM) < 80) {
+                    flipper.setPosition(0.1);
                 } else {
-                    flipper.setPosition(0.4);
+                    flipper.setPosition(0.52);
                 }
-                pastRPM = currentRPM;
             })
             .setStop(interrupted -> {
-                //this.setTargetVel(0);
-                flipper.setPosition(0.4);
-                pastRPM = 0;
-                shotCount = 0;
+                ActiveOpMode.telemetry().addLine("done w shooting");
+                flipper.setPosition(0.52);
             })
-            .setIsDone(() -> (shotCount == 3));
+            .setIsDone(() -> (shotTimer.seconds() > 3.2)); // TODO: CHANGE THIS TO THREE
 }

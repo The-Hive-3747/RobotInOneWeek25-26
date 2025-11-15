@@ -9,23 +9,21 @@ import dev.nextftc.ftc.ActiveOpMode;
 
 public class Hood implements Component {
     CRServo hood;
+
     AnalogInput hoodEncoder;
     @Override
     public void postInit() {
         hood = ActiveOpMode.hardwareMap().get(CRServo.class, "hoodServo");
-        hoodEncoder = ActiveOpMode.hardwareMap().get(AnalogInput.class, "hoodEncoder");
 
     }
 
     public void update() {
         if (ActiveOpMode.gamepad2().dpad_up) {
-            hood.setPower(1.0);
+            hood.setPower(-1.0);
         } else if (ActiveOpMode.gamepad2().dpad_down){
-            hood.setPower(-1);
+            hood.setPower(1);
         } else {
             hood.setPower(0.0);
         }
-        ActiveOpMode.telemetry().addData("encoder current pos", (hoodEncoder.getVoltage()/3.3)*360);
-        ActiveOpMode.telemetry().addData("encoder max pos", hoodEncoder.getMaxVoltage());
     }
 }

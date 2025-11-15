@@ -6,6 +6,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
@@ -23,12 +24,14 @@ public class TurretTracking implements Component{
     double center;
     double centerP;
     double horizDistance;
-    private MotorEx turretMotor;
+    private DcMotor turretMotor;
+    int apriltag;
 
     @Override
     public void postInit() {
         limelight = ActiveOpMode.hardwareMap().get(Limelight3A.class, "limelight");
-        turretMotor = new MotorEx("turret").brakeMode();
+        turretMotor = ActiveOpMode.hardwareMap().get(DcMotor.class, "turret");
+        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         limelight.pipelineSwitch(0);
         limelight.start();
     }
@@ -46,13 +49,14 @@ public class TurretTracking implements Component{
 
             horizDistance = Math.sqrt(x*x + y*y);
 
-            if (center>5) {
+            /*if (center>10) {
                 turretMotor.setPower(0.3);
-            }else if (center<-5) {
+            }else if (center<-10) {
                 turretMotor.setPower(-0.3);
             }else {
                 turretMotor.setPower(0);
-            }
+            }*/
+
 
             ActiveOpMode.telemetry().addData("horizontal distance", horizDistance);
             ActiveOpMode.telemetry().addData("april tag", fiducial.getFiducialId());
@@ -64,9 +68,12 @@ public class TurretTracking implements Component{
 
     }
 
-    Command holdTurret = new LambdaCommand()
+
+
+    public Command holdTurret = new LambdaCommand()
             .setStart(() -> {
-                turretMotor.setPower(0);
+                turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                turretMotor.setTargetPosition(0);
             })
             .setIsDone(() -> true);
     }
