@@ -20,7 +20,7 @@ public class Flywheel implements Component {
 
     MotorEx flywheelLeft, flywheelRight;
     static double GOBILDA_TICKS_PER_REVOLUTION = 4096;
-    static double correct, flywheelVel, targetVel, currentRPM, targetHoodPos, oldPos, currentPos, color;
+    static double correct, flywheelVel, targetVel, currentRPM, targetHoodPos, oldPos, currentPos, color, hoodPos;
     static double SECONDS_TO_MINUTES = 60.0;
     MotorGroup flywheels;
     static double pastRPM = 0;
@@ -57,6 +57,14 @@ public class Flywheel implements Component {
                 .velPid(kP) // and a velocity PID (for fine tuning)
                 .build(); // and build the control system!
         targetVel = 0; // setting a target velocity of 0 so that the robot doesnt blow up on start
+    }
+
+    public void setHoodPos(double pos) {
+        targetHoodPos = pos;
+        hoodController.setGoal(new KineticState(targetHoodPos));
+    }
+    public double getHoodPos() {
+        return fywheelLeft.getPosition();
     }
 
     // sets motor power DONT use this method normally, its not smart
@@ -101,6 +109,12 @@ public class Flywheel implements Component {
     // simple update function. telling the controller the robot's current velocity, and it returns a motor power
     public void update() {
         flywheelVel = this.getVel();
+        hoodPos = this.getHoodPos();
+
+        correctHood = hoodController.calculate(
+            new KineticState(hoodPos)
+        );
+        hood.setPower(Math.abs(correctHood) > 0.05 ? correctHood : 0);
         // correct is the motor power we need to set!
         correct = flywheelController.calculate( // calculate() lets us plug in current vals and outputs a motor power
                 new KineticState(0, flywheelVel) // a KineticState is NextFTC's way of storing position, velocity, and acceleration all in one variable
@@ -116,11 +130,14 @@ public class Flywheel implements Component {
             }
             flywheels.setPower(correct); // set the motor power!
         }
-        if (Math.abs(targetVel - flywheelVel) < 150) {
+        
+        
+        if (Math.abs(targetVel - flywheelVel) < 200) {
             this.rainbowLight(true);
         } else {
             this.rainbowLight(false);
         }
+        
 
         ActiveOpMode.telemetry().addData("flywheel power", correct);
         ActiveOpMode.telemetry().addData("flywheel vel", flywheelVel);
@@ -156,12 +173,12 @@ public class Flywheel implements Component {
                 currentRPM = this.getVel();
                 if ((targetVel - currentRPM) < 80) {
                     flipper.setPosition(0.1);
+                    this.rainbowLight(true);
                 } else {
                     flipper.setPosition(0.52);
                 }
             })
             .setStop(interrupted -> {
-                ActiveOpMode.telemetry().addLine("done w shooting");
                 flipper.setPosition(0.52);
             })
             .setIsDone(() -> (shotTimer.seconds() > 3.2)); // TODO: CHANGE THIS TO THREE
