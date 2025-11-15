@@ -67,6 +67,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g2Y = button(() -> gamepad2.y);
         Button g2B = button(() -> gamepad2.b);
         Button g2A = button(() -> gamepad2.a);
+        Button g2LB = button(() -> gamepad2.left_bumper);
+
         Button g2Up = button(() -> gamepad2.dpad_up);
         Button g2Down = button(() -> gamepad2.dpad_down);
         Button g1Right = button(() -> gamepad1.dpad_right);
@@ -117,18 +119,13 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 });
 
 
+
         g2B.whenTrue(() -> flipper.setPosition(0.1))
                 .whenFalse(() -> flipper.setPosition(0.52));
 
-        g1Right.whenTrue(() -> turretMotor.setPower(0.4))
-                .whenFalse(() -> turretMotor.setPower(0.0));
+        g2Up.whenTrue(() -> flywheel.setHoodPos(flywheel.getHoodPos()+5));
 
-        g1Left.whenTrue(() -> turretMotor.setPower(-0.4))
-                .whenFalse(() -> turretMotor.setPower(0.0));
-
-        g2Up.whenTrue(() -> flywheel.setHoodPos(flywheel.getHoodPos()+1));
-
-        g2Down.whenTrue(() -> flywheel.setHoodPos(flywheel.getHoodPos()-1);
+        g2Down.whenTrue(() -> flywheel.setHoodPos(flywheel.getHoodPos()-5));
 
 
 
@@ -137,10 +134,11 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     @Override
     public void onUpdate() {
         hood.update();
-        //tracking.update();
+        tracking.update();
         flywheel.update();
         BindingManager.update();
         drive.update();
+        tracking.update();
         telemetry.addData("X2 intake on/off","");
         telemetry.addData("Y2 flywheel on/off","");
         telemetry.addData("B2 hold flipper up/down","");

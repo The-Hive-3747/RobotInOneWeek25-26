@@ -20,7 +20,7 @@ public class Flywheel implements Component {
 
     MotorEx flywheelLeft, flywheelRight;
     static double GOBILDA_TICKS_PER_REVOLUTION = 4096;
-    static double correct, flywheelVel, targetVel, currentRPM, targetHoodPos, oldPos, currentPos, color, hoodPos;
+    static double correct, flywheelVel, targetVel, currentRPM, targetHoodPos, correctHood, oldPos, currentPos, color, hoodPos;
     static double SECONDS_TO_MINUTES = 60.0;
     MotorGroup flywheels;
     static double pastRPM = 0;
@@ -41,13 +41,14 @@ public class Flywheel implements Component {
         light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
         hood = ActiveOpMode.hardwareMap().get(CRServo.class, "hoodServo");
         flywheelLeft = new MotorEx("flywheelLeft").reversed();
-        flywheelRight = new MotorEx("flywheelRight").zero();
+        flywheelRight = new MotorEx("flywheelRight");
+        flywheelRight.zero();
 
         flywheels = new MotorGroup(flywheelLeft, flywheelRight);
         flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
 
         hoodController = ControlSystem.builder()
-                .posPid(0.1)
+                .posPid(0.5)
                 .build();
         targetHoodPos = 0;
 
@@ -57,6 +58,8 @@ public class Flywheel implements Component {
                 .velPid(kP) // and a velocity PID (for fine tuning)
                 .build(); // and build the control system!
         targetVel = 0; // setting a target velocity of 0 so that the robot doesnt blow up on start
+
+        colorTimer.reset();
     }
 
     public void setHoodPos(double pos) {
@@ -64,7 +67,7 @@ public class Flywheel implements Component {
         hoodController.setGoal(new KineticState(targetHoodPos));
     }
     public double getHoodPos() {
-        return fywheelLeft.getPosition();
+        return (flywheelLeft.getCurrentPosition()+21)/37;//2000;
     }
 
     // sets motor power DONT use this method normally, its not smart
@@ -98,6 +101,7 @@ public class Flywheel implements Component {
                 if (color>0.772) {
                     color = 0.279;
                 }
+                colorTimer.reset();
             }
             light.setPosition(color);
         } else {
@@ -114,7 +118,7 @@ public class Flywheel implements Component {
         correctHood = hoodController.calculate(
             new KineticState(hoodPos)
         );
-        hood.setPower(Math.abs(correctHood) > 0.05 ? correctHood : 0);
+        hood.setPower(Math.abs(correctHood) > 0.2 ? correctHood : 0);
         // correct is the motor power we need to set!
         correct = flywheelController.calculate( // calculate() lets us plug in current vals and outputs a motor power
                 new KineticState(0, flywheelVel) // a KineticState is NextFTC's way of storing position, velocity, and acceleration all in one variable
@@ -143,7 +147,7 @@ public class Flywheel implements Component {
         ActiveOpMode.telemetry().addData("flywheel vel", flywheelVel);
         ActiveOpMode.telemetry().addData("flywheel target vel", targetVel);
         ActiveOpMode.telemetry().addData("balls shot", shotCount);
-        ActiveOpMode.telemetry().addData("leftvel", flywheelLeft.getVelocity());
+        ActiveOpMode.telemetry().addData("hood pos", hoodPos);
         ActiveOpMode.telemetry().addData("rightVel", -flywheelRight.getVelocity());
     }
 

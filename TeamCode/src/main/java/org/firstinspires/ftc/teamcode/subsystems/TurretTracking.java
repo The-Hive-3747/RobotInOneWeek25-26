@@ -10,6 +10,9 @@ import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigu
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
+import dev.nextftc.control.ControlSystem;
+import dev.nextftc.control.KineticState;
+import dev.nextftc.control.builder.ControlSystemBuilder;
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.components.Component;
@@ -18,23 +21,37 @@ import dev.nextftc.hardware.impl.MotorEx;
 
 public class TurretTracking implements Component{
     private Limelight3A limelight;
-    double x;
-    double y;
-    double z;
-    double center;
-    double centerP;
-    double horizDistance;
-    private DcMotor turretMotor;
+    static double x, y, z, center, centerP, horizDistance, correct;
+    private MotorEx turretMotor;
+    ControlSystem turretPID;
+    int initTag;
     int aprilTag;
 
     @Override
     public void postInit() {
         limelight = ActiveOpMode.hardwareMap().get(Limelight3A.class, "limelight");
-        turretMotor = ActiveOpMode.hardwareMap().get(DcMotor.class, "turret");
-        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        turretMotor = new MotorEx("turret");
+        turretMotor.zero();
         limelight.pipelineSwitch(0);
         limelight.start();
+        LLResult result = limelight.getLatestResult();
+        if (result != null && result.isValid() && !result.getFiducialResults().isEmpty()) {
+            LLResultTypes.FiducialResult fiducial = result.getFiducialResults().get(0);
+            initTag = fiducial.getFiducialId();
+            if (initTag == 24 || initTag == 20) {
+                aprilTag = initTag;
+            }
+        }
+
+
+        turretPID = new ControlSystemBuilder()
+                .posPid(0.1)
+                .build();
+        turretPID.setGoal(
+                new KineticState(0)
+        );
     }
+
     public void update() {
 
         LLResult result = limelight.getLatestResult();
@@ -49,13 +66,14 @@ public class TurretTracking implements Component{
 
             horizDistance = Math.sqrt(x*x + y*y);
 
-            /*if (center>10) {
-                turretMotor.setPower(0.3);
-            }else if (center<-10) {
-                turretMotor.setPower(-0.3);
-            }else {
+            correct = turretPID.calculate(
+                    new KineticState(center)
+            );
+            if (Math.abs(correct) < 1) {
+                turretMotor.setPower(correct);
+            } else {
                 turretMotor.setPower(0);
-            }*/
+            }
 
 
             ActiveOpMode.telemetry().addData("horizontal distance", horizDistance);
@@ -64,6 +82,8 @@ public class TurretTracking implements Component{
             ActiveOpMode.telemetry().addData("x distance", x);
             ActiveOpMode.telemetry().addData("y distance", y);
             ActiveOpMode.telemetry().addData("center distance", center);
+            ActiveOpMode.telemetry().addData("AprilTag", aprilTag);
+
         }
 
     }
@@ -72,8 +92,7 @@ public class TurretTracking implements Component{
 
     public Command holdTurret = new LambdaCommand()
             .setStart(() -> {
-                turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-                turretMotor.setTargetPosition(0);
+
             })
             .setIsDone(() -> true);
     }

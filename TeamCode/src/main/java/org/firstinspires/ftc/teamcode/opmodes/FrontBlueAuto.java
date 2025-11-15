@@ -21,8 +21,8 @@ import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 
 
-@Autonomous(name = "front RED auto")
-public class FrontRedAuto extends NextFTCOpMode {
+@Autonomous(name = "front blue auto")
+public class FrontBlueAuto extends NextFTCOpMode {
     {
         addComponents(
                 new PedroComponent(Constants::createFollower),
