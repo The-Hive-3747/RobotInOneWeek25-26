@@ -46,7 +46,7 @@ public class FrontRedAuto extends NextFTCOpMode {
     public void onInit() {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
         //toShootFromStart =
-        FrontBlueAutoPaths.generatePaths(PedroComponent.follower());
+        FrontRedAutoPaths.generatePaths(PedroComponent.follower());
 
         PedroComponent.follower().setStartingPose(startingPose);
 
@@ -87,7 +87,7 @@ public class FrontRedAuto extends NextFTCOpMode {
 
 
 
-    public static class FrontBlueAutoPaths {
+    public static class FrontRedAutoPaths {
         public static void generatePaths(Follower follower) {
             startingPose = new Pose(140, 140, Math.toRadians(45));
             shootingPose = new Pose(105, 110);
@@ -98,7 +98,7 @@ public class FrontRedAuto extends NextFTCOpMode {
             parkPose = new Pose(125.638, 104);
             toShootCurvePose = new Pose(100,72);
             shootAngle = Math.toRadians(50);
-            parkAngle = Math.toRadians(270);
+            parkAngle = Math.toRadians(90);
 
             toShootFromStart = follower
                     .pathBuilder()
