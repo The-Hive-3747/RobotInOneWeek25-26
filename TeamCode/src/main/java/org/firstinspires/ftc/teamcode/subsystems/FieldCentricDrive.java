@@ -27,20 +27,18 @@ public class FieldCentricDrive implements Component {
     public void postInit() {
         odo.setOffsets(-5.4, 0, DistanceUnit.INCH);
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
         gamepad = ActiveOpMode.gamepad1();
         odo.resetPosAndIMU();
-        //frontLeft.reverse();
-        //backLeft.reverse();
-        frontRight.reverse();
-        backRight.reverse();
+        frontLeft.reverse();
+        backLeft.reverse();
     }
 
     public void update() {
                     odo.update();
-                    double y = gamepad.left_stick_y ; //y
-                    double x = -gamepad.left_stick_x;
-                    double rx = 0.5 * -gamepad.right_stick_x; //rx
+                    double y = -gamepad.left_stick_y ; //y
+                    double x = gamepad.left_stick_x;
+                    double rx = gamepad.right_stick_x; //rx
 
                     double botHeading = odo.getHeading(AngleUnit.RADIANS);
                     double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
@@ -49,10 +47,10 @@ public class FieldCentricDrive implements Component {
                     rotX = rotX * 1.1;
 
                     double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
-                    double frontLeftPower = (rotY + rotX + rx) / denominator;//rotY + rotX + rx
-                    double backLeftPower = (rotY - rotX + rx) / denominator;//rotY - rotX + rx
-                    double frontRightPower = (rotY - rotX - rx) / denominator;//rotY - rotX - rx
-                    double backRightPower = (rotY + rotX - rx) / denominator;//rotY + rotX - rx
+                    double frontLeftPower = (rotY - rotX + rx) / denominator;//rotY + rotX + rx
+                    double backLeftPower = (rotY + rotX + rx) / denominator;//rotY - rotX + rx
+                    double frontRightPower = (rotY + rotX - rx) / denominator;//rotY - rotX - rx
+                    double backRightPower = (rotY - rotX - rx) / denominator;//rotY + rotX - rx
 
                     frontLeft.setPower(frontLeftPower);
                     frontRight.setPower(frontRightPower);

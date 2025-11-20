@@ -9,6 +9,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
+import org.firstinspires.ftc.teamcode.helpers.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
@@ -47,7 +48,7 @@ public class FrontBlueAuto extends NextFTCOpMode {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
         //toShootFromStart =
         FrontBlueAutoPaths.generatePaths(PedroComponent.follower());
-
+        turret.setAllianceColor(false);
         PedroComponent.follower().setStartingPose(startingPose);
 
         autonomous = new SequentialGroup(
@@ -83,22 +84,28 @@ public class FrontBlueAuto extends NextFTCOpMode {
         telemetry.addData("path", PedroComponent.follower().getCurrentTValue());
         flywheel.update();
         telemetry.update();
+        turret.update();
     }
 
+    @Override
+    public void onStop() {
+        OpModeTransfer.currentPose = PedroComponent.follower().getPose();
+        OpModeTransfer.isRed = false;
+    }
 
 
     public static class FrontBlueAutoPaths {
         public static void generatePaths(Follower follower) {
-            startingPose = new Pose(4, 4, Math.toRadians(135));
-            shootingPose = new Pose(39, 34);
-            intake1StartPose = new Pose(34, 49);
-            intake1EndPose = new Pose(6, 49);
-            intake2StartPose = new Pose(29, 72);
-            intake2EndPose = new Pose(-5, 72);
-            parkPose = new Pose(19, 40);
+            startingPose = new Pose(4, 140, Math.toRadians(135));
+            shootingPose = new Pose(39, 110);
+            intake1StartPose = new Pose(28, 105); //34
+            intake1EndPose = new Pose(-5, 105); //6
+            intake2StartPose = new Pose(28, 80);
+            intake2EndPose = new Pose(-15, 80);
+            parkPose = new Pose(2, 94);
             toShootCurvePose = new Pose(44,72);
             shootAngle = Math.toRadians(130);
-            parkAngle = Math.toRadians(90);
+            parkAngle = Math.toRadians(0);
 
             toShootFromStart = follower
                     .pathBuilder()

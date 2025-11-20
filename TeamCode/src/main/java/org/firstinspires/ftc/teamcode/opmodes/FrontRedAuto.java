@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import android.graphics.Path;
+
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
@@ -9,6 +11,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
+import org.firstinspires.ftc.teamcode.helpers.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
@@ -47,7 +50,7 @@ public class FrontRedAuto extends NextFTCOpMode {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
         //toShootFromStart =
         FrontRedAutoPaths.generatePaths(PedroComponent.follower());
-
+turret.setAllianceColor(true);
         PedroComponent.follower().setStartingPose(startingPose);
 
         autonomous = new SequentialGroup(
@@ -83,6 +86,13 @@ public class FrontRedAuto extends NextFTCOpMode {
         telemetry.addData("path", PedroComponent.follower().getCurrentTValue());
         flywheel.update();
         telemetry.update();
+        turret.update();
+    }
+
+    @Override
+    public void onStop() {
+        OpModeTransfer.currentPose = PedroComponent.follower().getPose();
+        OpModeTransfer.isRed = true;
     }
 
 
@@ -98,7 +108,7 @@ public class FrontRedAuto extends NextFTCOpMode {
             parkPose = new Pose(125.638, 104);
             toShootCurvePose = new Pose(100,72);
             shootAngle = Math.toRadians(50);
-            parkAngle = Math.toRadians(90);
+            parkAngle = Math.toRadians(180);
 
             toShootFromStart = follower
                     .pathBuilder()

@@ -113,12 +113,12 @@ public class Flywheel implements Component {
     // simple update function. telling the controller the robot's current velocity, and it returns a motor power
     public void update() {
         flywheelVel = this.getVel();
-        hoodPos = this.getHoodPos();
+        //hoodPos = this.getHoodPos();
 
-        correctHood = hoodController.calculate(
+        /*correctHood = hoodController.calculate(
             new KineticState(hoodPos)
-        );
-        hood.setPower(Math.abs(correctHood) > 0.2 ? correctHood : 0);
+        );*/
+        //hood.setPower(Math.abs(correctHood) > 0.2 ? correctHood : 0);
         // correct is the motor power we need to set!
         correct = flywheelController.calculate( // calculate() lets us plug in current vals and outputs a motor power
                 new KineticState(0, flywheelVel) // a KineticState is NextFTC's way of storing position, velocity, and acceleration all in one variable
@@ -132,15 +132,13 @@ public class Flywheel implements Component {
             } else {
                 correct = 0.8;
             }
-            flywheels.setPower(correct); // set the motor power!
-        }
-        
-        
-        if (Math.abs(targetVel - flywheelVel) < 200) {
-            this.rainbowLight(true);
         } else {
-            this.rainbowLight(false);
+            correct = 0;
         }
+        flywheels.setPower(correct); // set the motor power!
+        
+        
+        this.rainbowLight(true);
         
 
         ActiveOpMode.telemetry().addData("flywheel power", correct);
