@@ -13,42 +13,76 @@ public class TurretUsingOdo implements Component {
 
     MotorEx turretMotor;
     Pose currentPose;
-    boolean isRed;
-    double goalAngle, goalDiff, goalX, goalY, error;
+    boolean isRed, allowTurret;
+    double goalAngle, goalDiff, goalX, goalY, turretPower, turretGoal;
     ControlSystem turretPID;
 
     @Override
     public void postInit() {
         turretMotor = new MotorEx("turret");
-        //turretMotor.reverse();
+
+        turretMotor.reverse();
         turretMotor.zero();
-        error = 0;
+        turretMotor.atPosition(0);
+        ActiveOpMode.telemetry().addData("pos", turretMotor.getCurrentPosition());
+        ActiveOpMode.telemetry().update();
+        turretPID = ControlSystem.builder()
+                .posPid(0.02, 0, 0.001)
+                .build();
+        turretGoal = 0;
 
     }
 
 
     public void update() {
-        setGoalAngle();
-        ActiveOpMode.telemetry().addData("angle", error);
+        turretMotor.zero();
+        if (allowTurret) {
+            //setGoalAngle();
+        } else {
+            turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
+            //turretMotor.setPower(turretPower);
+        }
+        ActiveOpMode.telemetry().addData("goal angle", Math.toDegrees(goalAngle));
+        ActiveOpMode.telemetry().addData("goal diff", Math.toDegrees(goalDiff));
+        ActiveOpMode.telemetry().addData("posesesese", currentPose);
+        ActiveOpMode.telemetry().addData("turret angle", this.getTurretAngle());
+        ActiveOpMode.telemetry().addData("turret goal", turretGoal);
     }
 
     public void setGoalAngle() {
         if (currentPose != null) {
             goalAngle = -Math.atan2((goalY - this.currentPose.getY()), (goalX - this.currentPose.getX())); // IN RADS
             //goalAngle = Math.toDegrees(goalAngle); // IN DEGREES
-            goalDiff = normalizeAngle(goalAngle + currentPose.getHeading());
-            error = Math.toDegrees(normalizeAngle(goalDiff - Math.toRadians(this.getTurretAngle())));
-            turretMotor.setPower(0.02*error);
-            ActiveOpMode.telemetry().addData("goal angle", Math.toDegrees(goalAngle));
-            ActiveOpMode.telemetry().addData("goal diff", Math.toDegrees(goalDiff));
-            ActiveOpMode.telemetry().addData("posesesese", currentPose);
-            ActiveOpMode.telemetry().addData("turret angle", this.getTurretAngle());
-
+            turretGoal = normalizeAngle(goalAngle + currentPose.getHeading());
+            turretPID.setGoal(new KineticState(this.putInTurretLimits(Math.toDegrees(turretGoal))));
+            // error = Math.toDegrees(normalizeAngle(goalDiff - Math.toRadians(this.getTurretAngle())));
+            //turretMotor.setPower(0.02*error);
+            turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
+            turretMotor.setPower(turretPower);
         }
+    }
+
+    public double putInTurretLimits(double goal) {
+        if (goal > 80 || goal <-200) { //insanely horribly code
+            if (goal > 80) {
+                goal = 80;
+            } else {
+                goal = -200;
+            }
+        }
+        return goal;
     }
 
     public void setCurrentPose(Pose pose) {
         this.currentPose = pose;
+    }
+
+    public void setTurretAngle(double goal) {
+        allowTurret = false;
+        turretPID.setGoal(new KineticState(goal));
+    }
+    public void allowTurret() {
+        allowTurret = true;
     }
 
     public double getTurretAngle() {

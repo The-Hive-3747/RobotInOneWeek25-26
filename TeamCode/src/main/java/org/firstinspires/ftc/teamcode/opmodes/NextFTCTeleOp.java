@@ -40,7 +40,6 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         addComponents(
                 hood = new Hood(),
                 flywheel = new Flywheel(),
-                tracking = new TurretTracking(),
                 BindingsComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower),
                 odoTurret = new TurretUsingOdo()
@@ -50,7 +49,6 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     TurretUsingOdo odoTurret;
 
     Flywheel flywheel;
-    TurretTracking tracking;
     double FLYWHEEL_POWER = 0.8;//0.7;//0.6
     double FLYWHEEL_VEL = 1300; // IN RPM
     double INTAKE_POWER = 0.9;
@@ -67,7 +65,6 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     DriverControlledCommand driverControlled;
     public boolean isRed, allowTurret;
 
-    DcMotor turretMotor;
 
 
 
@@ -78,7 +75,6 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         follower.setStartingPose(OpModeTransfer.currentPose);
         follower.update();
 
-        turretMotor = hardwareMap.get(DcMotor.class, "turret");
         hoodServo = hardwareMap.get(CRServo.class, "hoodServo");
         intakeMotor = hardwareMap.get(DcMotor.class, "transfer");
         flipper = hardwareMap.get(Servo.class, "flipper");
@@ -87,7 +83,6 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         sideWheelServo = hardwareMap.get(CRServo.class, "side-wheel");
         sideWheelServo.setDirection(CRServo.Direction.REVERSE);
         leftFireServo.setDirection(CRServo.Direction.REVERSE);
-        turretMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         intakeMotor.setDirection(DcMotor.Direction.REVERSE);
 
         light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
@@ -132,14 +127,13 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g1Right = button(() -> gamepad1.dpad_right);
         Button g1Left = button(() -> gamepad1.dpad_left);
 
-        tracking.setAllianceColor(isRed);
 
-        g2LB.toggleOnBecomesTrue()
+        g1Right.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
-                    allowTurret = false;
+                    odoTurret.setTurretAngle(0);
                         })
                 .whenBecomesFalse(() -> {
-                    allowTurret = true;
+                    odoTurret.allowTurret();
                 });
         g2Y.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
