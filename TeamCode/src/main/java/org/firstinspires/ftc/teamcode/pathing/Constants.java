@@ -16,16 +16,16 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(12.65)//V2 robot mass
+            .mass(13.7)//V2.5 robot mass //V2 robot mass = 12.65
             .useSecondaryTranslationalPIDF(true)
             .useSecondaryHeadingPIDF(true)
             .useSecondaryDrivePIDF(true)
-            .lateralZeroPowerAcceleration(-37.32)//-87.57
-            .forwardZeroPowerAcceleration(-35.8)//-52.34
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.35, 0, 0.005, 0))//(0.03, 0, 0, 0))
+            .lateralZeroPowerAcceleration(-68.71)//-37.32)//-87.57
+            .forwardZeroPowerAcceleration(-48.13)//-52.34
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.55, 0, 0.005, 0))//(0.03, 0, 0, 0))
             .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.2, 0, 0.001, 0))//(0.1, 0, 0.01, 0))//just a guess
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.5,0,0.000,0.6,0.015))//(0.09, 0, 0.0001, 0.0, 0.00))
-            .secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(0.09, 0, 0.000005, 0.6, 0.01))//(0.001, 0, 0.00001, 0, 0.01))//just a guess
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.3, 0, 0, 0.6, 0.015))//(0.5,0,0.000,0.6,0.015))//(0.09, 0, 0.0001, 0.0, 0.00))
+            .secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(0.001, 0, 0.00005, 0.6, 0.0001))//(0.09, 0, 0.000005, 0.6, 0.01))//(0.001, 0, 0.00001, 0, 0.01))//just a guess
             .centripetalScaling(0.0005)//(0.001)
             .headingPIDFCoefficients(new PIDFCoefficients(0.9, 0, 0, 0.01))//(1, 0, 0, 0.01))
             .secondaryHeadingPIDFCoefficients(new PIDFCoefficients(0.25, 0, 0.01, -0.0008))//(0.1, 0, 0.01, 0))//just a guess
@@ -43,13 +43,13 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(64.03)
-            .yVelocity(50.0);//(24.53);
+            .xVelocity(61.78)
+            .yVelocity(49.90);//(24.53);
 
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(5.4)//(0)
-            .strafePodX(0)//(-5.4)
+            .forwardPodY(-7)//(5.4)//(0)
+            .strafePodX(-0.125)//(0)//(-5.4)
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("odo")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)

@@ -34,12 +34,16 @@ public class TurretUsingOdo implements Component {
 
     public void setGoalAngle() {
         if (currentPose != null) {
-            goalAngle = Math.atan2(goalY- currentPose.getY(), goalX-currentPose.getX()); // IN RADS
+            goalAngle = -Math.atan2((goalY - this.currentPose.getY()), (goalX - this.currentPose.getX())); // IN RADS
             //goalAngle = Math.toDegrees(goalAngle); // IN DEGREES
             goalDiff = normalizeAngle(goalAngle + currentPose.getHeading());
             error = Math.toDegrees(normalizeAngle(goalDiff - Math.toRadians(this.getTurretAngle())));
-            turretMotor.setPower(0.015*error);
-            ActiveOpMode.telemetry().addData("power", 0.01*error);
+            turretMotor.setPower(0.02*error);
+            ActiveOpMode.telemetry().addData("goal angle", Math.toDegrees(goalAngle));
+            ActiveOpMode.telemetry().addData("goal diff", Math.toDegrees(goalDiff));
+            ActiveOpMode.telemetry().addData("posesesese", currentPose);
+            ActiveOpMode.telemetry().addData("turret angle", this.getTurretAngle());
+
         }
     }
 

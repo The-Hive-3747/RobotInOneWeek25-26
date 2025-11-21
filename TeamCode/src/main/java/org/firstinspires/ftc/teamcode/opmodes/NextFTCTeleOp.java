@@ -75,7 +75,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     @Override
     public void onInit() {
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose((new Pose(0,0,0)));
+        follower.setStartingPose(OpModeTransfer.currentPose);
         follower.update();
 
         turretMotor = hardwareMap.get(DcMotor.class, "turret");
@@ -198,9 +198,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         hood.update();
         flywheel.update();
         BindingManager.update();
-        odoTurret.setCurrentPose(PedroComponent.follower().getPose());
+        odoTurret.setCurrentPose(follower.getPose());
         odoTurret.update();
-        telemetry.addData("turret", (turretMotor.getCurrentPosition()/212)*90);
         telemetry.addData("X2 intake on/off","");
         telemetry.addData("Y2 flywheel on/off","");
         telemetry.addData("B2 hold flipper up/down","");
