@@ -1,17 +1,17 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 import dev.nextftc.core.components.Component;
-import dev.nextftc.core.subsystems.Subsystem;
 import dev.nextftc.ftc.ActiveOpMode;
-import dev.nextftc.hardware.impl.MotorEx;
 
 public class TurretUsingOdo implements Component {
-
-    MotorEx turretMotor;
+    DcMotorEx turret;
     Pose currentPose;
     boolean isRed, allowTurret;
     double goalAngle, goalDiff, goalX, goalY, turretPower, turretGoal;
@@ -19,29 +19,30 @@ public class TurretUsingOdo implements Component {
 
     @Override
     public void postInit() {
-        turretMotor = new MotorEx("turret");
-
-        turretMotor.reverse();
-        turretMotor.zero();
-        turretMotor.atPosition(0);
-        ActiveOpMode.telemetry().addData("pos", turretMotor.getCurrentPosition());
-        ActiveOpMode.telemetry().update();
+        turret = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "turret");
+        turret.setDirection(DcMotorSimple.Direction.REVERSE);
+        turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretPID = ControlSystem.builder()
                 .posPid(0.02, 0, 0.001)
                 .build();
         turretGoal = 0;
-
     }
 
+    @Override
+    public void postStartButtonPressed() {
+        turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
 
     public void update() {
-        turretMotor.zero();
         if (allowTurret) {
-            //setGoalAngle();
+            getGoalAngle();
         } else {
             turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
-            //turretMotor.setPower(turretPower);
         }
+        if (turretPower > 0.5) {
+            turretPower = 0.5;
+        }
+        turret.setPower(turretPower);
         ActiveOpMode.telemetry().addData("goal angle", Math.toDegrees(goalAngle));
         ActiveOpMode.telemetry().addData("goal diff", Math.toDegrees(goalDiff));
         ActiveOpMode.telemetry().addData("posesesese", currentPose);
@@ -49,23 +50,19 @@ public class TurretUsingOdo implements Component {
         ActiveOpMode.telemetry().addData("turret goal", turretGoal);
     }
 
-    public void setGoalAngle() {
+    public void getGoalAngle() {
         if (currentPose != null) {
             goalAngle = -Math.atan2((goalY - this.currentPose.getY()), (goalX - this.currentPose.getX())); // IN RADS
-            //goalAngle = Math.toDegrees(goalAngle); // IN DEGREES
             turretGoal = normalizeAngle(goalAngle + currentPose.getHeading());
             turretPID.setGoal(new KineticState(this.putInTurretLimits(Math.toDegrees(turretGoal))));
-            // error = Math.toDegrees(normalizeAngle(goalDiff - Math.toRadians(this.getTurretAngle())));
-            //turretMotor.setPower(0.02*error);
             turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
-            turretMotor.setPower(turretPower);
         }
     }
 
     public double putInTurretLimits(double goal) {
-        if (goal > 80 || goal <-200) { //insanely horribly code
-            if (goal > 80) {
-                goal = 80;
+        if (goal > 70 || goal <-200) { //insanely horribly code
+            if (goal > 70) {
+                goal = 70;
             } else {
                 goal = -200;
             }
@@ -86,7 +83,7 @@ public class TurretUsingOdo implements Component {
     }
 
     public double getTurretAngle() {
-        return (turretMotor.getCurrentPosition()*90)/212;
+        return (turret.getCurrentPosition()*90)/212;
     }
 
     public static double normalizeAngle(double angleRad) {

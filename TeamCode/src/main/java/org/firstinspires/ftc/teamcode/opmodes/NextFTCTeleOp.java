@@ -49,25 +49,18 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     TurretUsingOdo odoTurret;
 
     Flywheel flywheel;
-    double FLYWHEEL_POWER = 0.8;//0.7;//0.6
     double FLYWHEEL_VEL = 1300; // IN RPM
     double INTAKE_POWER = 0.9;
     private double HOOD_POSITION = 0.0;
-    GoBildaPinpointDriver odo;
     private DcMotor intakeMotor;
     private Servo flipper, light;
-    private double FIRE_POWER = 0.9;//0.3;
+    private double FIRE_POWER = 0.9;
     private CRServo leftFireServo;
     private CRServo rightFireServo;
     private CRServo sideWheelServo;
     private CRServo hoodServo;
     Follower follower;
-    DriverControlledCommand driverControlled;
-    public boolean isRed, allowTurret;
-
-
-
-
+    public boolean isRed;
 
     @Override
     public void onInit() {
@@ -87,21 +80,11 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
         isRed = OpModeTransfer.isRed;
-        allowTurret = true;
         Button g1Back = button(() -> gamepad1.back);
         g1Back.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
                     isRed = !isRed;
                 });
-        driverControlled = new PedroDriverControlled(
-                Gamepads.gamepad1().leftStickY(),
-                Gamepads.gamepad1().leftStickX(),
-                Gamepads.gamepad1().rightStickX(),
-                false
-        );
-
-
-
     }
     @Override
     public void onWaitForStart() {
@@ -114,19 +97,20 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     }
     @Override
     public void onStartButtonPressed() {
+        light.setPosition(0.388);
         follower.startTeleOpDrive();
+        odoTurret.allowTurret();
         odoTurret.setAlliance(isRed);
         Button g2X = button(() -> gamepad2.x);
         Button g2Y = button(() -> gamepad2.y);
         Button g2B = button(() -> gamepad2.b);
         Button g2A = button(() -> gamepad2.a);
-        Button g2LB = button(() -> gamepad2.back);
 
         Button g2Up = button(() -> gamepad2.dpad_up);
         Button g2Down = button(() -> gamepad2.dpad_down);
         Button g1Right = button(() -> gamepad1.dpad_right);
-        Button g1Left = button(() -> gamepad1.dpad_left);
-
+        Button g1Up = button(() -> gamepad1.dpad_up);
+        Button g1Down = button(() -> gamepad1.dpad_down);
 
         g1Right.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
@@ -135,6 +119,21 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 .whenBecomesFalse(() -> {
                     odoTurret.allowTurret();
                 });
+        g1Up.toggleOnBecomesTrue()
+                .whenBecomesTrue(() -> {
+                    flywheel.setTargetVel(FLYWHEEL_VEL);
+                    intakeMotor.setPower(INTAKE_POWER);
+                    leftFireServo.setPower(FIRE_POWER);
+                    sideWheelServo.setPower(FIRE_POWER);
+                })
+                .whenBecomesFalse(() -> {
+                    flywheel.setTargetVel(0);
+                    intakeMotor.setPower(0);
+                    leftFireServo.setPower(0);
+                    sideWheelServo.setPower(0);
+                });
+        g1Down.whenTrue(() -> flipper.setPosition(0.1))
+                .whenFalse(() -> flipper.setPosition(0.52));
         g2Y.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
                     flywheel.setTargetVel(FLYWHEEL_VEL);
@@ -174,10 +173,6 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         g2Down.whenTrue(() -> hoodServo.setPower(-0.1))
                 .whenFalse(() -> hoodServo.setPower(0));
-
-
-
-
     }
     @Override
     public void onUpdate() {
@@ -188,18 +183,11 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 false
         );
         follower.update();
-        telemetry.addData("turret on", allowTurret);
         hood.update();
         flywheel.update();
         BindingManager.update();
         odoTurret.setCurrentPose(follower.getPose());
         odoTurret.update();
-        telemetry.addData("X2 intake on/off","");
-        telemetry.addData("Y2 flywheel on/off","");
-        telemetry.addData("B2 hold flipper up/down","");
-        telemetry.addData("A2 transfer on/off","");
-        telemetry.addLine("Up2 & Down2 for hood");
-        telemetry.addLine("Left1 & Right1 for turret");
         telemetry.update();
     }
 }

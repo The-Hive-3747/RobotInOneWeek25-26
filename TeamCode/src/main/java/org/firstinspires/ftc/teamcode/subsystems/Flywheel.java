@@ -94,20 +94,7 @@ public class Flywheel implements Component {
         flywheelController.setGoal(new KineticState(0, targetVel));
     }
 
-    public void rainbowLight(boolean on) {
-        if (on) {
-            if (colorTimer.milliseconds() > 150) {
-                color += 0.001;
-                if (color>0.772) {
-                    color = 0.279;
-                }
-                colorTimer.reset();
-            }
-            light.setPosition(color);
-        } else {
-            light.setPosition(0);
-        }
-    }
+
 
 
     // simple update function. telling the controller the robot's current velocity, and it returns a motor power
@@ -136,11 +123,6 @@ public class Flywheel implements Component {
             correct = 0;
         }
         flywheels.setPower(correct); // set the motor power!
-        
-        
-        this.rainbowLight(true);
-        
-
         ActiveOpMode.telemetry().addData("flywheel power", correct);
         ActiveOpMode.telemetry().addData("flywheel vel", flywheelVel);
         ActiveOpMode.telemetry().addData("flywheel target vel", targetVel);
@@ -175,7 +157,6 @@ public class Flywheel implements Component {
                 currentRPM = this.getVel();
                 if ((targetVel - currentRPM) < 80) {
                     flipper.setPosition(0.1);
-                    this.rainbowLight(true);
                 } else {
                     flipper.setPosition(0.52);
                 }
