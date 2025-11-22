@@ -2,37 +2,27 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import static dev.nextftc.bindings.Bindings.button;
 
-import com.pedropathing.Drivetrain;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.follower.FollowerConstants;
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.localization.Localizer;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import dev.nextftc.bindings.BindingManager;
 import dev.nextftc.bindings.Button;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
-import dev.nextftc.extensions.pedro.PedroDriverControlled;
 import dev.nextftc.ftc.*;
-import dev.nextftc.hardware.driving.DriverControlledCommand;
 
 import org.firstinspires.ftc.teamcode.helpers.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
-import org.firstinspires.ftc.teamcode.subsystems.FieldCentricDrive;
-import org.firstinspires.ftc.teamcode.helpers.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
-import org.firstinspires.ftc.teamcode.subsystems.TurretTracking;
 import org.firstinspires.ftc.teamcode.subsystems.TurretUsingOdo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@TeleOp
+@TeleOp(name="teleop")
 public class NextFTCTeleOp extends NextFTCOpMode {
     private static final Logger log = LoggerFactory.getLogger(NextFTCTeleOp.class);
 
@@ -60,6 +50,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     private CRServo sideWheelServo;
     private CRServo hoodServo;
     Follower follower;
+    private double color;
     public boolean isRed;
 
     @Override
@@ -97,7 +88,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     }
     @Override
     public void onStartButtonPressed() {
-        light.setPosition(0.388);
+
         follower.startTeleOpDrive();
         odoTurret.allowTurret();
         odoTurret.setAlliance(isRed);
@@ -106,10 +97,12 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g2B = button(() -> gamepad2.b);
         Button g2A = button(() -> gamepad2.a);
 
-        Button g2Up = button(() -> gamepad2.dpad_up);
-        Button g2Down = button(() -> gamepad2.dpad_down);
+        Button gUp = button(() -> gamepad2.dpad_up || gamepad1.dpad_up);
+        Button gDown = button(() -> gamepad2.dpad_down || gamepad1.dpad_down);
         Button g1Right = button(() -> gamepad1.dpad_right);
         Button g1Up = button(() -> gamepad1.dpad_up);
+        Button g1LT = button(() -> gamepad1.left_trigger > 0.1);
+        Button g1RT = button(() -> gamepad1.right_trigger > 0.1);
         Button g1Down = button(() -> gamepad1.dpad_down);
 
         g1Right.toggleOnBecomesTrue()
@@ -119,7 +112,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 .whenBecomesFalse(() -> {
                     odoTurret.allowTurret();
                 });
-        g1Up.toggleOnBecomesTrue()
+        g1RT.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
                     flywheel.setTargetVel(FLYWHEEL_VEL);
                     intakeMotor.setPower(INTAKE_POWER);
@@ -132,8 +125,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                     leftFireServo.setPower(0);
                     sideWheelServo.setPower(0);
                 });
-        g1Down.whenTrue(() -> flipper.setPosition(0.1))
-                .whenFalse(() -> flipper.setPosition(0.52));
+        g1LT.whenTrue(() -> {flipper.setPosition(0.1); color=0.67;})
+                .whenFalse(() -> {flipper.setPosition(0.52); color=0.388;});
+
         g2Y.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
                     flywheel.setTargetVel(FLYWHEEL_VEL);
@@ -168,14 +162,17 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         g2B.whenTrue(() -> flipper.setPosition(0.1))
                 .whenFalse(() -> flipper.setPosition(0.52));
 
-        g2Up.whenTrue(() -> hoodServo.setPower(0.1))
+
+
+        gUp.whenTrue(() -> hoodServo.setPower(0.1))
             .whenFalse(() -> hoodServo.setPower(0));
 
-        g2Down.whenTrue(() -> hoodServo.setPower(-0.1))
+        gDown.whenTrue(() -> hoodServo.setPower(-0.1))
                 .whenFalse(() -> hoodServo.setPower(0));
     }
     @Override
     public void onUpdate() {
+        light.setPosition(color);
         follower.setTeleOpDrive(
                 -gamepad1.left_stick_y,
                 -gamepad1.left_stick_x,

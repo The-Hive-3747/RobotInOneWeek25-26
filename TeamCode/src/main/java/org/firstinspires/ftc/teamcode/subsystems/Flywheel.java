@@ -39,7 +39,7 @@ public class Flywheel implements Component {
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
         light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
-        hood = ActiveOpMode.hardwareMap().get(CRServo.class, "hoodServo");
+        //hood = ActiveOpMode.hardwareMap().get(CRServo.class, "hoodServo");
         flywheelLeft = new MotorEx("flywheelLeft").reversed();
         flywheelRight = new MotorEx("flywheelRight");
         flywheelRight.zero();
