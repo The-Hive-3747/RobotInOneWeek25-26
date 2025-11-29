@@ -7,10 +7,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import dev.nextftc.bindings.BindingManager;
 import dev.nextftc.bindings.Button;
 import dev.nextftc.core.components.BindingsComponent;
+import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.*;
 
@@ -28,8 +30,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
     {
         addComponents(
-                hood = new Hood(),
-                flywheel = new Flywheel(),
+                new SubsystemComponent(Hood.INSTANCE),
+                //flywheel = new Flywheel(),
                 BindingsComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower),
                 odoTurret = new TurretUsingOdo()
@@ -39,6 +41,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     TurretUsingOdo odoTurret;
 
     Flywheel flywheel;
+    private ElapsedTime looptime;
+    private double highestLooptime = 0;
     double FLYWHEEL_VEL = 1300; // IN RPM
     double INTAKE_POWER = 0.9;
     private double HOOD_POSITION = 0.0;
@@ -48,7 +52,6 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     private CRServo leftFireServo;
     private CRServo rightFireServo;
     private CRServo sideWheelServo;
-    private CRServo hoodServo;
     Follower follower;
     private double color;
     public boolean isRed;
@@ -59,7 +62,6 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         follower.setStartingPose(OpModeTransfer.currentPose);
         follower.update();
 
-        hoodServo = hardwareMap.get(CRServo.class, "hoodServo");
         intakeMotor = hardwareMap.get(DcMotor.class, "transfer");
         flipper = hardwareMap.get(Servo.class, "flipper");
         leftFireServo = hardwareMap.get(CRServo.class, "left_firewheel");
@@ -76,6 +78,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 .whenBecomesTrue(() -> {
                     isRed = !isRed;
                 });
+        looptime = new ElapsedTime();
     }
     @Override
     public void onWaitForStart() {
@@ -104,6 +107,10 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g1LT = button(() -> gamepad1.left_trigger > 0.1);
         Button g1RT = button(() -> gamepad1.right_trigger > 0.1);
         Button g1Down = button(() -> gamepad1.dpad_down);
+        Button gUpOrDown = gUp.or(gDown);
+
+        Button g1A = button(() -> gamepad1.a);
+        Button g1B = button(() -> gamepad1.b);
 
         g1Right.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
@@ -164,14 +171,25 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
 
 
-        gUp.whenTrue(() -> hoodServo.setPower(0.1))
-            .whenFalse(() -> hoodServo.setPower(0));
+        gUpOrDown.whenBecomesFalse(() -> {
+                    hood.INSTANCE.setGoal(hood.INSTANCE.getHoodPosition());
+                    hood.INSTANCE.setHoodPower(0);
+                });
+        gUp.whenTrue(() -> hood.INSTANCE.setHoodPower(0.1));
+        gDown.whenTrue(() -> hood.INSTANCE.setHoodPower(-0.1));
 
-        gDown.whenTrue(() -> hoodServo.setPower(-0.1))
-                .whenFalse(() -> hoodServo.setPower(0));
+        g1A.whenBecomesTrue(() -> {
+            hood.INSTANCE.setGoal(hood.INSTANCE.getGoal() + 250);
+        });
+        g1B.whenBecomesTrue(() -> {
+            hood.INSTANCE.setGoal(hood.INSTANCE.getGoal() - 250);
+        });
+
+
     }
     @Override
     public void onUpdate() {
+        looptime.reset();
         light.setPosition(color);
         follower.setTeleOpDrive(
                 -gamepad1.left_stick_y,
@@ -180,11 +198,15 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 false
         );
         follower.update();
-        hood.update();
-        flywheel.update();
+        //flywheel.update();
         BindingManager.update();
         odoTurret.setCurrentPose(follower.getPose());
-        odoTurret.update();
+        //odoTurret.update();
+        if (looptime.milliseconds() > highestLooptime) {
+            highestLooptime = looptime.milliseconds();
+        }
+        telemetry.addData("looptime (ms)", looptime.milliseconds());
+        telemetry.addData("highest looptime (ms)", highestLooptime);
         telemetry.update();
     }
 }

@@ -43,7 +43,7 @@ public class Flywheel implements Component {
         flywheelLeft = new MotorEx("flywheelLeft").reversed();
         flywheelRight = new MotorEx("flywheelRight");
         flywheelRight.zero();
-
+        flywheelLeft.zero();
         flywheels = new MotorGroup(flywheelLeft, flywheelRight);
         flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
 
@@ -67,7 +67,7 @@ public class Flywheel implements Component {
         hoodController.setGoal(new KineticState(targetHoodPos));
     }
     public double getHoodPos() {
-        return (flywheelLeft.getCurrentPosition()+21)/37;//2000;
+        return (flywheelLeft.getRawTicks());//2000;
     }
 
     // sets motor power DONT use this method normally, its not smart
@@ -127,7 +127,7 @@ public class Flywheel implements Component {
         ActiveOpMode.telemetry().addData("flywheel vel", flywheelVel);
         ActiveOpMode.telemetry().addData("flywheel target vel", targetVel);
         ActiveOpMode.telemetry().addData("balls shot", shotCount);
-        ActiveOpMode.telemetry().addData("hood pos", hoodPos);
+        ActiveOpMode.telemetry().addData("hood pos", this.getHoodPos());
         ActiveOpMode.telemetry().addData("rightVel", -flywheelRight.getVelocity());
     }
 

@@ -1,29 +1,95 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import dev.nextftc.core.components.Component;
+import dev.nextftc.control.ControlSystem;
+import dev.nextftc.control.KineticState;
+import dev.nextftc.core.subsystems.Subsystem;
 import dev.nextftc.ftc.ActiveOpMode;
 
-public class Hood implements Component {
+public class Hood implements Subsystem {
+    public static final Hood INSTANCE = new Hood();
+    private Hood() {}
+
+    private double HOOD_MAX_POS = 2400;
+    private double HOOD_MIN_POS = 0;
+    private double power = 0;
+    public boolean allowPID = true;
+
+    private static double HOOD_P = 0.0012;
+    private KineticState goal;
+
+    ControlSystem hoodPID;
     CRServo hood;
+    DcMotor hoodEncoder;
 
-    AnalogInput hoodEncoder;
     @Override
-    public void postInit() {
+    public void initialize() {
         hood = ActiveOpMode.hardwareMap().get(CRServo.class, "hoodServo");
+        hood.setDirection(DcMotorSimple.Direction.REVERSE);
+        hoodEncoder = ActiveOpMode.hardwareMap().get(DcMotor.class, "flywheelLeft");
+        hoodEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hoodEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        // default goal value
+        goal = new KineticState(0);
+
+        hoodPID = ControlSystem.builder()
+                .posPid(HOOD_P)
+                .build();
+        hoodPID.setGoal(goal); // set default goal to 0
+
+        allowPID = true;
     }
 
-    public void update() {
-        if (ActiveOpMode.gamepad2().dpad_up) {
-            hood.setPower(-1.0);
-        } else if (ActiveOpMode.gamepad2().dpad_down){
-            hood.setPower(1);
-        } else {
-            hood.setPower(0.0);
+
+    public double getHoodPosition() {
+        return hoodEncoder.getCurrentPosition();
+    }
+
+    public void setGoal(double goalPos) {
+        enableHoodPID();
+        if (goalPos > HOOD_MAX_POS) {
+            goalPos = HOOD_MAX_POS;
+        } else if (goalPos < HOOD_MIN_POS) {
+            goalPos = HOOD_MIN_POS;
         }
+        goal = new KineticState(goalPos);
+        hoodPID.setGoal(goal);
+    }
+
+    public double getGoal() {
+        return goal.component1();
+    }
+
+    public void setHoodPower(double hoodPower) {
+        allowPID = false;
+        hood.setPower(hoodPower);
+    }
+
+    public void enableHoodPID() {
+        allowPID = true;
+    }
+
+    @Override
+    public void periodic() {
+        if (allowPID) {
+            power = hoodPID.calculate(new KineticState(this.getHoodPosition()));
+            if (power > 1) {
+                power = 1;
+            } else if (power < -1) {
+                power = -1;
+            }
+            hood.setPower(power);
+        }
+
+        ActiveOpMode.telemetry().addData("hoodPos", this.getHoodPosition());
+        ActiveOpMode.telemetry().addData("hoodAllowed", allowPID);
+        /*
+        ActiveOpMode.telemetry().addData("hoodPower", power);
+        ActiveOpMode.telemetry().addData("hoodGoal", hoodPID.getGoal());
+        ActiveOpMode.telemetry().addData("hoodPos", this.getHoodPosition());*/
     }
 }
