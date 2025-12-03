@@ -6,7 +6,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
-//Eschew this because I was tripping, i will push onto git from my mac or do sum else -yers
+
 public class LimelightComponent implements Component{
     private Limelight3A limelight;
     private boolean hasTarget = false;
@@ -14,14 +14,19 @@ public class LimelightComponent implements Component{
     private double targetY= 0.0;
     private double targetArea = 0.0;
     private double targetHeading = 0.0;
-    private int aprilTagId;
+    private int aprilTagId = -1;
+    private double robotX = 0.0;
+    private double robotY = 0.0;
+    private double robotHeading = 0.0;
+
 
     public void init() {
         limelight = ActiveOpMode.hardwareMap().get(Limelight3A.class, "Limelight");
         limelight.start();
     }
 
-    public void update() {
+    public void update(double currentHeadingDegrees) {
+        limelight.updateRobotOrientation(currentHeadingDegrees);
         LLResult result = limelight.getLatestResult();
 
         if(result != null && result.isValid()) {
@@ -31,9 +36,16 @@ public class LimelightComponent implements Component{
             targetArea = result.getTa();
             Pose3D botpose = result.getBotpose();
             if(botpose != null) {
-                targetHeading = botpose.getOrientation().getYaw();
+                robotX = botpose.getPosition().x;
+                robotY = botpose.getPosition().y;
+                robotHeading = botpose.getOrientation().getYaw();
+                targetHeading = robotHeading;
             }
-
+            if(result.getFiducialResults() != null && !result.getFiducialResults().isEmpty()) {
+                aprilTagId = (int) result.getFiducialResults().get(0).getFiducialId();
+            } else {
+                aprilTagId = -1;
+            }
         }
     }
 
@@ -55,5 +67,8 @@ public class LimelightComponent implements Component{
     }
     public int getAprilTagId() {
         return aprilTagId;
+    }
+    public boolean hasValidBotPose() {
+        return hasTarget && (robotX!=0.0 || robotY!=0.0);
     }
 }
