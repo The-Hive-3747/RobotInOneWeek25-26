@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.helpers.GoBildaPinpointDriver;
+import org.firstinspires.ftc.teamcode.vision.limelight.LimelightComponent;
 
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.core.components.Component;
@@ -12,6 +13,7 @@ import dev.nextftc.hardware.impl.MotorEx;
 
 public class FieldCentricDrive implements Component {
     GoBildaPinpointDriver odo;
+    private LimelightComponent limelightComponent;
     MotorEx frontLeft, frontRight, backLeft, backRight;
     Gamepad gamepad;
     @Override
@@ -21,6 +23,8 @@ public class FieldCentricDrive implements Component {
         backLeft = new MotorEx("backLeftMotor").brakeMode();
         backRight = new MotorEx("backRightMotor").brakeMode();
         odo = ActiveOpMode.hardwareMap().get(GoBildaPinpointDriver.class, "odo");
+        limelightComponent = new LimelightComponent();
+        limelightComponent.init();
     }
 
     @Override
@@ -36,6 +40,14 @@ public class FieldCentricDrive implements Component {
 
     public void update() {
                     odo.update();
+                    limelightComponent.update();
+                    if(limelightComponent.hasTarget()) {
+                        double limelightX = limelightComponent.getTargetX();
+                        double limelightY = limelightComponent.getTargetY();
+                        double limelightHeading = limelightComponent.getTargetHeading();
+                    }
+
+
                     double y = -gamepad.left_stick_y ; //y
                     double x = gamepad.left_stick_x;
                     double rx = gamepad.right_stick_x; //rx

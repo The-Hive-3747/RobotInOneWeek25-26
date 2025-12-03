@@ -4,6 +4,8 @@ import dev.nextftc.core.components.Component;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+
 //Eschew this because I was tripping, i will push onto git from my mac or do sum else -yers
 public class LimelightComponent implements Component{
     private Limelight3A limelight;
@@ -11,6 +13,7 @@ public class LimelightComponent implements Component{
     private double targetX = 0.0;
     private double targetY= 0.0;
     private double targetArea = 0.0;
+    private double targetHeading = 0.0;
     private int aprilTagId;
 
     public void init() {
@@ -26,7 +29,31 @@ public class LimelightComponent implements Component{
             targetX = result.getTx();
             targetY = result.getTy();
             targetArea = result.getTa();
+            Pose3D botpose = result.getBotpose();
+            if(botpose != null) {
+                targetHeading = botpose.getOrientation().getYaw();
+            }
+
         }
     }
 
+    public boolean hasTarget() {
+        return hasTarget;
+    }
+    public double getTargetX() {
+        return targetX;
+    }
+    public double getTargetY() {
+        return targetY;
+    }
+    public double getTargetArea() {
+        return targetArea;
+    }
+
+    public double getTargetHeading() {
+        return targetHeading;
+    }
+    public int getAprilTagId() {
+        return aprilTagId;
+    }
 }

@@ -52,7 +52,7 @@ public class TurretTracking implements Component{
     }
 
     public void update() {
-        LLResult result = limelight.getLatestResult();
+        /*LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid() && !result.getFiducialResults().isEmpty()) {
 
             //if (Math.abs(correct) < 0.1) {
@@ -80,7 +80,7 @@ public class TurretTracking implements Component{
             }
             if (!foundTag) {
                 turretMotor.setPower(0);
-            }
+            }*/
 
 
 
@@ -97,7 +97,7 @@ public class TurretTracking implements Component{
 
         }
 
-    }
+
 
 
 

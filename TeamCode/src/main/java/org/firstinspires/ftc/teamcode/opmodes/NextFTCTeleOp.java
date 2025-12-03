@@ -31,7 +31,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     {
         addComponents(
                 new SubsystemComponent(Hood.INSTANCE),
-                //flywheel = new Flywheel(),
+                flywheel = new Flywheel(),
                 BindingsComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower),
                 odoTurret = new TurretUsingOdo()
@@ -198,10 +198,10 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 false
         );
         follower.update();
-        //flywheel.update();
+        flywheel.update();
         BindingManager.update();
         odoTurret.setCurrentPose(follower.getPose());
-        //odoTurret.update();
+        odoTurret.update();
         if (looptime.milliseconds() > highestLooptime) {
             highestLooptime = looptime.milliseconds();
         }

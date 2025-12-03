@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -13,6 +15,8 @@ import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.hardware.controllable.MotorGroup;
 import dev.nextftc.hardware.impl.MotorEx;
+import dev.nextftc.core.components.Component;
+
 
 
 // This is a component file for the flywheel / shooter.
@@ -46,6 +50,13 @@ public class Flywheel implements Component {
         flywheelLeft.zero();
         flywheels = new MotorGroup(flywheelLeft, flywheelRight);
         flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
+
+        hood = ActiveOpMode.hardwareMap().get(CRServo.class, "hoodServo");
+        hood.setDirection(DcMotorSimple.Direction.REVERSE);
+        /* These lines are a bad idea because they will affect our shooting motor.
+        hoodEncoder = ActiveOpMode.hardwareMap().get(DcMotor.class, "flywheelLeft");
+        hoodEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hoodEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);*/
 
         hoodController = ControlSystem.builder()
                 .posPid(0.5)
