@@ -9,9 +9,7 @@ import dev.nextftc.control.KineticState;
 import dev.nextftc.core.subsystems.Subsystem;
 import dev.nextftc.ftc.ActiveOpMode;
 
-public class Hood implements Subsystem {
-    public static final Hood INSTANCE = new Hood();
-    private Hood() {}
+public class Hood {
 
     private double HOOD_MAX_POS = 2400;
     private double HOOD_MIN_POS = 0;
@@ -25,13 +23,13 @@ public class Hood implements Subsystem {
     CRServo hood;
     DcMotor hoodEncoder;
 
-    @Override
-    public void initialize() {
+    public Hood(DcMotor encoder) {
+        hoodEncoder = encoder;
+    }
+
+    public void init() {
         hood = ActiveOpMode.hardwareMap().get(CRServo.class, "hoodServo");
         hood.setDirection(DcMotorSimple.Direction.REVERSE);
-        hoodEncoder = ActiveOpMode.hardwareMap().get(DcMotor.class, "flywheelLeft");
-        hoodEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        hoodEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // default goal value
         goal = new KineticState(0);
@@ -73,8 +71,9 @@ public class Hood implements Subsystem {
         allowPID = true;
     }
 
-    @Override
-    public void periodic() {
+
+
+    public void update() {
         if (allowPID) {
             power = hoodPID.calculate(new KineticState(this.getHoodPosition()));
             if (power > 1) {

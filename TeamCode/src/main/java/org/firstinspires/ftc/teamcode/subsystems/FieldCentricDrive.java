@@ -41,7 +41,7 @@ public class FieldCentricDrive implements Component {
 
     public void update() {
                     odo.update();
-                    limelightComponent.update();
+                    //limelightComponent.update();
                     if(limelightComponent.hasTarget()) {
                         double limelightX = limelightComponent.getTargetX();
                         double limelightY = limelightComponent.getTargetY();

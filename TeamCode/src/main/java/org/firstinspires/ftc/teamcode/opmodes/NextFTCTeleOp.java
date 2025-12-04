@@ -30,7 +30,6 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
     {
         addComponents(
-                new SubsystemComponent(Hood.INSTANCE),
                 flywheel = new Flywheel(),
                 BindingsComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower),
@@ -172,17 +171,17 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
 
         gUpOrDown.whenBecomesFalse(() -> {
-                    hood.INSTANCE.setGoal(hood.INSTANCE.getHoodPosition());
-                    hood.INSTANCE.setHoodPower(0);
+                    flywheel.setHoodGoalPos(flywheel.getHoodPos());
+                    flywheel.setHoodPower(0);
                 });
-        gUp.whenTrue(() -> hood.INSTANCE.setHoodPower(0.1));
-        gDown.whenTrue(() -> hood.INSTANCE.setHoodPower(-0.1));
+        gUp.whenTrue(() -> flywheel.setHoodPower(0.1));
+        gDown.whenTrue(() -> flywheel.setHoodPower(-0.1));
 
         g1A.whenBecomesTrue(() -> {
-            hood.INSTANCE.setGoal(hood.INSTANCE.getGoal() + 250);
+            flywheel.setHoodGoalPos(flywheel.getHoodGoal() + 250);
         });
         g1B.whenBecomesTrue(() -> {
-            hood.INSTANCE.setGoal(hood.INSTANCE.getGoal() - 250);
+            flywheel.setHoodGoalPos(flywheel.getHoodGoal() - 250);
         });
 
 
