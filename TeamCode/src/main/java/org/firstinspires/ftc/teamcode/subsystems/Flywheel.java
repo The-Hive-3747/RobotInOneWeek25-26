@@ -1,9 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -13,20 +11,27 @@ import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
+import dev.nextftc.hardware.controllable.MotorGroup;
+import dev.nextftc.hardware.impl.MotorEx;
 
 
 // This is a component file for the flywheel / shooter.
 public class Flywheel implements Component {
 
-    DcMotorEx flywheelLeft, flywheelRight;
-    static double correct, flywheelVel, targetVel, currentRPM;
-
+    MotorEx flywheelLeft, flywheelRight;
+    static double GOBILDA_TICKS_PER_REVOLUTION = 4096;
+    static double correct, flywheelVel, targetVel, currentRPM, targetHoodPos, correctHood, oldPos, currentPos, color, hoodPos;
+    static double SECONDS_TO_MINUTES = 60.0;
+    MotorGroup flywheels;
+    static double pastRPM = 0;
     static double shotCount = 0;
+    static boolean shotCountJustChanged = false;
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime colorTimer = new ElapsedTime();
-    ControlSystem flywheelController;
-    Servo light, flipper;
-    Hood hood;
+    ControlSystem flywheelController, hoodController;
+    Servo light;
+    CRServo hood;
+    Servo flipper;
 
     double autoTargetVel = 1100;
     double kV = 0.0004;
@@ -34,24 +39,18 @@ public class Flywheel implements Component {
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
         light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
-        flywheelLeft = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "flywheelLeft");
-        flywheelLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        flywheelRight = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "flywheelRight");
+        //hood = ActiveOpMode.hardwareMap().get(CRServo.class, "hoodServo");
+        flywheelLeft = new MotorEx("flywheelLeft").reversed();
+        flywheelRight = new MotorEx("flywheelRight");
+        flywheelRight.zero();
 
-        flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-        flywheelLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flywheelRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        flywheelLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        flywheelRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
+        flywheels = new MotorGroup(flywheelLeft, flywheelRight);
         flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
 
-        hood = new Hood(flywheelLeft);
-        hood.init();
-
+        hoodController = ControlSystem.builder()
+                .posPid(0.5)
+                .build();
+        targetHoodPos = 0;
 
         // a control system is NextFTC's way to build.. control systems!
         flywheelController = ControlSystem.builder()
@@ -63,20 +62,28 @@ public class Flywheel implements Component {
         colorTimer.reset();
     }
 
-
+    public void setHoodPos(double pos) {
+        targetHoodPos = pos;
+        hoodController.setGoal(new KineticState(targetHoodPos));
+    }
+    public double getHoodPos() {
+        return (flywheelLeft.getCurrentPosition()+21)/37;//2000;
+    }
 
     // sets motor power DONT use this method normally, its not smart
     public void setPower(double power) {
-        flywheelLeft.setPower(power);
-        flywheelRight.setPower(power);
+        flywheels.setPower(power);
     }
     // gets motor power
     public double getPower() {
-        return flywheelRight.getPower();
+        return flywheels.getPower();
 
     }
     // gets motor velocity. needs to convert from TPS (ticks per second) to RPM
     public double getVel() {
+        // NEED TO DO SOME MATH HERE!!!
+        // getVelocity() returns a val in Ticks Per Second, so we divide by the Ticks Per Seconds by Ticks Per Revolution
+        // Then we get Revolutions Per Second, so we need to multiply by 60 to convert it to Revolutions Per Minute (RPM)
         return (flywheelRight.getVelocity()); // GOBILDA_TICKS_PER_REVOLUTION)*SECONDS_TO_MINUTES;
     }
 
@@ -93,7 +100,12 @@ public class Flywheel implements Component {
     // simple update function. telling the controller the robot's current velocity, and it returns a motor power
     public void update() {
         flywheelVel = this.getVel();
+        //hoodPos = this.getHoodPos();
 
+        /*correctHood = hoodController.calculate(
+            new KineticState(hoodPos)
+        );*/
+        //hood.setPower(Math.abs(correctHood) > 0.2 ? correctHood : 0);
         // correct is the motor power we need to set!
         correct = flywheelController.calculate( // calculate() lets us plug in current vals and outputs a motor power
                 new KineticState(0, flywheelVel) // a KineticState is NextFTC's way of storing position, velocity, and acceleration all in one variable
@@ -110,39 +122,14 @@ public class Flywheel implements Component {
         } else {
             correct = 0;
         }
-        this.setPower(correct); // set the motor power!
-
-        hood.update();
-
+        flywheels.setPower(correct); // set the motor power!
         ActiveOpMode.telemetry().addData("flywheel power", correct);
         ActiveOpMode.telemetry().addData("flywheel vel", flywheelVel);
         ActiveOpMode.telemetry().addData("flywheel target vel", targetVel);
         ActiveOpMode.telemetry().addData("balls shot", shotCount);
+        ActiveOpMode.telemetry().addData("hood pos", hoodPos);
         ActiveOpMode.telemetry().addData("rightVel", -flywheelRight.getVelocity());
     }
-
-    // HOOD FUNCTIONS
-    public double getHoodPos() {
-        return hood.getHoodPosition();
-    }
-
-    public void setHoodGoalPos(double pos) {
-        hood.setGoal(pos);
-    }
-
-    public double getHoodGoal() {
-        return hood.getGoal();
-    }
-
-    public void setHoodPower(double pow) {
-        hood.setHoodPower(pow);
-    }
-
-    public void enableHoodPid() {
-        hood.enableHoodPID();
-    }
-
-
 
     public Command startFlywheel = new LambdaCommand()
             .setStart(() -> {
