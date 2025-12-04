@@ -14,7 +14,7 @@ public class TurretUsingOdo implements Component {
     DcMotorEx turret;
     Pose currentPose;
     boolean isRed, allowTurret;
-    double goalAngle, goalDiff, goalX, goalY, turretPower, turretGoal;
+    double goalAngle, goalDiff, goalX, goalY, turretPower, turretGoal, lastHeading, currentHeading, lastTurret;
     ControlSystem turretPID;
 
     @Override
@@ -22,32 +22,43 @@ public class TurretUsingOdo implements Component {
         turret = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "turret");
         turret.setDirection(DcMotorSimple.Direction.REVERSE);
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         turretPID = ControlSystem.builder()
-                .posPid(0.02, 0, 0.001)
+                .posPid(0.01, 0, 0.002)
                 .build();
         turretGoal = 0;
     }
 
     @Override
     public void postStartButtonPressed() {
-        turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        turret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     public void update() {
         if (allowTurret) {
             getGoalAngle();
         } else {
+            //turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
         }
-        if (turretPower > 0.5) {
-            turretPower = 0.5;
+        if (turretPower > 0.4) {
+            turretPower = 0.4;
         }
-        turret.setPower(turretPower);
+        if (turret.getMode().equals(DcMotor.RunMode.STOP_AND_RESET_ENCODER)) {
+            turret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+        if (currentPose.getY() > 70) {
+            turret.setPower(turretPower);
+        } else {
+            turret.setPower(0);
+        }
+        /*
         ActiveOpMode.telemetry().addData("goal angle", Math.toDegrees(goalAngle));
         ActiveOpMode.telemetry().addData("goal diff", Math.toDegrees(goalDiff));
         ActiveOpMode.telemetry().addData("posesesese", currentPose);
         ActiveOpMode.telemetry().addData("turret angle", this.getTurretAngle());
-        ActiveOpMode.telemetry().addData("turret goal", turretGoal);
+        ActiveOpMode.telemetry().addData("turret goal", turretGoal);*/
+        ActiveOpMode.telemetry().addData("turret angle", this.getTurretAngle());
     }
 
     public void getGoalAngle() {
@@ -60,11 +71,11 @@ public class TurretUsingOdo implements Component {
     }
 
     public double putInTurretLimits(double goal) {
-        if (goal > 70 || goal <-200) { //insanely horribly code
+        if (goal > 70 || goal < -180) { //insanely horribly code
             if (goal > 70) {
                 goal = 70;
             } else {
-                goal = -200;
+                goal = -180;
             }
         }
         return goal;
@@ -100,10 +111,10 @@ public class TurretUsingOdo implements Component {
     public void setAlliance(boolean alliance) {
         this.isRed = alliance;
         if (alliance) {
-            goalX = 144;
+            goalX = 150;
             goalY = 144;
         } else {
-            goalX = 0;
+            goalX = 6;
             goalY = 144;
         }
     }
