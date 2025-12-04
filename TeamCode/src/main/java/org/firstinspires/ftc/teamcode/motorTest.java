@@ -3,6 +3,9 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.subsystems.FieldCentricDrive;
 
@@ -12,23 +15,30 @@ import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.hardware.impl.MotorEx;
 
 
-@Disabled
+//@Disabled
 @TeleOp(name= "motor test")
 public class motorTest extends NextFTCOpMode {
     {
         addComponents(
-                drive = new FieldCentricDrive(),
+                //drive = new FieldCentricDrive(),
                 BindingsComponent.INSTANCE
         );
     }
     FieldCentricDrive drive;
-    MotorEx frontLeft, frontRight, backLeft, backRight, flyLeft, flyRight, turret;
+    MotorEx frontLeft, frontRight, backLeft, backRight, flyLeft, flyRight;
+    DcMotorEx turret;
     CRServo leftFireServo, rightFireServo, sideWheelServo, hood;
 
 
 
     @Override
     public void onInit() {
+        turret = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "turret");
+
+        turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        telemetry.addData("turret ticks", turret.getCurrentPosition());
+        telemetry.update();
         frontLeft = new MotorEx("frontLeftMotor").brakeMode();
         frontRight = new MotorEx("frontRightMotor").brakeMode();
         backLeft = new MotorEx("backLeftMotor").brakeMode();
@@ -45,9 +55,11 @@ public class motorTest extends NextFTCOpMode {
 
     @Override
     public void onUpdate() {
+        telemetry.addData("turret ticks", (turret.getCurrentPosition()*90)/6100);
+        telemetry.update();
         if (gamepad1.dpad_up) {
-            flyLeft.setPower(1); } else {
-            flyLeft.setPower(0);
+            turret.setPower(0.5); } else {
+            turret.setPower(0);
         }
         if (gamepad1.dpad_down) {
             flyRight.setPower(1); } else {

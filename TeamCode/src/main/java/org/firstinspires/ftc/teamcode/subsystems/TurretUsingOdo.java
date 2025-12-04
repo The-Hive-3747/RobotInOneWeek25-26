@@ -20,33 +20,30 @@ public class TurretUsingOdo implements Component {
     @Override
     public void postInit() {
         turret = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "turret");
-        turret.setDirection(DcMotorSimple.Direction.REVERSE);
+
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         turretPID = ControlSystem.builder()
-                .posPid(0.01, 0, 0.002)
+                .posPid(0.015, 0, 0.01)
                 .build();
         turretGoal = 0;
     }
 
-    @Override
-    public void postStartButtonPressed() {
-        turret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
 
     public void update() {
         if (allowTurret) {
             getGoalAngle();
         } else {
-            //turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
         }
         if (turretPower > 0.4) {
             turretPower = 0.4;
+        } else if (Math.abs(turretPower) < 0.1 ) {
+            turretPower = 0;
         }
-        if (turret.getMode().equals(DcMotor.RunMode.STOP_AND_RESET_ENCODER)) {
-            turret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
+
+        turretPower *= -1;
         if (currentPose.getY() > 70) {
             turret.setPower(turretPower);
         } else {
@@ -58,6 +55,8 @@ public class TurretUsingOdo implements Component {
         ActiveOpMode.telemetry().addData("posesesese", currentPose);
         ActiveOpMode.telemetry().addData("turret angle", this.getTurretAngle());
         ActiveOpMode.telemetry().addData("turret goal", turretGoal);*/
+        ActiveOpMode.telemetry().addData("turret goal", turretPID.getGoal().component1());
+        ActiveOpMode.telemetry().addData("turret power", turretPower);
         ActiveOpMode.telemetry().addData("turret angle", this.getTurretAngle());
     }
 
@@ -94,7 +93,7 @@ public class TurretUsingOdo implements Component {
     }
 
     public double getTurretAngle() {
-        return (turret.getCurrentPosition()*90)/212;
+        return (turret.getCurrentPosition()*90)/6100;
     }
 
     public static double normalizeAngle(double angleRad) {

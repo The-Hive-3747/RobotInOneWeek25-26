@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import dev.nextftc.control.ControlSystem;
@@ -21,9 +22,9 @@ public class Hood {
 
     ControlSystem hoodPID;
     CRServo hood;
-    DcMotor hoodEncoder;
+    DcMotorEx hoodEncoder;
 
-    public Hood(DcMotor encoder) {
+    public Hood(DcMotorEx encoder) {
         hoodEncoder = encoder;
     }
 
@@ -44,7 +45,7 @@ public class Hood {
 
 
     public double getHoodPosition() {
-        return hoodEncoder.getCurrentPosition();
+        return -hoodEncoder.getCurrentPosition();
     }
 
     public void setGoal(double goalPos) {
