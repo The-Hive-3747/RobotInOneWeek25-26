@@ -5,9 +5,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@Disabled
+//@Disabled
 @TeleOp
 public class intakeTest extends LinearOpMode {
     private DcMotor intakeMotor;
@@ -15,7 +16,9 @@ public class intakeTest extends LinearOpMode {
     private CRServo rightFireServo;
     private CRServo sideWheelServo;
     private Servo flipper;
-    private DcMotor flywheelMotor;
+    private DcMotor flywheelLeft;
+    private DcMotor flywheelRight;
+
     private double INTAKE_POWER = 0.9;//0.5;
     private double INTAKE_POWER_STEP = 0.05;
     private double FIRE_POWER = 0.9;//0.3;
@@ -40,25 +43,30 @@ public class intakeTest extends LinearOpMode {
     private boolean was1DpadLeftPressed = false;
     private boolean was1DpadRightPressed = false;
 
+
     @Override
     public void runOpMode() {
         intakeMotor = hardwareMap.get(DcMotor.class, "transfer");
         leftFireServo = hardwareMap.get(CRServo.class, "left_firewheel");
         rightFireServo = hardwareMap.get(CRServo.class, "right_firewheel");
-        flywheelMotor = hardwareMap.get(DcMotor.class, "flywheel");
+        flywheelLeft = hardwareMap.get(DcMotor.class, "flywheelLeft");
+        flywheelRight = hardwareMap.get(DcMotor.class, "flywheelRight");
+
         sideWheelServo = hardwareMap.get(CRServo.class, "side-wheel");
         flipper = hardwareMap.get(Servo.class, "flipper");
         Servo hoodServo = hardwareMap.get(Servo.class, "hoodServo");
         sideWheelServo.setDirection(CRServo.Direction.REVERSE);
         //leftFireServo.setDirection(CRServo.Direction.REVERSE);
         rightFireServo.setDirection(CRServo.Direction.REVERSE);
-        flywheelMotor.setDirection(DcMotor.Direction.REVERSE);
+        flywheelLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         intakeMotor.setDirection(DcMotor.Direction.REVERSE);
+        flywheelLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        flywheelRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         waitForStart();
 
         flipper.setPosition(0.4);
-        hoodServo.setPosition(HOOD_POSITION);
-
+        //hoodServo.setPosition(HOOD_POSITION);
         while (opModeIsActive()){
             //this is for intake
             if(gamepad1.a && !wasAPressed){
@@ -164,10 +172,12 @@ public class intakeTest extends LinearOpMode {
             //this is for the flywheel
             if(gamepad1.y && !wasY1Pressed){
                 if (!isFlywheelOn){
-                    flywheelMotor.setPower(FLYWHEEL_POWER);
+                    flywheelLeft.setPower(FLYWHEEL_POWER);
+                    flywheelRight.setPower(FLYWHEEL_POWER);
                     isFlywheelOn = true;
                 }else{
-                    flywheelMotor.setPower(0);
+                    flywheelLeft.setPower(0);
+                    flywheelRight.setPower(0);
                     isFlywheelOn = false;
                 }
                 wasY1Pressed = true;
@@ -208,7 +218,9 @@ public class intakeTest extends LinearOpMode {
                     FLYWHEEL_POWER_STEP = -1.0;
                 }
                 if(isFlywheelOn){
-                    flywheelMotor.setPower(FLYWHEEL_POWER);
+                    flywheelLeft.setPower(FLYWHEEL_POWER);
+                    flywheelRight.setPower(FLYWHEEL_POWER);
+
                 }
             }
             if(!gamepad2.dpad_left && was2DpadLeftPressed){
@@ -221,7 +233,9 @@ public class intakeTest extends LinearOpMode {
                     FLYWHEEL_POWER = 1.0;
                 }
                 if(isFlywheelOn){
-                    flywheelMotor.setPower(FLYWHEEL_POWER);
+                    flywheelLeft.setPower(FLYWHEEL_POWER);
+                    flywheelRight.setPower(FLYWHEEL_POWER);
+
                 }
             }
             if(!gamepad2.dpad_right && was2DpadRightPressed){
@@ -230,6 +244,8 @@ public class intakeTest extends LinearOpMode {
             telemetry.addData("Intake Power", INTAKE_POWER);
             telemetry.addData("Fire Servos Power", FIRE_POWER);
             telemetry.addData("Flywheel Power", FLYWHEEL_POWER);
+            //telemetry.addData("Flywheel Velocity", flywheelRight.getVelocity());
+            telemetry.addData("Hood Servo Position", hoodServo.getPosition());
             telemetry.addData("Press Gamepad 2 X to decrease the intake power by 5%", "");
             telemetry.addData("Press Gamepad 2 B to increase the intake power by 5%", "");
             telemetry.addData("Press Gamepad 1 A to toggle the intake","");
@@ -238,11 +254,10 @@ public class intakeTest extends LinearOpMode {
             telemetry.addData("Press Gamepad 1 B to toggle the fire servos","");
             telemetry.addData("Press Gamepad 2 Dpad Left to decrease the flywheel power by 5%", "");
             telemetry.addData("Press Gamepad 2 Dpad Right increase the flywheel power by 5%", "");
-            telemetry.addData("Press Gamepad 1 Y to toggle the flywheel","");
+            telemetry.addData("Press Gamepad 1hood Y to toggle the flywheel","");
             telemetry.addData("Press Gamepad 1 X to toggle the Flipper","");
             telemetry.addData("Press Gamepad 1 Dpad Left to decrease the hood servo position", "");
             telemetry.addData("Press Gamepad 1 Dpad Right increase the hood servo position", "");
-            telemetry.addData("Hood Servo Position", hoodServo.getPosition());
             telemetry.update();
         }
     }

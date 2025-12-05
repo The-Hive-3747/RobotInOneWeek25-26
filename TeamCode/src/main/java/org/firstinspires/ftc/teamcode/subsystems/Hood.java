@@ -8,9 +8,10 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 import dev.nextftc.core.subsystems.Subsystem;
+
 import dev.nextftc.ftc.ActiveOpMode;
 
-public class Hood {
+public class Hood{
 
     private double HOOD_MAX_POS = 2400;
     private double HOOD_MIN_POS = 0;
@@ -28,9 +29,14 @@ public class Hood {
         hoodEncoder = encoder;
     }
 
+
+
     public void init() {
         hood = ActiveOpMode.hardwareMap().get(CRServo.class, "hoodServo");
         hood.setDirection(DcMotorSimple.Direction.REVERSE);
+        hoodEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hoodEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
 
         // default goal value
         goal = new KineticState(0);
@@ -67,7 +73,6 @@ public class Hood {
         allowPID = false;
         hood.setPower(hoodPower);
     }
-
     public void enableHoodPID() {
         allowPID = true;
     }

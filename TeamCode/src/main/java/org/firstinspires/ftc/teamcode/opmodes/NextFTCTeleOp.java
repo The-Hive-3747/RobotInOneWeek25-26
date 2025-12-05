@@ -34,6 +34,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 BindingsComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower),
                 odoTurret = new TurretUsingOdo()
+
         );
     }
     Hood hood;
@@ -44,7 +45,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     private double highestLooptime = 0;
     double FLYWHEEL_VEL = 1300; // IN RPM
     double INTAKE_POWER = 0.9;
-    private double HOOD_POSITION = 0.0;
+    //private int HOOD_POSITION = 0;
     private DcMotor intakeMotor;
     private Servo flipper, light;
     private double FIRE_POWER = 0.9;
@@ -70,6 +71,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         leftFireServo.setDirection(CRServo.Direction.REVERSE);
         intakeMotor.setDirection(DcMotor.Direction.REVERSE);
 
+
+        //hood.init();
         light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
         isRed = OpModeTransfer.isRed;
         Button g1Back = button(() -> gamepad1.back);
@@ -102,11 +105,12 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button gUp = button(() -> gamepad2.dpad_up || gamepad1.dpad_up);
         Button gDown = button(() -> gamepad2.dpad_down || gamepad1.dpad_down);
         Button g1Right = button(() -> gamepad1.dpad_right);
-        Button g1Up = button(() -> gamepad1.dpad_up);
         Button g1LT = button(() -> gamepad1.left_trigger > 0.1);
         Button g1RT = button(() -> gamepad1.right_trigger > 0.1);
-        Button g1Down = button(() -> gamepad1.dpad_down);
         Button gUpOrDown = gUp.or(gDown);
+        Button g1RB = button(() -> gamepad1.right_bumper);
+        Button g1LB = button(() -> gamepad1.left_bumper);
+
 
         Button g1A = button(() -> gamepad1.a);
         Button g1B = button(() -> gamepad1.b);
@@ -131,6 +135,10 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                     leftFireServo.setPower(0);
                     sideWheelServo.setPower(0);
                 });
+
+        g1RB.whenBecomesTrue(() -> {FLYWHEEL_VEL +=200; flywheel.setTargetVel(FLYWHEEL_VEL);});
+        g1LB.whenBecomesTrue(() -> {FLYWHEEL_VEL -=200; flywheel.setTargetVel(FLYWHEEL_VEL);});
+
         g1LT.whenTrue(() -> {flipper.setPosition(0.1); color=0.67;})
                 .whenFalse(() -> {flipper.setPosition(0.52); color=0.388;});
 
@@ -206,6 +214,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         }
         telemetry.addData("looptime (ms)", looptime.milliseconds());
         telemetry.addData("highest looptime (ms)", highestLooptime);
+
         telemetry.update();
     }
 }
