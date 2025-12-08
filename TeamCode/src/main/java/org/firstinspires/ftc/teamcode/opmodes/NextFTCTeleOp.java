@@ -212,12 +212,12 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         double currentHeading = follower.getHeading();
         limelightComponent.update(currentHeading);
         if (limelightComponent.hasValidBotPose()) {
-            int tagId = limelightComponent.getAprilTagId();
-            boolean isGoalTag = (tagId >=1 && tagId <=2);
-                if(isGoalTag) {
-                    //limelightPose = new Pose(limelightComponent.getRobotX(),limelightComponent.getRobotY(),limelightComponent.getRobotHeading());
-                }
-
+            int tagId = limelightComponent.getAprilTagId(){
+            boolean isGoalTag = (tagId >= 1 && tagId <= 2);
+            if (isGoalTag) {
+                //limelightPose = new Pose(limelightComponent.getRobotX(),limelightComponent.getRobotY(),limelightComponent.getRobotHeading());
+            }
+        }
         }
 
 
