@@ -47,6 +47,20 @@ public class LimelightComponent implements Component{
                 aprilTagId = -1;
             }
         }
+        else {
+            hasTarget = false;
+            aprilTagId = -1;
+        }
+    }
+
+    public double getRobotX() {
+        return robotX;
+    }
+    public double getRobotY() {
+        return robotY;
+    }
+    public double getRobotHeading() {
+        return robotHeading;
     }
 
     public boolean hasTarget() {

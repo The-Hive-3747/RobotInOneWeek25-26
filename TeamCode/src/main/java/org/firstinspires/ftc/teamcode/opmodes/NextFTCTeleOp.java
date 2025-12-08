@@ -21,6 +21,7 @@ import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
 import org.firstinspires.ftc.teamcode.subsystems.TurretUsingOdo;
+import org.firstinspires.ftc.teamcode.vision.limelight.LimelightComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +44,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     Flywheel flywheel;
     private ElapsedTime looptime;
     private double highestLooptime = 0;
+    private LimelightComponent limelightComponent;
     double FLYWHEEL_VEL = 1300; // IN RPM
     double INTAKE_POWER = 0.9;
     //private int HOOD_POSITION = 0;
@@ -61,6 +63,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(OpModeTransfer.currentPose);
         follower.update();
+        limelightComponent = new LimelightComponent();
+        limelightComponent.init();
 
         intakeMotor = hardwareMap.get(DcMotor.class, "transfer");
         flipper = hardwareMap.get(Servo.class, "flipper");
@@ -140,7 +144,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         g1LB.whenBecomesTrue(() -> {FLYWHEEL_VEL -=200; flywheel.setTargetVel(FLYWHEEL_VEL);});
 
         g1LT.whenTrue(() -> {flipper.setPosition(0.1); color=0.67;})
-                .whenFalse(() -> {flipper.setPosition(0.52); color=0.388;});
+                .whenBecomesFalse(() -> {flipper.setPosition(0.52); color=0.388;});
 
         g2Y.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
@@ -174,7 +178,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
 
         g2B.whenTrue(() -> flipper.setPosition(0.1))
-                .whenFalse(() -> flipper.setPosition(0.52));
+                .whenBecomesFalse(() -> flipper.setPosition(0.52));
 
 
 
@@ -205,6 +209,18 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 false
         );
         follower.update();
+        double currentHeading = follower.getHeading();
+        limelightComponent.update(currentHeading);
+        if (limelightComponent.hasValidBotPose()) {
+            int tagId = limelightComponent.getAprilTagId();
+            boolean isGoalTag = (tagId >=1 && tagId <=2);
+                if(isGoalTag) {
+                    //limelightPose = new Pose(limelightComponent.getRobotX(),limelightComponent.getRobotY(),limelightComponent.getRobotHeading());
+                }
+
+        }
+
+
         flywheel.update();
         BindingManager.update();
         odoTurret.setCurrentPose(follower.getPose());
