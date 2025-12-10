@@ -20,17 +20,14 @@ public class Flywheel implements Component {
 
     DcMotorEx flywheelLeft, flywheelRight;
     static double correct, flywheelVel, targetVel, currentRPM;
-
-    static double shotCount = 0;
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime colorTimer = new ElapsedTime();
-    ControlSystem flywheelController;
+    ControlSystem largeFlywheelPID;
     Servo light, flipper;
     Hood hood;
 
     double autoTargetVel = 1100;
-    double kV = 0.0004;
-    double kP = 0.1;
+    double kP = 0.55;
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
         light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
@@ -54,10 +51,11 @@ public class Flywheel implements Component {
 
 
         // a control system is NextFTC's way to build.. control systems!
-        flywheelController = ControlSystem.builder()
-                .basicFF(kV) // we use a FeedForward (which pushes hard)
+        largeFlywheelPID = ControlSystem.builder()
+                //.basicFF(kV) // we use a FeedForward (which pushes hard)
                 .velPid(kP) // and a velocity PID (for fine tuning)
                 .build(); // and build the control system!
+
         targetVel = 0; // setting a target velocity of 0 so that the robot doesnt blow up on start
 
         colorTimer.reset();
@@ -84,7 +82,7 @@ public class Flywheel implements Component {
     // a KineticState is NextFTC's way of storing position, velocity, and acceleration all in one variable
     public void setTargetVel(double vel) {
         targetVel = vel;
-        flywheelController.setGoal(new KineticState(0, targetVel));
+        largeFlywheelPID.setGoal(new KineticState(0, targetVel));
     }
 
 
@@ -95,9 +93,12 @@ public class Flywheel implements Component {
         flywheelVel = this.getVel();
 
         // correct is the motor power we need to set!
-        correct = flywheelController.calculate( // calculate() lets us plug in current vals and outputs a motor power
+
+        correct = largeFlywheelPID.calculate( // calculate() lets us plug in current vals and outputs a motor power
                 new KineticState(0, flywheelVel) // a KineticState is NextFTC's way of storing position, velocity, and acceleration all in one variable
         );
+
+
         // setting constraints on our motor power so its not above 1 and not below 0
         if (targetVel != 0) {
             if (correct > 0) {
@@ -105,7 +106,7 @@ public class Flywheel implements Component {
                     correct = 1;
                 }
             } else {
-                correct = 0.8;
+                correct = 0.8 * targetVel/1300;
             }
         } else {
             correct = 0;
@@ -117,8 +118,8 @@ public class Flywheel implements Component {
         ActiveOpMode.telemetry().addData("flywheel power", correct);
         ActiveOpMode.telemetry().addData("flywheel vel", flywheelVel);
         ActiveOpMode.telemetry().addData("flywheel target vel", targetVel);
-        ActiveOpMode.telemetry().addData("balls shot", shotCount);
-        ActiveOpMode.telemetry().addData("rightVel", -flywheelRight.getVelocity());
+        //ActiveOpMode.telemetry().addData("balls shot", shotCount);
+        //ActiveOpMode.telemetry().addData("rightVel", flywheelRight.getVelocity());
     }
 
     // HOOD FUNCTIONS

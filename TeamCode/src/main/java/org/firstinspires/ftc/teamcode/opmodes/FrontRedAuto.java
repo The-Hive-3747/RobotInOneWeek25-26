@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import android.graphics.Path;
-
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
@@ -11,6 +9,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
+import org.firstinspires.ftc.teamcode.helpers.Alliance;
 import org.firstinspires.ftc.teamcode.helpers.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
@@ -92,7 +91,7 @@ turret.setAllianceColor(true);
     @Override
     public void onStop() {
         OpModeTransfer.currentPose = PedroComponent.follower().getPose();
-        OpModeTransfer.isRed = true;
+        OpModeTransfer.alliance = Alliance.RED;
     }
 
 

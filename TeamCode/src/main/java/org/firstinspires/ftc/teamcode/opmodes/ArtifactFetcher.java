@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import android.graphics.Color;
 import android.util.Size;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.SortOrder;
 
@@ -23,6 +24,7 @@ import dev.nextftc.control.KineticState;
 import dev.nextftc.control.feedback.AngleType;
 import dev.nextftc.ftc.NextFTCOpMode;
 
+@Disabled
 @TeleOp(name = "Vision Auto", group = "Concept")
 public class ArtifactFetcher extends NextFTCOpMode {
     {

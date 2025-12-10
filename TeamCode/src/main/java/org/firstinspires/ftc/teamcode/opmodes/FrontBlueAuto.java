@@ -9,6 +9,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
+import org.firstinspires.ftc.teamcode.helpers.Alliance;
 import org.firstinspires.ftc.teamcode.helpers.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
@@ -90,7 +91,7 @@ public class FrontBlueAuto extends NextFTCOpMode {
     @Override
     public void onStop() {
         OpModeTransfer.currentPose = PedroComponent.follower().getPose();
-        OpModeTransfer.isRed = false;
+        OpModeTransfer.alliance = Alliance.BLUE;
     }
 
 

@@ -5,16 +5,28 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import org.firstinspires.ftc.teamcode.helpers.Alliance;
+
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
+import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.conditionals.SwitchCommand;
+import dev.nextftc.core.commands.utility.InstantCommand;
+import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
 
 public class TurretUsingOdo implements Component {
     DcMotorEx turret;
     Pose currentPose;
-    boolean isRed, allowTurret;
-    double goalAngle, goalDiff, goalX, goalY, turretPower, turretGoal, lastHeading, currentHeading, lastTurret;
+    public enum turretState {
+        OFF,
+        FORWARD,
+        AUTO
+    }
+    turretState currentState = turretState.AUTO;
+    Alliance alliance;
+    double goalAngle, goalX, goalY, turretPower, turretGoal;
     ControlSystem turretPID;
 
     @Override
@@ -25,36 +37,34 @@ public class TurretUsingOdo implements Component {
         turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         turretPID = ControlSystem.builder()
-                .posPid(0.015, 0, 0.01)
+                .posPid(0.025, 0, 0.01)
                 .build();
         turretGoal = 0;
     }
 
 
     public void update() {
-        if (allowTurret) {
+        if (currentState == turretState.AUTO) {
             getGoalAngle();
-        } else {
+        } else if (currentState == turretState.FORWARD) {
             turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
+        } else {
+            turretPower = 0;
         }
-        if (turretPower > 0.4) {
-            turretPower = 0.4;
-        } else if (Math.abs(turretPower) < 0.1 ) {
+        if (turretPower > 0.8) {
+            turretPower = 0.8;
+        } else if (Math.abs(getTurretAngle() - turretGoal) < 2) {
             turretPower = 0;
         }
 
         turretPower *= -1;
+
         if (currentPose.getY() > 70) {
             turret.setPower(turretPower);
         } else {
             turret.setPower(0);
         }
-        /*
-        ActiveOpMode.telemetry().addData("goal angle", Math.toDegrees(goalAngle));
-        ActiveOpMode.telemetry().addData("goal diff", Math.toDegrees(goalDiff));
-        ActiveOpMode.telemetry().addData("posesesese", currentPose);
-        ActiveOpMode.telemetry().addData("turret angle", this.getTurretAngle());
-        ActiveOpMode.telemetry().addData("turret goal", turretGoal);*/
+
         ActiveOpMode.telemetry().addData("turret goal", turretPID.getGoal().component1());
         ActiveOpMode.telemetry().addData("turret power", turretPower);
         ActiveOpMode.telemetry().addData("turret angle", this.getTurretAngle());
@@ -70,11 +80,11 @@ public class TurretUsingOdo implements Component {
     }
 
     public double putInTurretLimits(double goal) {
-        if (goal > 70 || goal < -180) { //insanely horribly code
-            if (goal > 70) {
-                goal = 70;
+        if (goal > 60 || goal < -60) { //insanely horribly code
+            if (goal > 60) {
+                goal = 60;
             } else {
-                goal = -180;
+                goal = -60;
             }
         }
         return goal;
@@ -85,11 +95,13 @@ public class TurretUsingOdo implements Component {
     }
 
     public void setTurretAngle(double goal) {
-        allowTurret = false;
+        currentState = turretState.FORWARD;
         turretPID.setGoal(new KineticState(goal));
     }
-    public void allowTurret() {
-        allowTurret = true;
+
+
+    public turretState getTurretState() {
+        return currentState;
     }
 
     public double getTurretAngle() {
@@ -107,14 +119,53 @@ public class TurretUsingOdo implements Component {
         return angleRad;
     }
 
-    public void setAlliance(boolean alliance) {
-        this.isRed = alliance;
-        if (alliance) {
-            goalX = 150;
+    public void setAlliance(Alliance all) {
+        this.alliance = all;
+        if (this.alliance == Alliance.RED) {
+            goalX = 144;
             goalY = 144;
         } else {
-            goalX = 6;
+            goalX = 0;
             goalY = 144;
         }
     }
+
+    public Command setTurretAuto = new LambdaCommand()
+            .setStart(() -> {
+                currentState = turretState.AUTO;
+            })
+            .setIsDone(() -> true);
+    public Command setTurretOff = new LambdaCommand()
+            .setStart(() -> {
+                currentState = turretState.OFF;
+            })
+            .setIsDone(() -> true);
+    public Command setTurretForward = new LambdaCommand()
+            .setStart(() -> {
+                currentState = turretState.FORWARD;
+                setTurretAngle(0);
+            })
+            .setIsDone(() -> true);
+
+    public Command turretStateForward = new InstantCommand(() -> {
+        switch (currentState) {
+            case AUTO:
+                this.setTurretForward.schedule(); break;
+            case FORWARD:
+                this.setTurretOff.schedule(); break;
+            case OFF:
+                this.setTurretAuto.schedule(); break;
+        }
+    });
+
+    public Command turretStateBackward = new InstantCommand(() -> {
+        switch (currentState) {
+            case AUTO:
+                this.setTurretOff.schedule(); break;
+            case FORWARD:
+                this.setTurretAuto.schedule(); break;
+            case OFF:
+                this.setTurretForward.schedule(); break;
+        }
+    });
 }

@@ -15,7 +15,7 @@ import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.hardware.impl.MotorEx;
 
 
-//@Disabled
+@Disabled
 @TeleOp(name= "motor test")
 public class motorTest extends NextFTCOpMode {
     {
@@ -46,7 +46,6 @@ public class motorTest extends NextFTCOpMode {
         flyLeft = new MotorEx("flywheelLeft");
         flyRight = new MotorEx("flywheelRight");
         leftFireServo = ActiveOpMode.hardwareMap().get(CRServo.class, "left_firewheel");
-        rightFireServo = ActiveOpMode.hardwareMap().get(CRServo.class, "right_firewheel");
         sideWheelServo = ActiveOpMode.hardwareMap().get(CRServo.class, "side-wheel");
         hood = ActiveOpMode.hardwareMap().get(CRServo.class, "hoodServo");
         sideWheelServo.setDirection(CRServo.Direction.REVERSE);

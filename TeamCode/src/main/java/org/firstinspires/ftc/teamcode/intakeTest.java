@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-//@Disabled
+@Disabled
 @TeleOp
 public class intakeTest extends LinearOpMode {
     private DcMotor intakeMotor;

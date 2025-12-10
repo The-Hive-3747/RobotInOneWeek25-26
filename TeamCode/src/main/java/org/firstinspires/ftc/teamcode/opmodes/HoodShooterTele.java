@@ -13,8 +13,6 @@ import org.firstinspires.ftc.teamcode.helpers.Alliance;
 import org.firstinspires.ftc.teamcode.helpers.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
-import org.firstinspires.ftc.teamcode.subsystems.TurretUsingOdo;
-import org.firstinspires.ftc.teamcode.vision.limelight.LimelightComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,9 +23,9 @@ import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.NextFTCOpMode;
 
-@TeleOp(name="teleop")
-public class HoodShooter extends NextFTCOpMode {
-    private static final Logger log = LoggerFactory.getLogger(HoodShooter.class);
+@TeleOp(name="hood shooter tele")
+public class HoodShooterTele extends NextFTCOpMode {
+    private static final Logger log = LoggerFactory.getLogger(HoodShooterTele.class);
 
     {
         addComponents(
@@ -39,7 +37,7 @@ public class HoodShooter extends NextFTCOpMode {
     Flywheel flywheel;
     private ElapsedTime looptime;
     private double highestLooptime = 0;
-    double FLYWHEEL_VEL;//= 1300; // IN RPM
+    static double FLYWHEEL_VEL;//= 1300; // IN RPM
     double INTAKE_POWER = 0.9;
     //private int HOOD_POSITION = 0;
     int FLYWHEEL_STEP = 50;
@@ -124,16 +122,10 @@ public class HoodShooter extends NextFTCOpMode {
                 .whenBecomesTrue(() -> {
                     FLYWHEEL_VEL = 1300;
                     flywheel.setTargetVel(FLYWHEEL_VEL);
-                    intakeMotor.setPower(INTAKE_POWER);
-                    leftFireServo.setPower(FIRE_POWER);
-                    sideWheelServo.setPower(FIRE_POWER);
 
                 })
                 .whenBecomesFalse(() -> {
                     flywheel.setTargetVel(0);
-                    intakeMotor.setPower(0);
-                    leftFireServo.setPower(0);
-                    sideWheelServo.setPower(0);
                 });
         g1RB.whenBecomesTrue(() -> {
             if (FLYWHEEL_VEL >= 1600) {

@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.vision;
 
 import static dev.nextftc.bindings.Bindings.button;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -18,6 +19,7 @@ import dev.nextftc.bindings.Button;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 
+@Disabled
 @TeleOp
 public class CustomCamera extends NextFTCOpMode {
 
