@@ -12,7 +12,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.helpers.Alliance;
 import org.firstinspires.ftc.teamcode.helpers.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
+import org.firstinspires.ftc.teamcode.subsystems.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
+import org.firstinspires.ftc.teamcode.vision.limelight.LimelightComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +24,7 @@ import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.NextFTCOpMode;
+import org.firstinspires.ftc.teamcode.helpers.GoBildaPinpointDriver;
 
 @TeleOp(name="hood shooter tele tuning")
 public class HoodShooterTele extends NextFTCOpMode {
@@ -31,16 +34,19 @@ public class HoodShooterTele extends NextFTCOpMode {
         addComponents(
                 flywheel = new Flywheel(),
                 BindingsComponent.INSTANCE,
-                new PedroComponent(Constants::createFollower)
+                new PedroComponent(Constants::createFollower),
+                limelight = new LimelightComponent(),
+                drive = new FieldCentricDrive()
         );
     }
 
     Flywheel flywheel;
-
+    FieldCentricDrive drive;
+LimelightComponent limelight;
     private ElapsedTime looptime;
     private double highestLooptime = 0;
 
-    static double FLYWHEEL_VEL = 1300; // RPM start
+    static double  FLYWHEEL_VEL = 1300; // RPM start
     double INTAKE_POWER = 0.9;
     int FLYWHEEL_STEP = 50;
 
@@ -64,7 +70,7 @@ public class HoodShooterTele extends NextFTCOpMode {
         sideWheelServo = hardwareMap.get(CRServo.class, "side-wheel");
         sideWheelServo.setDirection(CRServo.Direction.REVERSE);
         leftFireServo.setDirection(CRServo.Direction.REVERSE);
-        intakeMotor.setDirection(DcMotor.Direction.REVERSE);
+        //intakeMotor.setDirection(DcMotor.Direction.REVERSE);
 
         light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
         alliance = OpModeTransfer.alliance;
@@ -112,8 +118,20 @@ public class HoodShooterTele extends NextFTCOpMode {
 
         // enable/disable flywheel at current target vel
         g1RT.toggleOnBecomesTrue()
-                .whenBecomesTrue(() -> flywheel.setTargetVel(FLYWHEEL_VEL))
-                .whenBecomesFalse(() -> flywheel.setTargetVel(0));
+                .whenBecomesTrue(() -> {
+                    FLYWHEEL_VEL = 1300;
+                    flywheel.setTargetVel(FLYWHEEL_VEL);
+                    intakeMotor.setPower(INTAKE_POWER);
+                    leftFireServo.setPower(FIRE_POWER);
+                    sideWheelServo.setPower(FIRE_POWER);
+
+                })
+                .whenBecomesFalse(() -> {
+                    flywheel.setTargetVel(0);
+                    intakeMotor.setPower(0);
+                    leftFireServo.setPower(0);
+                    sideWheelServo.setPower(0);
+                });
 
         // bump flywheel target RPM up/down
         g1RB.whenBecomesTrue(() -> {
@@ -142,6 +160,7 @@ public class HoodShooterTele extends NextFTCOpMode {
 
         gUp.whenTrue(() -> flywheel.setHoodPower(0.1));
         gDown.whenTrue(() -> flywheel.setHoodPower(-0.1));
+
 
         // hood step in encoder ticks with A/B
         g1A.whenBecomesTrue(() -> flywheel.setHoodGoalPos(flywheel.getHoodGoal() + 250));
@@ -197,6 +216,7 @@ public class HoodShooterTele extends NextFTCOpMode {
 
         BindingManager.update();
         flywheel.update();
+        drive.update();
 
         if (looptime.milliseconds() > highestLooptime) {
             highestLooptime = looptime.milliseconds();
@@ -205,11 +225,18 @@ public class HoodShooterTele extends NextFTCOpMode {
         // key telemetry for tuning
         telemetry.addData("looptime (ms)", looptime.milliseconds());
         telemetry.addData("highest looptime (ms)", highestLooptime);
-
         telemetry.addData("Flywheel target RPM", FLYWHEEL_VEL);
         telemetry.addData("Flywheel actual vel", flywheel.getVel());
         telemetry.addData("Hood pos (ticks)", flywheel.getHoodPos());
         telemetry.addData("Hood goal (ticks)", flywheel.getHoodGoal());
+
+        /*telemetry.addData("Target X from limelight", limelight.getTargetX());
+        telemetry.addData("Target Y from limelight", limelight.getTargetY());
+        telemetry.addData("Target dis from limelight", Math.sqrt(Math.pow(limelight.getTargetY(),2) + Math.pow(limelight.getTargetX(),2)));A*/
+
+
+
+
         telemetry.update();
     }
 }

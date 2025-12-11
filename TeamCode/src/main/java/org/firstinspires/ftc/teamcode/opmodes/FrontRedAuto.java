@@ -1,91 +1,169 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.intake1;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.intake2;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.intake3;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForIntake1;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForIntake2;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForIntake3;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForOpenGate;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.openGate;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.park;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.startAngle;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.startingPose;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromIntake2;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromIntake3;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromOpenGate;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromStart;
+
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
-import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
-import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.helpers.Alliance;
 import org.firstinspires.ftc.teamcode.helpers.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
-import org.firstinspires.ftc.teamcode.subsystems.TurretTracking;
+import org.firstinspires.ftc.teamcode.subsystems.TurretUsingOdo;
 
+import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.groups.CommandGroup;
+import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 
-
-@Autonomous(name = "front RED auto")
+@Autonomous(name = "front red auto")
 public class FrontRedAuto extends NextFTCOpMode {
     {
         addComponents(
                 new PedroComponent(Constants::createFollower),
                 flywheel = new Flywheel(),
                 intake = new Intake(),
-                turret = new TurretTracking()
+                turret = new TurretUsingOdo()
         );
     }
     CommandGroup autonomous;
-    TurretTracking turret;
+    TurretUsingOdo turret;
     Flywheel flywheel;
     Intake intake;
-
-    public static Pose startingPose, shootingPose, intake1StartPose, intake1EndPose, intake2StartPose, intake2EndPose, parkPose, toShootCurvePose;
-    public static PathChain toShootFromStart, lineUpForIntake1, intake1, toShootFromIntake1, lineUpForIntake2, intake2, toShootFromIntake2, park;
-    public static double shootAngle, parkAngle;
     TelemetryManager telemetryM;
 
 
     @Override
     public void onInit() {
+        Servo light = hardwareMap.get(Servo.class, "light");
+
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-        //toShootFromStart =
-        FrontRedAutoPaths.generatePaths(PedroComponent.follower());
-turret.setAllianceColor(true);
-        PedroComponent.follower().setStartingPose(startingPose);
+        FrontAutoPaths.alliance = Alliance.RED;
+        FrontAutoPaths.generatePaths(PedroComponent.follower());
+        PedroComponent.follower().setStartingPose(new Pose(startingPose.getX(), startingPose.getY(), startAngle));
+
+        turret.setAlliance(Alliance.RED);
+
+        if (FrontAutoPaths.getAlliance() == Alliance.RED) {
+            light.setPosition(0.279);
+        } else {
+            light.setPosition(0.611);
+        }
 
         autonomous = new SequentialGroup(
-                intake.startIntake,
-                flywheel.startFlywheel,
-                intake.startTransfer,
-                turret.holdTurret,
-                new FollowPath(toShootFromStart),
-                flywheel.resetShotTimer,
-                flywheel.shootAllThree,
-                new FollowPath(lineUpForIntake1),
+                new ParallelGroup(
+                        intake.startIntake,
+                        flywheel.startFlywheel,
+                        turret.setTurretOff,
+                        new FollowPath(toShootFromStart)
+                ),
+                new Delay(1.3),
+                new ParallelGroup(
+                        turret.setTurretAuto,
+                        flywheel.resetShotTimer,
+                        flywheel.shootAllThree,
+                        intake.startTransfer
+                ),
+                new ParallelGroup(
+                        new FollowPath(lineUpForIntake1),
+                        intake.stopTransfer
+                ),
                 new FollowPath(intake1),
-                new FollowPath(toShootFromIntake1),
-                flywheel.resetShotTimer,
-                flywheel.shootAllThree,
-                new FollowPath(lineUpForIntake2),
+                new Delay(0.3),
+                new FollowPath(lineUpForOpenGate),
+                new FollowPath(openGate),
+                new Delay(0.5),
+                new FollowPath(toShootFromOpenGate),
+                new Delay(0.5),
+                new ParallelGroup(
+                        flywheel.resetShotTimer,
+                        flywheel.shootAllThree,
+                        intake.startTransfer
+                ),
+                new ParallelGroup(
+                        new FollowPath(lineUpForIntake2),
+                        intake.stopTransfer
+                ),
+                new Delay(0.2),
                 new FollowPath(intake2),
+                new Delay(0.3),
                 new FollowPath(toShootFromIntake2),
-                flywheel.resetShotTimer,
-                flywheel.shootAllThree,
-                flywheel.stopFlywheel,
-                intake.stopIntake,
-                intake.stopTransfer,
-                new FollowPath(park)
+                new Delay(0.3),
+                new ParallelGroup(
+                        flywheel.resetShotTimer,
+                        flywheel.shootAllThree,
+                        intake.startTransfer
+                ),
+                new ParallelGroup(
+                        new FollowPath(lineUpForIntake3),
+                        intake.stopTransfer
+                ),
+                new Delay(0.2),
+                new FollowPath(intake3),
+                new Delay(0.3),
+                new FollowPath(toShootFromIntake3),
+                new Delay(0.3),
+                new ParallelGroup(
+                        flywheel.resetShotTimer,
+                        flywheel.shootAllThree,
+                        intake.startTransfer
+                ),
+                new ParallelGroup(
+                        turret.setTurretForward,
+                        flywheel.stopFlywheel,
+                        intake.stopIntake,
+                        intake.stopTransfer,
+                        new FollowPath(park)
+                )
         );
+
+        turret.zeroTurret();
 
     }
 
     @Override
-    public void onUpdate() {
-        autonomous.schedule();
+    public void onWaitForStart() {
+        flywheel.setHoodGoalPos(1247);
+        flywheel.update();
         telemetry.addData("pose", PedroComponent.follower().getPose());
-        telemetry.addData("path", PedroComponent.follower().getCurrentTValue());
+        telemetry.update();
+    }
+
+    @Override
+    public void onStartButtonPressed() {
+        //turret.zeroTurret();
+        autonomous.schedule();
+    }
+    @Override
+    public void onUpdate() {
+        turret.setCurrentPose(PedroComponent.follower().getPose());
+        turret.update();
+
+        telemetry.addData("pose", PedroComponent.follower().getPose());
         flywheel.update();
         telemetry.update();
-        turret.update();
     }
 
     @Override
@@ -93,88 +171,4 @@ turret.setAllianceColor(true);
         OpModeTransfer.currentPose = PedroComponent.follower().getPose();
         OpModeTransfer.alliance = Alliance.RED;
     }
-
-
-
-    public static class FrontRedAutoPaths {
-        public static void generatePaths(Follower follower) {
-            startingPose = new Pose(140, 140, Math.toRadians(45));
-            shootingPose = new Pose(105, 110);
-            intake1StartPose = new Pose(110, 95);
-            intake1EndPose = new Pose(138, 95);
-            intake2StartPose = new Pose(115, 72);
-            intake2EndPose = new Pose(149, 72);
-            parkPose = new Pose(125.638, 104);
-            toShootCurvePose = new Pose(100,72);
-            shootAngle = Math.toRadians(50);
-            parkAngle = Math.toRadians(180);
-
-            toShootFromStart = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(startingPose, shootingPose)
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(45), shootAngle)
-                    .build();
-
-            lineUpForIntake1 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(shootingPose, intake1StartPose)
-                    )
-                    .setLinearHeadingInterpolation(shootAngle, Math.toRadians(0))
-                    .build();
-
-            intake1 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(intake1StartPose, intake1EndPose)
-                    )
-                    .setConstantHeadingInterpolation(Math.toRadians(0))
-                    .build();
-
-            toShootFromIntake1 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(intake1EndPose, shootingPose)
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(0), shootAngle)
-                    .build();
-
-            lineUpForIntake2 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(shootingPose, intake2StartPose)
-                    )
-                    .setLinearHeadingInterpolation(shootAngle, Math.toRadians(0))
-                    .build();
-
-            intake2 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(intake2StartPose, intake2EndPose)
-                    )
-                    .setConstantHeadingInterpolation(Math.toRadians(0))
-                    .build();
-
-            toShootFromIntake2 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierCurve(intake2EndPose, toShootCurvePose, shootingPose)
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(0), shootAngle)
-                    .build();
-
-            park = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(shootingPose, parkPose)
-                    )
-                    .setLinearHeadingInterpolation(shootAngle, parkAngle)
-                    .build();
-        }
-
-
-    }
-
 }

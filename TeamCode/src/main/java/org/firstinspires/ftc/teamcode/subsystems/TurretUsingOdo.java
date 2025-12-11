@@ -30,16 +30,18 @@ public class TurretUsingOdo implements Component {
     ControlSystem turretPID;
 
     @Override
-    public void postInit() {
+    public void preInit() {
         turret = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "turret");
 
-        turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
         turretPID = ControlSystem.builder()
-                .posPid(0.025, 0, 0.01)
+                .posPid(0.04, 0, 0.01)
                 .build();
         turretGoal = 0;
+    }
+
+    public void zeroTurret() {
+        turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
 
@@ -130,11 +132,9 @@ public class TurretUsingOdo implements Component {
         }
     }
 
-    public Command setTurretAuto = new LambdaCommand()
-            .setStart(() -> {
-                currentState = turretState.AUTO;
-            })
-            .setIsDone(() -> true);
+    public Command setTurretAuto = new InstantCommand(
+            () -> currentState = turretState.AUTO
+    );
     public Command setTurretOff = new LambdaCommand()
             .setStart(() -> {
                 currentState = turretState.OFF;

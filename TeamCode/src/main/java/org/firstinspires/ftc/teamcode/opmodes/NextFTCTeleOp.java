@@ -242,7 +242,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         );
         follower.update();
 
-        double currentHeading = follower.getHeading();
+        /*double currentHeading = follower.getHeading();
         limelightComponent.update(currentHeading);
         if (limelightComponent.hasValidBotPose()) {
             int tagId = limelightComponent.getAprilTagId();
@@ -250,7 +250,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
             if (isGoalTag) {
               Pose limelightPose = new Pose(limelightComponent.getRobotX(),limelightComponent.getRobotY(),limelightComponent.getRobotHeading());
             }
-       }
+       }*/
 
         BindingManager.update();
         flywheel.update();
@@ -264,6 +264,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         telemetry.addData("looptime (ms)", looptime.milliseconds());
         telemetry.addData("highest looptime (ms)", highestLooptime);
+        telemetry.addData("pose", follower.getPose());
 
         telemetry.update();
     }

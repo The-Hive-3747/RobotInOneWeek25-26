@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
@@ -26,7 +27,7 @@ public class Flywheel implements Component {
     Servo light, flipper;
     Hood hood;
 
-    double autoTargetVel = 1100;
+    double autoTargetVel = 1040;
     double kP = 0.55;
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
@@ -145,22 +146,16 @@ public class Flywheel implements Component {
 
 
 
-    public Command startFlywheel = new LambdaCommand()
-            .setStart(() -> {
-                this.setTargetVel(autoTargetVel);
-                    })
-            .setIsDone(() -> true);;
-    public Command stopFlywheel = new LambdaCommand()
-            .setStart(() -> {
-                this.setTargetVel(0);
-            })
-            .setIsDone(() -> true);
+    public Command startFlywheel = new InstantCommand(
+            () -> this.setTargetVel(autoTargetVel)
+    );
+    public Command stopFlywheel = new InstantCommand(
+            () -> this.setTargetVel(0)
+    );
 
-    public Command resetShotTimer = new LambdaCommand()
-            .setStart(() -> {
-                shotTimer.reset();
-            })
-            .setIsDone(() -> true);
+    public Command resetShotTimer = new InstantCommand(
+            () ->  shotTimer.reset()
+    );
 
     public Command shootAllThree = new LambdaCommand()
             .setStart(() -> {
@@ -169,7 +164,8 @@ public class Flywheel implements Component {
             })
             .setUpdate(() -> {
                 currentRPM = this.getVel();
-                if ((targetVel - currentRPM) < 80) {
+                if (Math.abs(targetVel - currentRPM) < 200) {
+                    light.setPosition(0.67);
                     flipper.setPosition(0.1);
                 } else {
                     flipper.setPosition(0.52);
@@ -177,6 +173,7 @@ public class Flywheel implements Component {
             })
             .setStop(interrupted -> {
                 flipper.setPosition(0.52);
+                light.setPosition(0.388);
             })
-            .setIsDone(() -> (shotTimer.seconds() > 3.2)); // TODO: CHANGE THIS TO THREE
+            .setIsDone(() -> (shotTimer.seconds() > 2)); // TODO: CHANGE THIS TO THREE
 }
