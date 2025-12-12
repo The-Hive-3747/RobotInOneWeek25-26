@@ -87,6 +87,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         alliance = OpModeTransfer.alliance;
         Button g1Back = button(() -> gamepad1.back);
         Button g2Back = button(() -> gamepad2.back);
+        Button g2Options = button(() -> gamepad2.options);
+        g2Options.whenBecomesTrue(() -> flywheel.resetHoodEncoder());
         g2Back.whenBecomesTrue(() -> odoTurret.zeroTurret());
         g1Back.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
@@ -134,6 +136,10 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g1RT = button(() -> gamepad1.right_trigger > 0.1);
 
         Button g1B = button(() -> gamepad1.b);
+
+        //Button g1X = button(() -> gamepad1.x);
+
+        //g1X.whenBecomesTrue(() -> odoTurret.resetTurret());
 
         g1Right.whenBecomesTrue(() -> odoTurret.turretStateForward());
 

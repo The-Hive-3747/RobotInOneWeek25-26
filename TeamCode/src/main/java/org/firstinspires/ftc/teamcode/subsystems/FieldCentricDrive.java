@@ -82,6 +82,6 @@ public class FieldCentricDrive implements Component {
     }
 
     public double getHeading(double heading) {
-        return heading + this.offset;
+        return heading - this.offset;
     }
 }

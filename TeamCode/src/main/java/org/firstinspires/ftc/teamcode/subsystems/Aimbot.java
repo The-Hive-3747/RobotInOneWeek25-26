@@ -66,12 +66,20 @@ public class Aimbot implements Component{
         AimbotValues last;
         last = null;
 
+        percentage = 0;
+        velocity = aimbotValues[0].velocity;
+        hoodPos = aimbotValues[0].hoodPos;
+
         for(AimbotValues value : aimbotValues) {
             next = value;
             if (next != null && last != null && distance >= last.distance && distance < next.distance) {
                 percentage = (distance - last.distance)/(next.distance-last.distance);
                 velocity = (next.velocity - last.velocity) * percentage + last.velocity;
                 hoodPos = (next.hoodPos - last.hoodPos) * percentage + last.hoodPos;
+            }else if(next != null && last != null && distance > last.distance && distance >= next.distance){
+                percentage = 0;
+                velocity = next.velocity;
+                hoodPos = next.hoodPos;
             }
             last = next;
         }

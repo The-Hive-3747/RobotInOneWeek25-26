@@ -4,6 +4,7 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.helpers.Alliance;
 
@@ -19,10 +20,16 @@ import dev.nextftc.ftc.ActiveOpMode;
 public class TurretUsingOdo implements Component {
     DcMotorEx turret;
     Pose currentPose;
+    ElapsedTime resetTimer = new ElapsedTime();
+    boolean resetStarted = false;
+    private double LEFT_STOP_DEG = -102.0;
+    private double RESET_TIME_MS = 2000;
+    private double RESET_TO_ZERO_MS = 4000;
     public enum turretState {
         OFF,
         FORWARD,
-        AUTO
+        AUTO,
+        ZEROING
     }
     turretState currentState = turretState.AUTO;
     Alliance alliance;
@@ -44,13 +51,37 @@ public class TurretUsingOdo implements Component {
         turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
+    public void resetTurret(){
+        currentState = turretState.ZEROING;
+        resetStarted = false;
+        resetTimer.reset();
+    }
 
     public void update() {
         if (currentState == turretState.AUTO) {
             getGoalAngle();
         } else if (currentState == turretState.FORWARD) {
             turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
-        } else {
+        } else if(currentState == turretState.ZEROING){
+            if(resetTimer.milliseconds() < RESET_TIME_MS){
+                turretPower = -0.3;
+            }
+            if(resetTimer.milliseconds() > RESET_TIME_MS && !resetStarted){
+                resetStarted = true;
+                turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                setTurretAngle(-LEFT_STOP_DEG);
+            }
+            if(resetStarted && resetTimer.milliseconds() < RESET_TO_ZERO_MS){
+                turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
+            }
+            if(resetTimer.milliseconds() > RESET_TO_ZERO_MS && resetStarted){
+                turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                currentState = turretState.AUTO;
+                resetStarted = false;
+            }
+        }else {
             turretPower = 0;
         }
         if (turretPower > 0.8) {
@@ -79,6 +110,10 @@ public class TurretUsingOdo implements Component {
     }
 
     public double putInTurretLimits(double goal) {
+        //Remove Limits if Zeroing
+        if(currentState == turretState.ZEROING){
+            return goal;
+        }
         if (goal > 60 || goal < -60) { //insanely horribly code
             if (goal > 60) {
                 goal = 60;

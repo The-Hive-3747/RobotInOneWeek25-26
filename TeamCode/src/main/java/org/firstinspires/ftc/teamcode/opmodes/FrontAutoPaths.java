@@ -44,21 +44,21 @@ public class FrontAutoPaths {
         if (alliance == Alliance.BLUE) {
             startingPose = new Pose(21, 120);
         } else {
-            startingPose = new Pose(125, 120);
+            startingPose = new Pose(125, 122);
         }
         shootingPose = convert(new Pose(48, 90));
         intake1StartPose = convert(new Pose(45, 82)); //34
-        intake1EndPose = convert(new Pose(20, 82)); //6
-        openGateStartPose = convert(new Pose(35, 74.5)); //78
-        openGateEndPose = convert(new Pose(18, 74.5));
+        intake1EndPose = convert(new Pose(16, 82)); //6
+        openGateStartPose = convert(new Pose(35, 74)); //78
+        openGateEndPose = convert(new Pose(18, 74));
         intake2StartPose = convert(new Pose(45, 58));
-        intake2EndPose = convert(new Pose(10, 58));
+        intake2EndPose = convert(new Pose(8, 58));
         intake3StartPose = convert(new Pose(50, 38));
-        intake3EndPose = convert(new Pose(10, 38));
-        parkPose = convert(new Pose(30, 94));
+        intake3EndPose = convert(new Pose(8, 38));
+        parkPose = convert(new Pose(30, 80));
         toShootCurvePose = convert(new Pose(80,72));
 
-        shootAngle = convertHeading180(Math.toRadians(180));
+        shootAngle = convertHeading90(Math.toRadians(135));
         parkAngle = convertHeading180(Math.toRadians(180));
         if (alliance == Alliance.BLUE) {
             startAngle = Math.toRadians(143);
@@ -109,8 +109,8 @@ public class FrontAutoPaths {
 
         toShootFromOpenGate = follower
                 .pathBuilder()
-                .addPath(new BezierLine(openGateEndPose, shootingPose))
-                .setLinearHeadingInterpolation(intakeAngle, shootAngle)
+                .addPath(new BezierCurve(openGateEndPose, toShootCurvePose, shootingPose))
+                .setConstantHeadingInterpolation(Math.toRadians(90))
                 .build();
 
         lineUpForIntake2 = follower

@@ -91,7 +91,7 @@ public class FrontRedAuto extends NextFTCOpMode {
                         intake.stopTransfer
                 ),
                 new FollowPath(intake1),
-                new Delay(0.3),
+                new Delay(1),
                 new FollowPath(lineUpForOpenGate),
                 new FollowPath(openGate),
                 new Delay(0.5),
@@ -108,7 +108,7 @@ public class FrontRedAuto extends NextFTCOpMode {
                 ),
                 new Delay(0.2),
                 new FollowPath(intake2),
-                new Delay(0.3),
+                new Delay(1),
                 new FollowPath(toShootFromIntake2),
                 new Delay(0.3),
                 new ParallelGroup(
@@ -140,7 +140,6 @@ public class FrontRedAuto extends NextFTCOpMode {
         );
 
         turret.zeroTurret();
-
     }
 
     @Override
