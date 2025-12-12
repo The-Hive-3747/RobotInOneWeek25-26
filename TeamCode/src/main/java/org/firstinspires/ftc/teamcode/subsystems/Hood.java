@@ -13,7 +13,7 @@ import dev.nextftc.ftc.ActiveOpMode;
 
 public class Hood{
 
-    private double HOOD_MAX_POS = 2400;
+    private double HOOD_MAX_POS = 2500;
     private double HOOD_MIN_POS = 0;
     private double power = 0;
     public boolean allowPID = true;

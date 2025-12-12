@@ -49,8 +49,8 @@ public class FrontAutoPaths {
         shootingPose = convert(new Pose(48, 90));
         intake1StartPose = convert(new Pose(45, 82)); //34
         intake1EndPose = convert(new Pose(20, 82)); //6
-        openGateStartPose = convert(new Pose(35, 76)); //78
-        openGateEndPose = convert(new Pose(18, 76));
+        openGateStartPose = convert(new Pose(35, 74.5)); //78
+        openGateEndPose = convert(new Pose(18, 74.5));
         intake2StartPose = convert(new Pose(45, 58));
         intake2EndPose = convert(new Pose(10, 58));
         intake3StartPose = convert(new Pose(50, 38));

@@ -39,10 +39,10 @@ public class Flywheel implements Component {
         flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        flywheelLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         flywheelRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        flywheelLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         flywheelRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
@@ -60,6 +60,11 @@ public class Flywheel implements Component {
         targetVel = 0; // setting a target velocity of 0 so that the robot doesnt blow up on start
 
         colorTimer.reset();
+    }
+
+    public void resetHoodEncoder() {
+        flywheelLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flywheelLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
 
@@ -107,7 +112,7 @@ public class Flywheel implements Component {
                     correct = 1;
                 }
             } else {
-                correct = 0.8 * targetVel/1300;
+                correct = 0.7 * targetVel/1300;
             }
         } else {
             correct = 0;

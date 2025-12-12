@@ -26,13 +26,13 @@ public class TurretUsingOdo implements Component {
     }
     turretState currentState = turretState.AUTO;
     Alliance alliance;
-    double goalAngle, goalX, goalY, turretPower, turretGoal;
+    double goalAngle, goalX, goalY, turretPower, turretGoal, heading;
     ControlSystem turretPID;
 
     @Override
     public void preInit() {
         turret = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "turret");
-
+        currentState = turretState.AUTO;
         turretPID = ControlSystem.builder()
                 .posPid(0.04, 0, 0.01)
                 .build();
@@ -61,12 +61,9 @@ public class TurretUsingOdo implements Component {
 
         turretPower *= -1;
 
-        if (currentPose.getY() > 70) {
-            turret.setPower(turretPower);
-        } else {
-            turret.setPower(0);
-        }
+        turret.setPower(turretPower);
 
+        ActiveOpMode.telemetry().addData("turret state", currentState);
         ActiveOpMode.telemetry().addData("turret goal", turretPID.getGoal().component1());
         ActiveOpMode.telemetry().addData("turret power", turretPower);
         ActiveOpMode.telemetry().addData("turret angle", this.getTurretAngle());
@@ -75,7 +72,7 @@ public class TurretUsingOdo implements Component {
     public void getGoalAngle() {
         if (currentPose != null) {
             goalAngle = -Math.atan2((goalY - this.currentPose.getY()), (goalX - this.currentPose.getX())); // IN RADS
-            turretGoal = normalizeAngle(goalAngle + currentPose.getHeading());
+            turretGoal = normalizeAngle(goalAngle + this.getActualHeading());
             turretPID.setGoal(new KineticState(this.putInTurretLimits(Math.toDegrees(turretGoal))));
             turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
         }
@@ -94,6 +91,14 @@ public class TurretUsingOdo implements Component {
 
     public void setCurrentPose(Pose pose) {
         this.currentPose = pose;
+    }
+
+    public double getActualHeading() {
+        return this.currentPose.getHeading() + this.heading;
+    }
+
+    public void setActualRobotHeading(double heading) {
+        this.heading = heading;
     }
 
     public void setTurretAngle(double goal) {
@@ -147,25 +152,30 @@ public class TurretUsingOdo implements Component {
             })
             .setIsDone(() -> true);
 
-    public Command turretStateForward = new InstantCommand(() -> {
+    public void turretStateForward() {
         switch (currentState) {
             case AUTO:
-                this.setTurretForward.schedule(); break;
+                this.currentState = turretState.FORWARD;
+                setTurretAngle(0);
+                break;
             case FORWARD:
-                this.setTurretOff.schedule(); break;
+                this.currentState = turretState.OFF; break;
             case OFF:
-                this.setTurretAuto.schedule(); break;
+                this.currentState = turretState.AUTO; break;
         }
-    });
+    }
 
-    public Command turretStateBackward = new InstantCommand(() -> {
+    public void turretStateBackward() {
         switch (currentState) {
             case AUTO:
-                this.setTurretOff.schedule(); break;
+                this.currentState = turretState.OFF; break;
             case FORWARD:
-                this.setTurretAuto.schedule(); break;
+                this.currentState = turretState.AUTO; break;
             case OFF:
-                this.setTurretForward.schedule(); break;
+                this.currentState = turretState.FORWARD;
+                setTurretAngle(0);
+                break;
         }
-    });
+    }
+
 }

@@ -20,6 +20,9 @@ import dev.nextftc.ftc.*;
 import org.firstinspires.ftc.teamcode.helpers.Alliance;
 import org.firstinspires.ftc.teamcode.helpers.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
+import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
+import org.firstinspires.ftc.teamcode.subsystems.AimbotValues;
+import org.firstinspires.ftc.teamcode.subsystems.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
 import org.firstinspires.ftc.teamcode.subsystems.TurretUsingOdo;
@@ -35,18 +38,24 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     {
         addComponents(
                 flywheel = new Flywheel(),
+                drive = new FieldCentricDrive(),
                 BindingsComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower),
+                aimbot = new Aimbot(),
                 odoTurret = new TurretUsingOdo()
         );
     }
     TurretUsingOdo odoTurret;
+    FieldCentricDrive drive;
+    Aimbot aimbot;
     Flywheel flywheel;
     private ElapsedTime looptime;
     private double highestLooptime = 0;
     private LimelightComponent limelightComponent;
-    double FLYWHEEL_VEL = 1300;//= 1300; // IN RPM
+    double FLYWHEEL_VEL;//= 1300; // IN RPM
+    double HOOD_POS;
     double INTAKE_POWER = 0.9;
+    private boolean FLYWHEEL_ON = false;
     int FLYWHEEL_STEP = 50;
     private DcMotor intakeMotor;
     private Servo flipper, light;
@@ -56,10 +65,12 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     Follower follower;
     private double color;
     public Alliance alliance;
+    double botDistance;
 
     @Override
     public void onInit() {
         follower = Constants.createFollower(hardwareMap);
+        drive.setOffset(OpModeTransfer.currentPose.getHeading());
         follower.setStartingPose(OpModeTransfer.currentPose);
         follower.update();
 
@@ -75,6 +86,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
         alliance = OpModeTransfer.alliance;
         Button g1Back = button(() -> gamepad1.back);
+        Button g2Back = button(() -> gamepad2.back);
+        g2Back.whenBecomesTrue(() -> odoTurret.zeroTurret());
         g1Back.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
                     if (alliance == Alliance.BLUE) alliance = Alliance.RED;
@@ -97,10 +110,11 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     @Override
     public void onStartButtonPressed() {
 
-        follower.startTeleOpDrive();
+        //follower.startTeleOpDrive();
 
-        odoTurret.setTurretAuto.schedule();
         odoTurret.setAlliance(alliance);
+        aimbot.setAlliance(alliance);
+
 
 
         Button g2X = button(() -> gamepad2.x);
@@ -121,48 +135,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         Button g1B = button(() -> gamepad1.b);
 
-        g1Right.whenBecomesTrue(() -> odoTurret.turretStateForward.schedule());
+        g1Right.whenBecomesTrue(() -> odoTurret.turretStateForward());
 
-        g1Left.whenBecomesTrue(() -> odoTurret.turretStateBackward.schedule());
-
-        /*
-        g1RT.toggleOnBecomesTrue()
-                .whenBecomesTrue(() -> {
-                    FLYWHEEL_VEL = 1300;
-                    flywheel.setTargetVel(FLYWHEEL_VEL);
-                    intakeMotor.setPower(INTAKE_POWER);
-                    leftFireServo.setPower(FIRE_POWER);
-                    sideWheelServo.setPower(FIRE_POWER);
-
-                })
-                .whenBecomesFalse(() -> {
-                    flywheel.setTargetVel(0);
-                    intakeMotor.setPower(0);
-                    leftFireServo.setPower(0);
-                    sideWheelServo.setPower(0);
-                });
-        g1RB.whenBecomesTrue(() -> {
-            if (FLYWHEEL_VEL >= 1600) {
-                FLYWHEEL_VEL = 1600;
-                flywheel.setTargetVel(FLYWHEEL_VEL);
-
-            }
-            else{
-                FLYWHEEL_VEL = FLYWHEEL_VEL + FLYWHEEL_STEP;
-                flywheel.setTargetVel(FLYWHEEL_VEL);
-
-            }
-        });
-        g1LB.whenBecomesTrue(() -> {
-            if (FLYWHEEL_VEL <= 100) {
-                FLYWHEEL_VEL = 0;
-                flywheel.setTargetVel(FLYWHEEL_VEL);
-            }
-            else {
-                FLYWHEEL_VEL = FLYWHEEL_VEL - FLYWHEEL_STEP;
-                flywheel.setTargetVel(FLYWHEEL_VEL);
-            }
-        }); */
+        g1Left.whenBecomesTrue(() -> odoTurret.turretStateBackward());
 
         g1RT.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> SLOW_MODE = 0.5)
@@ -171,8 +146,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
 
         g2Y.toggleOnBecomesTrue()
-                .whenBecomesTrue(() -> flywheel.setTargetVel(FLYWHEEL_VEL))
-                .whenBecomesFalse(() -> flywheel.setTargetVel(0.0));
+                .whenBecomesTrue(() -> FLYWHEEL_ON = true)
+                .whenBecomesFalse(() -> FLYWHEEL_ON = false);
 
 
         g2X.toggleOnBecomesTrue()
@@ -207,7 +182,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
 
 
-        g2B.whenTrue(() -> { flipper.setPosition(0.1); color=0.67; })
+        g2B.whenTrue(() -> {
+            flipper.setPosition(0.1);
+            color=0.67; })
                 .whenBecomesFalse(() -> { flipper.setPosition(0.52); color=0.388; });
 
 
@@ -220,27 +197,36 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         gUp.whenTrue(() -> flywheel.setHoodPower(0.2));
         gDown.whenTrue(() -> flywheel.setHoodPower(-0.2));
 
-
         g1B.whenBecomesTrue(() -> {
-            follower.setPose(
-                    new Pose(follower.getPose().getX(), follower.getPose().getY(), 0)
-            );
+            drive.setOffset(follower.getHeading());
         });
 
 
     }
     @Override
     public void onUpdate() {
+        drive.update(follower.getHeading());
         looptime.reset();
         light.setPosition(color);
 
-        follower.setTeleOpDrive(
-                -gamepad1.left_stick_y * SLOW_MODE,
-                -gamepad1.left_stick_x * SLOW_MODE,
-                -gamepad1.right_stick_x * SLOW_MODE,
-                false
-        );
+//        follower.setTeleOpDrive(
+//                -gamepad1.left_stick_y * SLOW_MODE,
+//                -gamepad1.left_stick_x * SLOW_MODE,
+//                -gamepad1.right_stick_x * SLOW_MODE,
+//                false
+//        );
         follower.update();
+
+        aimbot.setCurrentPose(follower.getPose());
+        aimbot.update();
+        FLYWHEEL_VEL = aimbot.getAimbotValues().velocity;
+        HOOD_POS = aimbot.getAimbotValues().hoodPos;
+        flywheel.setHoodGoalPos(HOOD_POS);
+        if (FLYWHEEL_ON) {
+            flywheel.setTargetVel(FLYWHEEL_VEL);
+        } else {
+            flywheel.setTargetVel(0);
+        }
 
         /*double currentHeading = follower.getHeading();
         limelightComponent.update(currentHeading);
@@ -254,6 +240,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         BindingManager.update();
         flywheel.update();
+
 
         odoTurret.setCurrentPose(follower.getPose());
         odoTurret.update();

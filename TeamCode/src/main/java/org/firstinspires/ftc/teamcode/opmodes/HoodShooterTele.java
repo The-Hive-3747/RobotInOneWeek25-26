@@ -216,7 +216,6 @@ LimelightComponent limelight;
 
         BindingManager.update();
         flywheel.update();
-        drive.update();
 
         if (looptime.milliseconds() > highestLooptime) {
             highestLooptime = looptime.milliseconds();

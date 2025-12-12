@@ -60,13 +60,13 @@ public class FrontBlueAuto extends NextFTCOpMode {
         Servo light = hardwareMap.get(Servo.class, "light");
 
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-        FrontAutoPaths.alliance = Alliance.RED;
+        FrontAutoPaths.alliance = Alliance.BLUE;
         FrontAutoPaths.generatePaths(PedroComponent.follower());
         PedroComponent.follower().setStartingPose(new Pose(startingPose.getX(), startingPose.getY(), startAngle));
 
         turret.setAlliance(Alliance.BLUE);
 
-        if (FrontAutoPaths.getAlliance() == Alliance.BLUE) {
+        if (FrontAutoPaths.getAlliance() == Alliance.RED) {
             light.setPosition(0.279);
         } else {
             light.setPosition(0.611);
