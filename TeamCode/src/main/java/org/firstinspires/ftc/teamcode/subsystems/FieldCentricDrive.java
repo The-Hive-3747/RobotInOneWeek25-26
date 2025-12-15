@@ -4,18 +4,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.teamcode.helpers.GoBildaPinpointDriver;
-import org.firstinspires.ftc.teamcode.vision.limelight.LimelightComponent;
-
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.core.components.Component;
-import dev.nextftc.hardware.impl.MotorEx;
 
 public class FieldCentricDrive implements Component {
-    GoBildaPinpointDriver odo;
     double offset = 0;
     DcMotor frontLeft, frontRight, backLeft, backRight;
     Gamepad gamepad;

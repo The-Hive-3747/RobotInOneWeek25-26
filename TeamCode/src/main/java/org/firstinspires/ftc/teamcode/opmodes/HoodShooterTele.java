@@ -24,7 +24,6 @@ import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.NextFTCOpMode;
-import org.firstinspires.ftc.teamcode.helpers.GoBildaPinpointDriver;
 
 @TeleOp(name="hood shooter tele tuning")
 public class HoodShooterTele extends NextFTCOpMode {

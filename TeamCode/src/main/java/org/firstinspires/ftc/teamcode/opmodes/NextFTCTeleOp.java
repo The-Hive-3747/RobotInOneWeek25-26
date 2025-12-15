@@ -12,7 +12,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import dev.nextftc.bindings.BindingManager;
 import dev.nextftc.bindings.Button;
-import dev.nextftc.core.commands.conditionals.SwitchCommand;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.*;
@@ -21,12 +20,9 @@ import org.firstinspires.ftc.teamcode.helpers.Alliance;
 import org.firstinspires.ftc.teamcode.helpers.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
-import org.firstinspires.ftc.teamcode.subsystems.AimbotValues;
 import org.firstinspires.ftc.teamcode.subsystems.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
-import org.firstinspires.ftc.teamcode.subsystems.Hood;
-import org.firstinspires.ftc.teamcode.subsystems.TurretUsingOdo;
-import org.firstinspires.ftc.teamcode.subsystems.TurretUsingOdo.turretState;
+import org.firstinspires.ftc.teamcode.subsystems.Turret;
 import org.firstinspires.ftc.teamcode.vision.limelight.LimelightComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,10 +38,10 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 BindingsComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower),
                 aimbot = new Aimbot(),
-                odoTurret = new TurretUsingOdo()
+                turret = new Turret()
         );
     }
-    TurretUsingOdo odoTurret;
+    Turret turret;
     FieldCentricDrive drive;
     Aimbot aimbot;
     Flywheel flywheel;
@@ -89,13 +85,13 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g2Back = button(() -> gamepad2.back);
         Button g2Options = button(() -> gamepad2.options);
         g2Options.whenBecomesTrue(() -> flywheel.resetHoodEncoder());
-        g2Back.whenBecomesTrue(() -> odoTurret.zeroTurret());
+        g2Back.whenBecomesTrue(() -> turret.zeroTurret());
         g1Back.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
                     if (alliance == Alliance.BLUE) alliance = Alliance.RED;
                     else alliance = Alliance.BLUE;
 
-                    odoTurret.setAlliance(alliance);
+                    turret.setAlliance(alliance);
                 });
         looptime = new ElapsedTime();
     }
@@ -114,7 +110,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         //follower.startTeleOpDrive();
 
-        odoTurret.setAlliance(alliance);
+        turret.setAlliance(alliance);
         aimbot.setAlliance(alliance);
 
 
@@ -143,9 +139,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         //g1X.whenBecomesTrue(() -> odoTurret.resetTurret());
 
-        g1Right.whenBecomesTrue(() -> odoTurret.turretStateForward());
+        g1Right.whenBecomesTrue(() -> turret.turretStateForward());
 
-        g1Left.whenBecomesTrue(() -> odoTurret.turretStateBackward());
+        g1Left.whenBecomesTrue(() -> turret.turretStateBackward());
 
         g1RT.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> SLOW_MODE = 0.5)
@@ -225,13 +221,6 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         drive.update(follower.getHeading());
         looptime.reset();
         light.setPosition(color);
-
-//        follower.setTeleOpDrive(
-//                -gamepad1.left_stick_y * SLOW_MODE,
-//                -gamepad1.left_stick_x * SLOW_MODE,
-//                -gamepad1.right_stick_x * SLOW_MODE,
-//                false
-//        );
         follower.update();
 
         aimbot.setCurrentPose(follower.getPose());
@@ -259,8 +248,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         flywheel.update();
 
 
-        odoTurret.setCurrentPose(follower.getPose());
-        odoTurret.update();
+        turret.setCurrentPose(follower.getPose());
+        turret.update();
 
         if (looptime.milliseconds() > highestLooptime) {
             highestLooptime = looptime.milliseconds();

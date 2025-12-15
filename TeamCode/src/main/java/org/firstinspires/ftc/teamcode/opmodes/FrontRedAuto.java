@@ -20,15 +20,15 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.helpers.Alliance;
+import org.firstinspires.ftc.teamcode.helpers.Light;
 import org.firstinspires.ftc.teamcode.helpers.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
-import org.firstinspires.ftc.teamcode.subsystems.TurretUsingOdo;
+import org.firstinspires.ftc.teamcode.subsystems.Turret;
 
 import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.groups.CommandGroup;
@@ -46,11 +46,13 @@ public class FrontRedAuto extends NextFTCOpMode {
                 new PedroComponent(Constants::createFollower),
                 flywheel = new Flywheel(),
                 intake = new Intake(),
-                turret = new TurretUsingOdo()
+                turret = new Turret(),
+                light = new Light()
         );
     }
     CommandGroup autonomous;
-    TurretUsingOdo turret;
+    Light light;
+    Turret turret;
     Flywheel flywheel;
     Intake intake;
     TelemetryManager telemetryM;
@@ -58,8 +60,6 @@ public class FrontRedAuto extends NextFTCOpMode {
 
     @Override
     public void onInit() {
-        Servo light = hardwareMap.get(Servo.class, "light");
-
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
         FrontAutoPaths.alliance = Alliance.RED;
         FrontAutoPaths.generatePaths(PedroComponent.follower());
@@ -68,9 +68,9 @@ public class FrontRedAuto extends NextFTCOpMode {
         turret.setAlliance(Alliance.RED);
 
         if (FrontAutoPaths.getAlliance() == Alliance.RED) {
-            light.setPosition(0.279);
+            light.setColor(Light.COLOR_RED);
         } else {
-            light.setPosition(0.611);
+            light.setColor(Light.COLOR_BLUE);
         }
 
         autonomous = new SequentialGroup(

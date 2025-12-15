@@ -15,7 +15,7 @@ import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
 
-public class TurretUsingOdo implements Component {
+public class Turret implements Component {
     DcMotorEx turret;
     Pose currentPose;
     ElapsedTime resetTimer = new ElapsedTime();

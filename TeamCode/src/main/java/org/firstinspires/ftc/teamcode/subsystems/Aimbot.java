@@ -1,17 +1,13 @@
 package org.firstinspires.ftc.teamcode.subsystems;
-import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
 
 import org.firstinspires.ftc.teamcode.helpers.Alliance;
-import org.firstinspires.ftc.teamcode.helpers.GoBildaPinpointDriver;
 
 
 public class Aimbot implements Component{
-    GoBildaPinpointDriver odo;
-    
     Pose currentPose;
     double velocity;
     double percentage;
