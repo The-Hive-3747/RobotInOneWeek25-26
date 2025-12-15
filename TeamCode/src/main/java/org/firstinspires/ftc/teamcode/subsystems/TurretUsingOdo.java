@@ -164,10 +164,10 @@ public class TurretUsingOdo implements Component {
     public void setAlliance(Alliance all) {
         this.alliance = all;
         if (this.alliance == Alliance.RED) {
-            goalX = 144;
+            goalX = 140;
             goalY = 144;
         } else {
-            goalX = 0;
+            goalX = 4;
             goalY = 144;
         }
     }
@@ -211,6 +211,9 @@ public class TurretUsingOdo implements Component {
                 setTurretAngle(0);
                 break;
         }
+    }
+    public void turretStateReset() {
+
     }
 
 }

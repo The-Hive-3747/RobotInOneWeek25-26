@@ -59,7 +59,7 @@ public class Aimbot implements Component{
             new AimbotValues(116.5, 1350, 1750),
             new AimbotValues(121.5, 1400, 1500),
             new AimbotValues(126.5, 1450, 2000),
-            new AimbotValues(131.5, 1450, 2000),
+            new AimbotValues(131.5, 1500, 2000),
     };
     public AimbotValues getAimValues(double distance){
         AimbotValues next;

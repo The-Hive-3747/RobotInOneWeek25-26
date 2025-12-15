@@ -123,6 +123,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g2Y = button(() -> gamepad2.y);
         Button g2B = button(() -> gamepad2.b);
         Button g2A = button(() -> gamepad2.a);
+        Button g2RT = button(() -> gamepad2.right_trigger > 0.1);
 
         Button gUp = button(() -> gamepad2.dpad_up || gamepad1.dpad_up);
         Button gDown = button(() -> gamepad2.dpad_down || gamepad1.dpad_down);
@@ -130,6 +131,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         Button g1Right = button(() -> gamepad1.dpad_right);
         Button g1Left = button(() -> gamepad1.dpad_left);
+        Button g1A = button(() -> gamepad1.a);
 
         Button g2LT = button(() -> gamepad2.left_trigger > 0.1);
 
@@ -156,7 +158,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 .whenBecomesFalse(() -> FLYWHEEL_ON = false);
 
 
-        g2X.toggleOnBecomesTrue()
+        g2A.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
                     intakeMotor.setPower(INTAKE_POWER);
                 })
@@ -176,7 +178,14 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                     leftFireServo.setPower(0);
                 });
 
-        g2A.toggleOnBecomesTrue()
+        g1A.whenBecomesTrue(() -> {
+            FrontAutoPaths.alliance = alliance;
+            FrontAutoPaths.generatePaths(follower);
+            Pose resetPose = new Pose(FrontAutoPaths.startingPose.getX(), FrontAutoPaths.startingPose.getY(), FrontAutoPaths.startAngle);
+            follower.setPose(resetPose);
+        });
+
+        g2X.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
                     leftFireServo.setPower(FIRE_POWER);
                     sideWheelServo.setPower(FIRE_POWER);
@@ -196,8 +205,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
 
         gUpOrDown.whenBecomesFalse(() -> {
-                    flywheel.setHoodGoalPos(flywheel.getHoodPos());
                     flywheel.setHoodPower(0);
+                    flywheel.resetHoodEncoder();
+                    //flywheel.setHoodGoalPos(flywheel.getHoodPos());
                 });
 
         gUp.whenTrue(() -> flywheel.setHoodPower(0.2));
@@ -205,6 +215,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         g1B.whenBecomesTrue(() -> {
             drive.setOffset(follower.getHeading());
+
         });
 
 

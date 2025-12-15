@@ -1,26 +1,25 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.intake1;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.intake2;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.intake3;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForIntake1;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForIntake2;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForIntake3;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForOpenGate;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.openGate;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.park;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.startAngle;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.startingPose;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromIntake2;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromIntake3;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromOpenGate;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromStart;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.intake1;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.intake2;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.intake3;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake1;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake2;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake3;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForOpenGate;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.openGate;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.park;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.startAngle;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.startingPose;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake2;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake3;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromOpenGate;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromStart;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.helpers.Alliance;
@@ -39,8 +38,8 @@ import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 
-@Autonomous(name = "front blue auto")
-public class FrontBlueAuto extends NextFTCOpMode {
+@Autonomous(name = "back red auto")
+public class BackRedAuto extends NextFTCOpMode {
     {
         addComponents(
                 new PedroComponent(Constants::createFollower),
@@ -61,13 +60,13 @@ public class FrontBlueAuto extends NextFTCOpMode {
         Servo light = hardwareMap.get(Servo.class, "light");
 
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-        FrontAutoPaths.alliance = Alliance.BLUE;
-        FrontAutoPaths.generatePaths(PedroComponent.follower());
+        BackAutoPaths.alliance = Alliance.RED;
+        BackAutoPaths.generatePaths(PedroComponent.follower());
         PedroComponent.follower().setStartingPose(new Pose(startingPose.getX(), startingPose.getY(), startAngle));
 
-        turret.setAlliance(Alliance.BLUE);
+        turret.setAlliance(Alliance.RED);
 
-        if (FrontAutoPaths.getAlliance() == Alliance.RED) {
+        if (BackAutoPaths.getAlliance() == Alliance.RED) {
             light.setPosition(0.279);
         } else {
             light.setPosition(0.611);
@@ -144,7 +143,6 @@ public class FrontBlueAuto extends NextFTCOpMode {
         );
 
         turret.zeroTurret();
-
     }
 
     @Override
@@ -173,6 +171,6 @@ public class FrontBlueAuto extends NextFTCOpMode {
     @Override
     public void onStop() {
         OpModeTransfer.currentPose = PedroComponent.follower().getPose();
-        OpModeTransfer.alliance = Alliance.BLUE;
+        OpModeTransfer.alliance = Alliance.RED;
     }
 }

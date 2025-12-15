@@ -34,6 +34,7 @@ import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.groups.CommandGroup;
 import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
+import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
@@ -131,6 +132,9 @@ public class FrontRedAuto extends NextFTCOpMode {
                         intake.startTransfer
                 ),
                 new ParallelGroup(
+                        new InstantCommand(
+                                () -> flywheel.setHoodGoalPos(0)
+                        ),
                         turret.setTurretForward,
                         flywheel.stopFlywheel,
                         intake.stopIntake,
