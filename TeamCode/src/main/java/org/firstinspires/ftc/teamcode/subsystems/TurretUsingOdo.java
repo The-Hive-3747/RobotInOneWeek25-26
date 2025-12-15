@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.helpers.Alliance;
@@ -11,7 +10,6 @@ import org.firstinspires.ftc.teamcode.helpers.Alliance;
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
 import dev.nextftc.core.commands.Command;
-import dev.nextftc.core.commands.conditionals.SwitchCommand;
 import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.components.Component;
@@ -33,7 +31,13 @@ public class TurretUsingOdo implements Component {
     }
     turretState currentState = turretState.AUTO;
     Alliance alliance;
-    double goalAngle, goalX, goalY, turretPower, turretGoal, heading;
+    private double goalAngle, goalX, goalY, turretPower, turretGoal, heading;
+    private KineticState ZERO_ANGLE = new KineticState(0);
+
+    private double TURRET_PID_KP = 0.04, TURRET_PID_KD = 0.01;
+    private double LEFT_TURRET_LIMIT = -60, RIGHT_TURRET_LIMIT = 60;
+    private double TURRET_POWER_LIMIT = 0.8, TURRET_ANGLE_DEADZONE = 2;
+    private double TURRET_TICKS_TO_ANGLES = 90/6100;
     ControlSystem turretPID;
 
     @Override
@@ -41,7 +45,7 @@ public class TurretUsingOdo implements Component {
         turret = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "turret");
         currentState = turretState.AUTO;
         turretPID = ControlSystem.builder()
-                .posPid(0.04, 0, 0.01)
+                .posPid(TURRET_PID_KP, 0, TURRET_PID_KD)
                 .build();
         turretGoal = 0;
     }
@@ -59,8 +63,10 @@ public class TurretUsingOdo implements Component {
 
     public void update() {
         if (currentState == turretState.AUTO) {
-            getGoalAngle();
+            turretPID.setGoal(getAutoAimGoalAngle());
+            turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
         } else if (currentState == turretState.FORWARD) {
+            turretPID.setGoal(ZERO_ANGLE);
             turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
         } else if(currentState == turretState.ZEROING){
             if(resetTimer.milliseconds() < RESET_TIME_MS){
@@ -81,16 +87,23 @@ public class TurretUsingOdo implements Component {
                 currentState = turretState.AUTO;
                 resetStarted = false;
             }
-        }else {
-            turretPower = 0;
-        }
-        if (turretPower > 0.8) {
-            turretPower = 0.8;
-        } else if (Math.abs(getTurretAngle() - turretGoal) < 2) {
+        } else {
+            // this is when the TurretState is Off
             turretPower = 0;
         }
 
+        // limit the turret power to our Turret Power Limit
+        turretPower = Math.min(TURRET_POWER_LIMIT, turretPower);
+
+        // Clamp goal so that if we're within the deadzone, we dont waste power
+        if (Math.abs(getTurretAngle() - turretGoal) < TURRET_ANGLE_DEADZONE) {
+            turretPower = 0;
+        }
+
+        // Need to do this because our encoder and motor are reversed
+        // TODO: FLIP ENCODER MECHANICALLY SO THAT THEY MATCH UP
         turretPower *= -1;
+
 
         turret.setPower(turretPower);
 
@@ -100,42 +113,53 @@ public class TurretUsingOdo implements Component {
         ActiveOpMode.telemetry().addData("turret angle", this.getTurretAngle());
     }
 
-    public void getGoalAngle() {
+    /**
+     * @return: KineticState of goal, for auto-aim.
+     */
+    public KineticState getAutoAimGoalAngle() {
         if (currentPose != null) {
             goalAngle = -Math.atan2((goalY - this.currentPose.getY()), (goalX - this.currentPose.getX())); // IN RADS
-            turretGoal = normalizeAngle(goalAngle + this.getActualHeading());
-            turretPID.setGoal(new KineticState(this.putInTurretLimits(Math.toDegrees(turretGoal))));
-            turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
+            turretGoal = normalizeAngle(goalAngle + this.currentPose.getHeading());
+            return new KineticState(this.putInTurretLimits(Math.toDegrees(turretGoal)));
+        } else {
+            return ZERO_ANGLE;
         }
     }
 
+
+    /**
+     *
+     * @param goal: goal that you are putting within turret limits
+     * @return goal: which is within turret limits
+     */
     public double putInTurretLimits(double goal) {
         //Remove Limits if Zeroing
-        if(currentState == turretState.ZEROING){
+        if (currentState == turretState.ZEROING){
             return goal;
         }
-        if (goal > 60 || goal < -60) { //insanely horribly code
-            if (goal > 60) {
-                goal = 60;
+        if (goal > RIGHT_TURRET_LIMIT || goal < LEFT_TURRET_LIMIT) {
+            if (goal > RIGHT_TURRET_LIMIT) {
+                goal = RIGHT_TURRET_LIMIT;
             } else {
-                goal = -60;
+                goal = LEFT_TURRET_LIMIT;
             }
         }
         return goal;
     }
 
+    /**
+     *
+     * @param pose: sets the current pose, used for auto-aim calculations
+     *            NEEDS TO BE DONE EVERY LOOP
+     */
     public void setCurrentPose(Pose pose) {
         this.currentPose = pose;
     }
 
-    public double getActualHeading() {
-        return this.currentPose.getHeading() + this.heading;
-    }
-
-    public void setActualRobotHeading(double heading) {
-        this.heading = heading;
-    }
-
+    /**
+     *
+     * @param goal: goal angle for turret to face
+     */
     public void setTurretAngle(double goal) {
         currentState = turretState.FORWARD;
         turretPID.setGoal(new KineticState(goal));
@@ -146,8 +170,14 @@ public class TurretUsingOdo implements Component {
         return currentState;
     }
 
+
+    /**
+     *
+     * @return turret angle after converting from ticks
+     * IN DEGREES
+     */
     public double getTurretAngle() {
-        return (turret.getCurrentPosition()*90)/6100;
+        return turret.getCurrentPosition()*TURRET_TICKS_TO_ANGLES;
     }
 
     public static double normalizeAngle(double angleRad) {
@@ -161,6 +191,11 @@ public class TurretUsingOdo implements Component {
         return angleRad;
     }
 
+    /**
+     *
+     * @param all: alliance we're on
+     *           sets the goal (physical) values for red & blue
+     */
     public void setAlliance(Alliance all) {
         this.alliance = all;
         if (this.alliance == Alliance.RED) {
@@ -211,9 +246,6 @@ public class TurretUsingOdo implements Component {
                 setTurretAngle(0);
                 break;
         }
-    }
-    public void turretStateReset() {
-
     }
 
 }
