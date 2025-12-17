@@ -16,19 +16,19 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(11.8)// 13.7//V2.5 robot mass //V2 robot mass = 12.65
+            .mass(13.8)// 11.8// 13.7//V2.5 robot mass //V2 robot mass = 12.65
             .useSecondaryTranslationalPIDF(true)
             .useSecondaryHeadingPIDF(true)
             .useSecondaryDrivePIDF(true)
-            .lateralZeroPowerAcceleration(-77.91)//-68.71 //-37.32) //-87.57
-            .forwardZeroPowerAcceleration(-45.59)//-48.13 //-52.34
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.55, 0, 0.005, 0))//(0.03, 0, 0, 0))
-            .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.2, 0, 0.001, 0))//(0.1, 0, 0.01, 0))//just a guess
+            .lateralZeroPowerAcceleration(-32.41)//-77.91//-68.71 //-37.32) //-87.57
+            .forwardZeroPowerAcceleration(-66.10)//-45.59//-48.13 //-52.34
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.53, 0, 0.08, 0))//(0.55, 0, 0.005, 0)//(0.03, 0, 0, 0))
+            .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.2, 0, 0.012, 0))//(0.2, 0, 0.001, 0)//(0.1, 0, 0.01, 0))//just a guess
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.25, 0, 0, 0.6, 0.015))//(0.5,0,0.000,0.6,0.015))//(0.09, 0, 0.0001, 0.0, 0.00))
             .secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(0.001, 0, 0.00005, 0.6, 0.0001))//(0.09, 0, 0.000005, 0.6, 0.01))//(0.001, 0, 0.00001, 0, 0.01))//just a guess
             .centripetalScaling(0.0005)//(0.001)
             .headingPIDFCoefficients(new PIDFCoefficients(0.9, 0, 0, 0.01))//(1, 0, 0, 0.01))
-            .secondaryHeadingPIDFCoefficients(new PIDFCoefficients(0.25, 0, 0.01, -0.0008))//(0.1, 0, 0.01, 0))//just a guess
+            .secondaryHeadingPIDFCoefficients(new PIDFCoefficients(4, 0, 0.15, -0.0008))//(0.25, 0, 0.01, -0.0008)//(0.1, 0, 0.01, 0))//just a guess
             .drivePIDFSwitch(5);//5
 
 
@@ -43,8 +43,8 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(57.49)//61.78
-            .yVelocity(45.39);//49.90 //(24.53);
+            .xVelocity(75.10)//57.49//61.78
+            .yVelocity(58.18);//45.39//49.90 //(24.53);
 
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
