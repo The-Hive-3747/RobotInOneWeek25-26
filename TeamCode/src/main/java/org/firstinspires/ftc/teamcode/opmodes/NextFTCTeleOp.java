@@ -22,6 +22,7 @@ import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
 import org.firstinspires.ftc.teamcode.subsystems.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
+import org.firstinspires.ftc.teamcode.subsystems.Relocalization;
 import org.firstinspires.ftc.teamcode.subsystems.Turret;
 import org.firstinspires.ftc.teamcode.vision.limelight.LimelightComponent;
 import org.slf4j.Logger;
@@ -38,9 +39,11 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 BindingsComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower),
                 aimbot = new Aimbot(),
-                turret = new Turret()
+                turret = new Turret(),
+                limelight = new Relocalization()
         );
     }
+    Relocalization limelight;
     Turret turret;
     FieldCentricDrive drive;
     Aimbot aimbot;
@@ -243,10 +246,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
               Pose limelightPose = new Pose(limelightComponent.getRobotX(),limelightComponent.getRobotY(),limelightComponent.getRobotHeading());
             }
        }*/
-
+        limelight.update();
         BindingManager.update();
         flywheel.update();
-
 
         turret.setCurrentPose(follower.getPose());
         turret.update();
@@ -254,11 +256,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         if (looptime.milliseconds() > highestLooptime) {
             highestLooptime = looptime.milliseconds();
         }
-
         telemetry.addData("looptime (ms)", looptime.milliseconds());
         telemetry.addData("highest looptime (ms)", highestLooptime);
         telemetry.addData("pose", follower.getPose());
-
         telemetry.update();
     }
 }

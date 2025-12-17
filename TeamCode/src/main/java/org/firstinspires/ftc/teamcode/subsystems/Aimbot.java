@@ -38,7 +38,8 @@ public class Aimbot implements Component{
     public Pose getCurrentPose() {
         return this.currentPose;
     }
-    AimbotValues[] aimbotValues = {
+    AimbotValues[] aimbotValues = { //These are all the actual values from tests on field, must be
+                                    // in order of distance from least to greatest
             new AimbotValues(16.5, 850, 0),
             new AimbotValues(21.5, 950, 0),
             new AimbotValues(26.5, 950, 0),
@@ -69,6 +70,7 @@ public class Aimbot implements Component{
         for(AimbotValues value : aimbotValues) {
             next = value;
             if (next != null && last != null && distance >= last.distance && distance < next.distance) {
+                //math for linear interpolation code
                 percentage = (distance - last.distance)/(next.distance-last.distance);
                 velocity = (next.velocity - last.velocity) * percentage + last.velocity;
                 hoodPos = (next.hoodPos - last.hoodPos) * percentage + last.hoodPos;
@@ -84,7 +86,7 @@ public class Aimbot implements Component{
     public void setAlliance(Alliance all) {
         this.alliance = all;
         if (this.alliance == Alliance.RED) {
-            goalX = 129;
+            goalX = 129; //this is the point of the middle of the front panel of the goal
             goalY = 129;
         } else {
             goalX = 15;
@@ -92,6 +94,7 @@ public class Aimbot implements Component{
         }
     }
     public double getBotDistance() {
+        //this is math for the distance from bot to goal using hypotenuse of x and y
         botDistance = Math.sqrt(Math.pow(goalX - currentPose.getX(), 2) + Math.pow(goalY - currentPose.getY(), 2));
         return botDistance;
     }
