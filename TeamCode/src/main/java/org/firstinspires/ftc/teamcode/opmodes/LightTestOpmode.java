@@ -23,14 +23,14 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
 
-import static org.firstinspires.ftc.teamcode.helpers.GoBildaPrismDriver.LayerHeight;
+import static org.firstinspires.ftc.teamcode.utilities.GoBildaPrismDriver.LayerHeight;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.helpers.Color;
-import org.firstinspires.ftc.teamcode.helpers.GoBildaPrismDriver;
-import org.firstinspires.ftc.teamcode.helpers.PrismAnimations;
+import org.firstinspires.ftc.teamcode.utilities.Color;
+import org.firstinspires.ftc.teamcode.utilities.GoBildaPrismDriver;
+import org.firstinspires.ftc.teamcode.utilities.PrismAnimations;
 
 import java.util.concurrent.TimeUnit;
 

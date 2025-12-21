@@ -20,7 +20,7 @@
  *   SOFTWARE.
  */
 
-package org.firstinspires.ftc.teamcode.helpers;
+package org.firstinspires.ftc.teamcode.utilities;
 
 public class Color {
     public int red;

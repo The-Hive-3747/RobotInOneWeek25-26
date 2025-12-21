@@ -3,9 +3,10 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.helpers.Alliance;
+import org.firstinspires.ftc.teamcode.utilities.Alliance;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
@@ -17,6 +18,7 @@ import dev.nextftc.ftc.ActiveOpMode;
 
 public class Turret implements Component {
     DcMotorEx turret;
+    TouchSensor limitSwitch;
     Pose currentPose;
     ElapsedTime resetTimer = new ElapsedTime();
     boolean resetStarted = false;
@@ -42,6 +44,7 @@ public class Turret implements Component {
 
     @Override
     public void preInit() {
+        limitSwitch = ActiveOpMode.hardwareMap().get(TouchSensor.class, "limitSwitch");
         turret = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "turret");
         currentState = turretState.AUTO;
         turretPID = ControlSystem.builder()
@@ -68,29 +71,14 @@ public class Turret implements Component {
         } else if (currentState == turretState.FORWARD) {
             turretPID.setGoal(ZERO_ANGLE);
             turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
-        } else if(currentState == turretState.ZEROING){
-            if(resetTimer.milliseconds() < RESET_TIME_MS){
-                turretPower = -0.3;
-            }
-            if(resetTimer.milliseconds() > RESET_TIME_MS && !resetStarted){
-                resetStarted = true;
-                turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                setTurretAngle(-LEFT_STOP_DEG);
-            }
-            if(resetStarted && resetTimer.milliseconds() < RESET_TO_ZERO_MS){
-                turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
-            }
-            if(resetTimer.milliseconds() > RESET_TO_ZERO_MS && resetStarted){
-                turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                currentState = turretState.AUTO;
-                resetStarted = false;
-            }
         } else {
             // this is when the TurretState is Off
             turretPower = 0;
         }
+
+        /*if (limitSwitch.isPressed()) {
+            this.zeroTurret();
+        }*/
 
         // limit the turret power to our Turret Power Limit
         turretPower = Math.min(TURRET_POWER_LIMIT, turretPower);
@@ -119,7 +107,7 @@ public class Turret implements Component {
     public KineticState getAutoAimGoalAngle() {
         if (currentPose != null) {
             goalAngle = -Math.atan2((goalY - this.currentPose.getY()), (goalX - this.currentPose.getX())); // IN RADS
-            turretGoal = normalizeAngle(goalAngle + this.currentPose.getHeading());
+            turretGoal = normalizeAngle(goalAngle + this.currentPose.getHeading()) + Math.PI;
             return new KineticState(this.putInTurretLimits(Math.toDegrees(turretGoal)));
         } else {
             return ZERO_ANGLE;
@@ -218,7 +206,6 @@ public class Turret implements Component {
     public Command setTurretForward = new LambdaCommand()
             .setStart(() -> {
                 currentState = turretState.FORWARD;
-                setTurretAngle(0);
             })
             .setIsDone(() -> true);
 
@@ -226,7 +213,6 @@ public class Turret implements Component {
         switch (currentState) {
             case AUTO:
                 this.currentState = turretState.FORWARD;
-                setTurretAngle(0);
                 break;
             case FORWARD:
                 this.currentState = turretState.OFF; break;
@@ -238,12 +224,13 @@ public class Turret implements Component {
     public void turretStateBackward() {
         switch (currentState) {
             case AUTO:
-                this.currentState = turretState.OFF; break;
+                this.currentState = turretState.OFF;
+                break;
             case FORWARD:
-                this.currentState = turretState.AUTO; break;
+                this.currentState = turretState.AUTO;
+                break;
             case OFF:
                 this.currentState = turretState.FORWARD;
-                setTurretAngle(0);
                 break;
         }
     }

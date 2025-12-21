@@ -3,8 +3,8 @@ import com.pedropathing.geometry.Pose;
 
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
-
-import org.firstinspires.ftc.teamcode.helpers.Alliance;
+import org.firstinspires.ftc.teamcode.utilities.AimbotValues;
+import org.firstinspires.ftc.teamcode.utilities.Alliance;
 
 
 public class Aimbot implements Component{

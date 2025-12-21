@@ -20,19 +20,19 @@
  *   SOFTWARE.
  */
 
-package org.firstinspires.ftc.teamcode.helpers;
+package org.firstinspires.ftc.teamcode.utilities;
 
-import static org.firstinspires.ftc.teamcode.helpers.GoBildaPrismDriver.LayerHeight;
+import static org.firstinspires.ftc.teamcode.utilities.GoBildaPrismDriver.LayerHeight;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.helpers.Color;
-import org.firstinspires.ftc.teamcode.helpers.GoBildaPrismDriver;
-import org.firstinspires.ftc.teamcode.helpers.PrismAnimations;
-import org.firstinspires.ftc.teamcode.helpers.PrismAnimations.AnimationType;
-import org.firstinspires.ftc.teamcode.helpers.PrismAnimations.PoliceLights;
-import org.firstinspires.ftc.teamcode.helpers.GoBildaPrismDriver.Artboard;
+import org.firstinspires.ftc.teamcode.utilities.Color;
+import org.firstinspires.ftc.teamcode.utilities.GoBildaPrismDriver;
+import org.firstinspires.ftc.teamcode.utilities.PrismAnimations;
+import org.firstinspires.ftc.teamcode.utilities.PrismAnimations.AnimationType;
+import org.firstinspires.ftc.teamcode.utilities.PrismAnimations.PoliceLights;
+import org.firstinspires.ftc.teamcode.utilities.GoBildaPrismDriver.Artboard;
 
 import java.util.concurrent.TimeUnit;
 
