@@ -24,14 +24,13 @@ public class Flywheel implements Component {
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime colorTimer = new ElapsedTime();
     ControlSystem largeFlywheelPID;
-    Servo light, flipper;
+    Servo flipper;
     Hood hood;
 
     double autoTargetVel = 1040;
     double kP = 0.55;
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
-        light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
         flywheelLeft = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "flywheelLeft");
         flywheelLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         flywheelRight = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "flywheelRight");
@@ -62,30 +61,48 @@ public class Flywheel implements Component {
         colorTimer.reset();
     }
 
+    /**
+     * self-explanatory, resets the hood encoder
+     */
     public void resetHoodEncoder() {
         flywheelLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flywheelLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
 
-
-    // sets motor power DONT use this method normally, its not smart
+    /**
+     *
+     * @param power sets motor power. DONT use this method normally, its not smart
+     */
     public void setPower(double power) {
         flywheelLeft.setPower(power);
         flywheelRight.setPower(power);
     }
-    // gets motor power
+
+
+    /**
+     *
+     * @return motor power
+     */
     public double getPower() {
         return flywheelRight.getPower();
 
     }
-    // gets motor velocity. needs to convert from TPS (ticks per second) to RPM
+
+
+    /**
+     *
+     * @return gets flywheel motor velocity
+     */
     public double getVel() {
-        return (flywheelRight.getVelocity()); // GOBILDA_TICKS_PER_REVOLUTION)*SECONDS_TO_MINUTES;
+        return (flywheelRight.getVelocity());
     }
 
-    // sets the target velocity! since we don't care abt the position of the flywheel, we can just set it to 0
-    // a KineticState is NextFTC's way of storing position, velocity, and acceleration all in one variable
+
+    /**
+     *
+     * @param vel: sets target velocity
+     */
     public void setTargetVel(double vel) {
         targetVel = vel;
         largeFlywheelPID.setGoal(new KineticState(0, targetVel));
@@ -99,7 +116,6 @@ public class Flywheel implements Component {
         flywheelVel = this.getVel();
 
         // correct is the motor power we need to set!
-
         correct = largeFlywheelPID.calculate( // calculate() lets us plug in current vals and outputs a motor power
                 new KineticState(0, flywheelVel) // a KineticState is NextFTC's way of storing position, velocity, and acceleration all in one variable
         );
@@ -124,11 +140,14 @@ public class Flywheel implements Component {
         ActiveOpMode.telemetry().addData("flywheel power", correct);
         ActiveOpMode.telemetry().addData("flywheel vel", flywheelVel);
         ActiveOpMode.telemetry().addData("flywheel target vel", targetVel);
-        //ActiveOpMode.telemetry().addData("balls shot", shotCount);
-        //ActiveOpMode.telemetry().addData("rightVel", flywheelRight.getVelocity());
     }
 
-    // HOOD FUNCTIONS
+
+    // q: why does the hood own the flywheel?
+    // a: the hood encoder uses the left flywheel's encoder port,
+    // so everything becomes easier when the hood is owned by the flywheel
+
+    // HOOD METHODS
     public double getHoodPos() {
         return hood.getHoodPosition();
     }
@@ -163,14 +182,12 @@ public class Flywheel implements Component {
     );
 
     public Command shootAllThree = new LambdaCommand()
-            .setStart(() -> {
-                ActiveOpMode.telemetry().addLine("flywheel is shootinggg");
-
-            })
+            .setStart(() ->
+                    ActiveOpMode.telemetry().addLine("flywheel is shootinggg")
+            )
             .setUpdate(() -> {
                 currentRPM = this.getVel();
                 if (Math.abs(targetVel - currentRPM) < 200) {
-                    light.setPosition(0.67);
                     flipper.setPosition(0.1);
                 } else {
                     flipper.setPosition(0.52);
@@ -178,7 +195,6 @@ public class Flywheel implements Component {
             })
             .setStop(interrupted -> {
                 flipper.setPosition(0.52);
-                light.setPosition(0.388);
             })
-            .setIsDone(() -> (shotTimer.seconds() > 2)); // TODO: CHANGE THIS TO THREE
-}
+            .setIsDone(() -> (shotTimer.seconds() > 2));
+            }

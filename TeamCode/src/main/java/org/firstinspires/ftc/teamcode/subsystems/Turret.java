@@ -22,6 +22,7 @@ public class Turret implements Component {
     Pose currentPose;
     ElapsedTime resetTimer = new ElapsedTime();
     boolean resetStarted = false;
+    boolean hasBeenReset = false;
     private double LEFT_STOP_DEG = -102.0;
     private double RESET_TIME_MS = 2000;
     private double RESET_TO_ZERO_MS = 4000;
@@ -37,9 +38,9 @@ public class Turret implements Component {
     private KineticState ZERO_ANGLE = new KineticState(0);
 
     private double TURRET_PID_KP = 0.04, TURRET_PID_KD = 0.01;
-    private double LEFT_TURRET_LIMIT = -60, RIGHT_TURRET_LIMIT = 60;
+    private double LEFT_TURRET_LIMIT = -100, RIGHT_TURRET_LIMIT = 130;
     private double TURRET_POWER_LIMIT = 0.8, TURRET_ANGLE_DEADZONE = 2;
-    private double TURRET_TICKS_TO_ANGLES = 90/6100;
+    private int TURRET_TICKS_TO_ANGLES = 90/6100;
     ControlSystem turretPID;
 
     @Override
@@ -52,6 +53,7 @@ public class Turret implements Component {
                 .build();
         turretGoal = 0;
     }
+
 
     public void zeroTurret() {
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -76,9 +78,14 @@ public class Turret implements Component {
             turretPower = 0;
         }
 
-        /*if (limitSwitch.isPressed()) {
-            this.zeroTurret();
-        }*/
+        if (limitSwitch.isPressed()) {
+            if (!hasBeenReset) {
+                this.zeroTurret();
+                hasBeenReset = true;
+            }
+        } else if (hasBeenReset) {
+            hasBeenReset = false;
+        }
 
         // limit the turret power to our Turret Power Limit
         turretPower = Math.min(TURRET_POWER_LIMIT, turretPower);
@@ -121,10 +128,6 @@ public class Turret implements Component {
      * @return goal: which is within turret limits
      */
     public double putInTurretLimits(double goal) {
-        //Remove Limits if Zeroing
-        if (currentState == turretState.ZEROING){
-            return goal;
-        }
         if (goal > RIGHT_TURRET_LIMIT || goal < LEFT_TURRET_LIMIT) {
             if (goal > RIGHT_TURRET_LIMIT) {
                 goal = RIGHT_TURRET_LIMIT;
@@ -165,7 +168,7 @@ public class Turret implements Component {
      * IN DEGREES
      */
     public double getTurretAngle() {
-        return turret.getCurrentPosition()*TURRET_TICKS_TO_ANGLES;
+        return turret.getCurrentPosition()*90/6100;
     }
 
     public static double normalizeAngle(double angleRad) {

@@ -59,10 +59,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     private DcMotor intakeMotor;
     private Servo flipper, light;
     private double FIRE_POWER = 0.9;
-    private double SLOW_MODE = 1;
+    private double slowModeMultiplier = 1;
     private CRServo leftFireServo, sideWheelServo;
     Follower follower;
-    private double color;
     public Alliance alliance;
     double botDistance;
 
@@ -82,7 +81,6 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
         alliance = OpModeTransfer.alliance;
         Button g1Back = button(() -> gamepad1.back);
         Button g2Back = button(() -> gamepad2.back);
@@ -97,6 +95,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                     turret.setAlliance(alliance);
                 });
         looptime = new ElapsedTime();
+
     }
     @Override
     public void onWaitForStart() {
@@ -110,7 +109,6 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
     @Override
     public void onStartButtonPressed() {
-
         //follower.startTeleOpDrive();
 
         turret.setAlliance(alliance);
@@ -131,6 +129,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g1Right = button(() -> gamepad1.dpad_right);
         Button g1Left = button(() -> gamepad1.dpad_left);
         Button g1A = button(() -> gamepad1.a);
+        Button g1LT = button(() -> gamepad1.left_trigger > 0.1);
 
         Button g2LT = button(() -> gamepad2.left_trigger > 0.1);
 
@@ -147,8 +146,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         g1Left.whenBecomesTrue(() -> turret.turretStateBackward());
 
         g1RT.toggleOnBecomesTrue()
-                .whenBecomesTrue(() -> SLOW_MODE = 0.5)
-                .whenBecomesFalse(() -> SLOW_MODE = 1);
+                .whenBecomesTrue(() -> slowModeMultiplier = 0.5)
+                .whenBecomesFalse(() -> slowModeMultiplier = 1);
 
 
 
@@ -195,18 +194,16 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 });
 
 
-
-        g2B.whenTrue(() -> {
-            flipper.setPosition(0.1);
-            color=0.67; })
-                .whenBecomesFalse(() -> { flipper.setPosition(0.52); color=0.388; });
+        g2B.whenTrue(() ->
+            flipper.setPosition(0.1)
+            )
+                .whenBecomesFalse(() -> flipper.setPosition(0.52));
 
 
 
         gUpOrDown.whenBecomesFalse(() -> {
                     flywheel.setHoodPower(0);
                     flywheel.resetHoodEncoder();
-                    //flywheel.setHoodGoalPos(flywheel.getHoodPos());
                 });
 
         gUp.whenTrue(() -> flywheel.setHoodPower(0.2));
@@ -221,9 +218,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     }
     @Override
     public void onUpdate() {
-        drive.update(follower.getHeading());
+        drive.update(follower.getHeading(), slowModeMultiplier);
         looptime.reset();
-        light.setPosition(color);
         follower.update();
 
         aimbot.setCurrentPose(follower.getPose());
@@ -256,6 +252,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         if (looptime.milliseconds() > highestLooptime) {
             highestLooptime = looptime.milliseconds();
         }
+        telemetry.addData("turretpos", intakeMotor.getCurrentPosition()*90/6100);
         telemetry.addData("looptime (ms)", looptime.milliseconds());
         telemetry.addData("highest looptime (ms)", highestLooptime);
         telemetry.addData("pose", follower.getPose());
