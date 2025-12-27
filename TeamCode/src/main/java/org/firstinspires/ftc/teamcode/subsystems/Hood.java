@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -16,26 +17,23 @@ public class Hood{
     private double HOOD_MAX_POS = 2500;
     private double HOOD_MIN_POS = 0;
     private double power = 0;
+    private double angle, rotations, offset, lastAngle;
     public boolean allowPID = true;
 
-    private static double HOOD_P = 0.0012;
+    private static double HOOD_P = 0.0006;//0.0012;
+    //private static double HOOD_D = 0.014;
     private KineticState goal;
 
     ControlSystem hoodPID;
     CRServo hood;
     DcMotorEx hoodEncoder;
-
-    public Hood(DcMotorEx encoder) {
+    public Hood(DcMotorEx encoder){
         hoodEncoder = encoder;
     }
-
-
 
     public void init() {
         hood = ActiveOpMode.hardwareMap().get(CRServo.class, "hoodServo");
         hood.setDirection(DcMotorSimple.Direction.REVERSE);
-        hoodEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        hoodEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
 
         // default goal value

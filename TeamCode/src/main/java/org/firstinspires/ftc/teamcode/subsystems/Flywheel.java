@@ -19,7 +19,7 @@ import dev.nextftc.ftc.ActiveOpMode;
 // This is a component file for the flywheel / shooter.
 public class Flywheel implements Component {
 
-    DcMotorEx flywheelLeft, flywheelRight;
+    DcMotorEx flywheelBottom, flywheelTop, intakeMotor;
     static double correct, flywheelVel, targetVel, currentRPM;
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime colorTimer = new ElapsedTime();
@@ -28,31 +28,35 @@ public class Flywheel implements Component {
     Hood hood;
 
     double autoTargetVel = 1040;
-    double kP = 0.55;
+    double kP = 0.02;//0.55
+    double kV = 0.00011;
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
-        flywheelLeft = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "flywheelLeft");
-        flywheelLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        flywheelRight = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "flywheelRight");
+        //this needs to be forward in order to use the hood PID. correction is in set power
+        flywheelBottom = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "flywheelBottom");
+        flywheelBottom.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheelTop = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "flywheelTop");
+        flywheelTop.setDirection(DcMotorEx.Direction.FORWARD);
+        intakeMotor = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "transfer");
 
-        flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheelBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheelTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
 
-        flywheelRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flywheelBottom.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
 
-        flywheelRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        flywheelBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
-
-        hood = new Hood(flywheelLeft);
+        hood = new Hood(intakeMotor);
         hood.init();
 
 
         // a control system is NextFTC's way to build.. control systems!
         largeFlywheelPID = ControlSystem.builder()
-                //.basicFF(kV) // we use a FeedForward (which pushes hard)
+                .basicFF(kV) // we use a FeedForward (which pushes hard)
                 .velPid(kP) // and a velocity PID (for fine tuning)
                 .build(); // and build the control system!
 
@@ -65,8 +69,8 @@ public class Flywheel implements Component {
      * self-explanatory, resets the hood encoder
      */
     public void resetHoodEncoder() {
-        flywheelLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flywheelLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intakeMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
 
@@ -75,8 +79,9 @@ public class Flywheel implements Component {
      * @param power sets motor power. DONT use this method normally, its not smart
      */
     public void setPower(double power) {
-        flywheelLeft.setPower(power);
-        flywheelRight.setPower(power);
+        //this is to correct the flywheel direction
+        flywheelBottom.setPower(power);
+        flywheelTop.setPower(power);
     }
 
 
@@ -85,7 +90,7 @@ public class Flywheel implements Component {
      * @return motor power
      */
     public double getPower() {
-        return flywheelRight.getPower();
+        return flywheelBottom.getPower();
 
     }
 
@@ -95,7 +100,7 @@ public class Flywheel implements Component {
      * @return gets flywheel motor velocity
      */
     public double getVel() {
-        return (flywheelRight.getVelocity());
+        return (flywheelBottom.getVelocity());
     }
 
 

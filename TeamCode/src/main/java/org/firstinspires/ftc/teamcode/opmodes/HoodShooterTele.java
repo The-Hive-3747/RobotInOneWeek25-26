@@ -9,12 +9,14 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
 import org.firstinspires.ftc.teamcode.utilities.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.vision.limelight.LimelightComponent;
+import org.firstinspires.ftc.teamcode.utilities.Drawing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,11 +37,14 @@ public class HoodShooterTele extends NextFTCOpMode {
                 BindingsComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower),
                 limelight = new LimelightComponent(),
-                drive = new FieldCentricDrive()
-        );
+                drive = new FieldCentricDrive(),
+                aimbot = new Aimbot()
+
+                );
     }
 
     Flywheel flywheel;
+    Aimbot aimbot;
     FieldCentricDrive drive;
 LimelightComponent limelight;
     private ElapsedTime looptime;
@@ -63,6 +68,7 @@ LimelightComponent limelight;
         follower.setStartingPose(OpModeTransfer.currentPose);
         follower.update();
 
+
         intakeMotor = hardwareMap.get(DcMotor.class, "transfer");
         flipper = hardwareMap.get(Servo.class, "flipper");
         leftFireServo = hardwareMap.get(CRServo.class, "left_firewheel");
@@ -70,9 +76,12 @@ LimelightComponent limelight;
         sideWheelServo.setDirection(CRServo.Direction.REVERSE);
         leftFireServo.setDirection(CRServo.Direction.REVERSE);
         //intakeMotor.setDirection(DcMotor.Direction.REVERSE);
+        intakeMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         light = ActiveOpMode.hardwareMap().get(Servo.class, "light");
-        alliance = OpModeTransfer.alliance;
+        //alliance = OpModeTransfer.alliance;
+        aimbot.setAlliance(Alliance.BLUE);
 
         Button g1Back = button(() -> gamepad1.back);
         g1Back.toggleOnBecomesTrue()
@@ -80,6 +89,7 @@ LimelightComponent limelight;
                     if (alliance == Alliance.BLUE) alliance = Alliance.RED;
                     else alliance = Alliance.BLUE;
                 });
+        Drawing.init();
 
         looptime = new ElapsedTime();
     }
@@ -212,10 +222,12 @@ LimelightComponent limelight;
                 false
         );
         follower.update();
+        Drawing.drawOnlyCurrent(follower);
 
         BindingManager.update();
         flywheel.update();
-
+        aimbot.setCurrentPose(follower.getPose());
+        aimbot.update();
         if (looptime.milliseconds() > highestLooptime) {
             highestLooptime = looptime.milliseconds();
         }

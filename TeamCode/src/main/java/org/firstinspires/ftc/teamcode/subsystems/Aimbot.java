@@ -5,10 +5,11 @@ import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
 import org.firstinspires.ftc.teamcode.utilities.AimbotValues;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
+import org.firstinspires.ftc.teamcode.utilities.OpModeTransfer;
 
 
 public class Aimbot implements Component{
-    Pose currentPose;
+    Pose currentPose = OpModeTransfer.currentPose;
     double velocity;
     double percentage;
     double hoodPos;
@@ -28,6 +29,7 @@ public class Aimbot implements Component{
     public void update() {
         botDistance = this.getBotDistance();
         currentAimValues = this.getAimValues(botDistance);
+        ActiveOpMode.telemetry().addData("Bot Distance", botDistance);
         ActiveOpMode.telemetry().addData("CURRENT AIM VALUES", currentAimValues.velocity);
         ActiveOpMode.telemetry().addData("CURRENT AIM VALUES", currentAimValues.hoodPos);
     }

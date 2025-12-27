@@ -37,9 +37,9 @@ public class Turret implements Component {
     private double goalAngle, goalX, goalY, turretPower, turretGoal, heading;
     private KineticState ZERO_ANGLE = new KineticState(0);
 
-    private double TURRET_PID_KP = 0.04, TURRET_PID_KD = 0.01;
-    private double LEFT_TURRET_LIMIT = -100, RIGHT_TURRET_LIMIT = 130;
-    private double TURRET_POWER_LIMIT = 0.8, TURRET_ANGLE_DEADZONE = 2;
+    private double TURRET_PID_KP = 0.058, TURRET_PID_KD = 0.01;
+    private final double LEFT_TURRET_LIMIT = -100, RIGHT_TURRET_LIMIT = 130;
+    private double TURRET_POWER_LIMIT = 0.9, TURRET_ANGLE_DEADZONE = 0.5;
     private int TURRET_TICKS_TO_ANGLES = 90/6100;
     ControlSystem turretPID;
 
@@ -104,7 +104,7 @@ public class Turret implements Component {
 
         ActiveOpMode.telemetry().addData("turret state", currentState);
         ActiveOpMode.telemetry().addData("turret goal", turretPID.getGoal().component1());
-        ActiveOpMode.telemetry().addData("turret power", turretPower);
+        //ActiveOpMode.telemetry().addData("turret power", turretPower);
         ActiveOpMode.telemetry().addData("turret angle", this.getTurretAngle());
     }
 
@@ -114,7 +114,7 @@ public class Turret implements Component {
     public KineticState getAutoAimGoalAngle() {
         if (currentPose != null) {
             goalAngle = -Math.atan2((goalY - this.currentPose.getY()), (goalX - this.currentPose.getX())); // IN RADS
-            turretGoal = normalizeAngle(goalAngle + this.currentPose.getHeading()) + Math.PI;
+            turretGoal = normalizeAngle(goalAngle + this.currentPose.getHeading() + Math.PI);
             return new KineticState(this.putInTurretLimits(Math.toDegrees(turretGoal)));
         } else {
             return ZERO_ANGLE;
@@ -168,7 +168,7 @@ public class Turret implements Component {
      * IN DEGREES
      */
     public double getTurretAngle() {
-        return turret.getCurrentPosition()*90/6100;
+        return (double) (turret.getCurrentPosition() * 90) /6100;
     }
 
     public static double normalizeAngle(double angleRad) {
