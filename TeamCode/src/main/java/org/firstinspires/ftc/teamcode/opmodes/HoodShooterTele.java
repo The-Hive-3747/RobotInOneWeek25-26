@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import static dev.nextftc.bindings.Bindings.button;
 
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,7 +11,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
+import org.firstinspires.ftc.teamcode.subsystems.Relocalization;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
+import org.firstinspires.ftc.teamcode.utilities.DataLogger;
 import org.firstinspires.ftc.teamcode.utilities.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.FieldCentricDrive;
@@ -38,11 +41,14 @@ public class HoodShooterTele extends NextFTCOpMode {
                 new PedroComponent(Constants::createFollower),
                 limelight = new LimelightComponent(),
                 drive = new FieldCentricDrive(),
-                aimbot = new Aimbot()
+                aimbot = new Aimbot(),
+                relocalization = new Relocalization(),
+                dataLog = new DataLogger()
 
                 );
     }
-
+DataLogger dataLog;
+    Relocalization relocalization;
     Flywheel flywheel;
     Aimbot aimbot;
     FieldCentricDrive drive;
@@ -223,6 +229,9 @@ LimelightComponent limelight;
         );
         follower.update();
         Drawing.drawOnlyCurrent(follower);
+        relocalization.update();
+        //dataLog.setCurrentPose(follower.getPose());
+        //dataLog.update();
 
         BindingManager.update();
         flywheel.update();
@@ -239,13 +248,11 @@ LimelightComponent limelight;
         telemetry.addData("Flywheel actual vel", flywheel.getVel());
         telemetry.addData("Hood pos (ticks)", flywheel.getHoodPos());
         telemetry.addData("Hood goal (ticks)", flywheel.getHoodGoal());
+        telemetry.addData("odo", aimbot.getCurrentPose());
 
         /*telemetry.addData("Target X from limelight", limelight.getTargetX());
         telemetry.addData("Target Y from limelight", limelight.getTargetY());
         telemetry.addData("Target dis from limelight", Math.sqrt(Math.pow(limelight.getTargetY(),2) + Math.pow(limelight.getTargetX(),2)));A*/
-
-
-
 
         telemetry.update();
     }

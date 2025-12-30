@@ -6,6 +6,7 @@ import dev.nextftc.ftc.ActiveOpMode;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 public class Relocalization implements Component{
@@ -24,12 +25,13 @@ Limelight3A limelight;
         if (botPose != null) {
             double x = botPose.getPosition().x;
             double y = botPose.getPosition().y;
+
             ActiveOpMode.telemetry().addData("Bot X", x);
             ActiveOpMode.telemetry().addData("Bot Y", y);
+            ActiveOpMode.telemetry().addData("Bot pos", botPose.getPosition().toUnit(DistanceUnit.INCH));
 
         }
     }
-
 }
 
 

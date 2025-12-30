@@ -38,7 +38,7 @@ public class Turret implements Component {
     private KineticState ZERO_ANGLE = new KineticState(0);
 
     private double TURRET_PID_KP = 0.058, TURRET_PID_KD = 0.01;
-    private final double LEFT_TURRET_LIMIT = -100, RIGHT_TURRET_LIMIT = 130;
+    private final double LEFT_TURRET_LIMIT = -120, RIGHT_TURRET_LIMIT = 120;//Left:-100, right:130
     private double TURRET_POWER_LIMIT = 0.9, TURRET_ANGLE_DEADZONE = 0.5;
     private int TURRET_TICKS_TO_ANGLES = 90/6100;
     ControlSystem turretPID;
@@ -90,7 +90,7 @@ public class Turret implements Component {
         // limit the turret power to our Turret Power Limit
         turretPower = Math.min(TURRET_POWER_LIMIT, turretPower);
 
-        // Clamp goal so that if we're within the deadzone, we dont waste power
+        // Clamp goal so that if we're within the deadzone, we don't waste power
         if (Math.abs(getTurretAngle() - turretGoal) < TURRET_ANGLE_DEADZONE) {
             turretPower = 0;
         }

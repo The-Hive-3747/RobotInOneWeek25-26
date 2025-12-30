@@ -46,8 +46,7 @@ public class LimelightComponent implements Component{
             } else {
                 aprilTagId = -1;
             }
-        }
-        else {
+        } else {
             hasTarget = false;
             aprilTagId = -1;
         }

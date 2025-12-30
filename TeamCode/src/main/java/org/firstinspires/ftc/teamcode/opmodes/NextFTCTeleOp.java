@@ -140,13 +140,12 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g1Right = button(() -> gamepad1.dpad_right);
         Button g1Left = button(() -> gamepad1.dpad_left);
         Button g1A = button(() -> gamepad1.a);
+        Button g1B = button(() -> gamepad1.b);
+
         Button g1LT = button(() -> gamepad1.left_trigger > 0.1);
-
         Button g2LT = button(() -> gamepad2.left_trigger > 0.1);
-
         Button g1RT = button(() -> gamepad1.right_trigger > 0.1);
 
-        Button g1B = button(() -> gamepad1.b);
 
         //Button g1X = button(() -> gamepad1.x);
 

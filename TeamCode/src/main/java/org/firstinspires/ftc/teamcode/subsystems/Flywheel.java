@@ -28,7 +28,7 @@ public class Flywheel implements Component {
     Hood hood;
 
     double autoTargetVel = 1040;
-    double kP = 0.02;//0.55
+    double kP = 0.06;//0.02//0.55
     double kV = 0.00011;
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
