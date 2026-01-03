@@ -11,11 +11,17 @@ import org.firstinspires.ftc.teamcode.utilities.PrismAnimations;
 public class TurretLights {
     GoBildaPrismDriver prism;
     PrismAnimations.Solid ball1 = new PrismAnimations.Solid(Color.RED);
-    PrismAnimations.Solid ball2 = new PrismAnimations.Solid(Color.ORANGE);
-    PrismAnimations.Solid ball3 = new PrismAnimations.Solid(Color.BLUE);
-    PrismAnimations.Solid ball4 = new PrismAnimations.Solid(Color.YELLOW);
-    PrismAnimations.Solid ball5 = new PrismAnimations.Solid(Color.TEAL);
-    PrismAnimations.Solid ball6 = new PrismAnimations.Solid(Color.CYAN);
+    PrismAnimations.Solid ball2 = new PrismAnimations.Solid(Color.RED);
+    PrismAnimations.Solid ball3 = new PrismAnimations.Solid(Color.RED);
+    PrismAnimations.Solid ball4 = new PrismAnimations.Solid(Color.RED);
+    PrismAnimations.Solid ball5 = new PrismAnimations.Solid(Color.RED);
+    PrismAnimations.Solid ball6 = new PrismAnimations.Solid(Color.RED);
+    PrismAnimations.Solid blue1 = new PrismAnimations.Solid(Color.BLUE);
+    PrismAnimations.Solid blue2 = new PrismAnimations.Solid(Color.BLUE);
+    PrismAnimations.Solid blue3 = new PrismAnimations.Solid(Color.BLUE);
+    PrismAnimations.Solid blue4 = new PrismAnimations.Solid(Color.BLUE);
+    PrismAnimations.Solid blue5 = new PrismAnimations.Solid(Color.BLUE);
+    PrismAnimations.Solid blue6 = new PrismAnimations.Solid(Color.BLUE);
 
     HardwareMap hardwareMap;
     Telemetry telemetry;
@@ -60,6 +66,33 @@ public class TurretLights {
         prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_3, ball4);
         prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_4, ball5);
         prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_5, ball6);
+    }
+
+    public void blueAlliance(){
+        blue1.setBrightness(30);
+        blue1.setStartIndex(0);
+        blue1.setStopIndex(1);
+        blue2.setBrightness(30);
+        blue2.setStartIndex(2);
+        blue2.setStopIndex(3);
+        blue3.setBrightness(30);
+        blue3.setStartIndex(4);
+        blue3.setStopIndex(5);
+        blue4.setBrightness(30);
+        blue4.setStartIndex(6);
+        blue4.setStopIndex(7);
+        blue5.setBrightness(30);
+        blue5.setStartIndex(8);
+        blue5.setStopIndex(9);
+        blue6.setBrightness(30);
+        blue6.setStartIndex(10);
+        blue6.setStopIndex(11);
+        prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, blue1);
+        prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_1, blue2);
+        prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_2, blue3);
+        prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_3, blue4);
+        prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_4, blue5);
+        prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_5, blue6);
     }
 
 }

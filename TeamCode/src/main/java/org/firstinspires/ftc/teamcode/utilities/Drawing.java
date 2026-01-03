@@ -17,11 +17,15 @@ import com.pedropathing.util.PoseHistory;
  * @version 1.1, 5/19/2025
  */
 public class Drawing {
-    public static final double ROBOT_RADIUS = 9; // woah
+    public static final double ROBOT_RADIUS = 8.5;// woah
+    public static final double TURRET_RADIUS = 4.25;
     private static final FieldManager panelsField = PanelsField.INSTANCE.getField();
 
     private static final Style robotLook = new Style(
             "", "#42f54e", 0.75
+    );
+    private static final Style turretLook = new Style(
+            "","#ffba0a", 0.75
     );
     private static final Style historyLook = new Style(
             "", "#4CAF50", 0.75
@@ -78,6 +82,25 @@ public class Drawing {
         panelsField.line(x2, y2);
     }
 
+    public static void drawTurret(Pose pose, Style style) {
+        if (pose == null || Double.isNaN(pose.getX()) || Double.isNaN(pose.getY()) || Double.isNaN(pose.getHeading())) {
+            return;
+        }
+
+        panelsField.setStyle(style);
+        panelsField.moveCursor(pose.getX(), pose.getY());
+        panelsField.circle(TURRET_RADIUS);
+
+        Vector v = pose.getHeadingAsUnitVector();
+        v.setMagnitude(v.getMagnitude() * TURRET_RADIUS);
+        double x1 = pose.getX() + v.getXComponent() / 2, y1 = pose.getY() + v.getYComponent() / 2;
+        double x2 = pose.getX() + v.getXComponent() * 5, y2 = pose.getY() + v.getYComponent() * 5;
+
+        panelsField.setStyle(style);
+        panelsField.moveCursor(x1, y1);
+        panelsField.line(x2, y2);
+    }
+
     /**
      * This draws a robot at a specified Pose. The heading is represented as a line.
      *
@@ -85,6 +108,10 @@ public class Drawing {
      */
     public static void drawRobot(Pose pose) {
         drawRobot(pose, robotLook);
+    }
+
+    public static void drawTurret(Pose pose) {
+        drawTurret(pose, turretLook);
     }
 
     /**
@@ -158,6 +185,16 @@ public class Drawing {
     public static void drawOnlyCurrent(Follower follower) {
         try {
             drawRobot(follower.getPose());
+            sendPacket();
+        } catch (Exception e) {
+            throw new RuntimeException("Drawing failed " + e);
+        }
+    }
+
+    public static void drawOnlyCurrentWithTurret(Follower follower, double heading) {
+        try {
+            drawRobot(follower.getPose());
+            drawTurret(new Pose(follower.getPose().getX(), follower.getPose().getY(), heading));
             sendPacket();
         } catch (Exception e) {
             throw new RuntimeException("Drawing failed " + e);

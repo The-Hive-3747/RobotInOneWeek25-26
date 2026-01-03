@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -15,7 +16,7 @@ import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
 
-
+@Configurable
 // This is a component file for the flywheel / shooter.
 public class Flywheel implements Component {
 
@@ -28,8 +29,10 @@ public class Flywheel implements Component {
     Hood hood;
 
     double autoTargetVel = 1040;
-    double kP = 0.06;//0.02//0.55
-    double kV = 0.00011;
+    public static double kP = 0.06;//0.02//0.55
+    public static double kS = 0.00011;
+    public static double kD = 0.0;
+    double targetAdjust = 0;
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
         //this needs to be forward in order to use the hood PID. correction is in set power
@@ -56,7 +59,7 @@ public class Flywheel implements Component {
 
         // a control system is NextFTC's way to build.. control systems!
         largeFlywheelPID = ControlSystem.builder()
-                .basicFF(kV) // we use a FeedForward (which pushes hard)
+                //.basicFF(0, 0, kS) // we use a FeedForward (which pushes hard)
                 .velPid(kP) // and a velocity PID (for fine tuning)
                 .build(); // and build the control system!
 
@@ -73,6 +76,27 @@ public class Flywheel implements Component {
         intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
+    public void increase(){
+        targetAdjust += 5;
+        double targetV = targetVel;
+        if (targetVel + targetAdjust < 0){
+            targetV = 0;
+        }else{
+            targetV = targetVel + targetAdjust;
+        }
+        largeFlywheelPID.setGoal(new KineticState(0, targetV));
+    }
+
+    public void decrease(){
+        targetAdjust -= 5;
+        double targetV = targetVel;
+        if (targetVel + targetAdjust < 0){
+            targetV = 0;
+        }else{
+            targetV = targetVel + targetAdjust;
+        }
+        largeFlywheelPID.setGoal(new KineticState(0, targetV));
+    }
 
     /**
      *
@@ -109,8 +133,14 @@ public class Flywheel implements Component {
      * @param vel: sets target velocity
      */
     public void setTargetVel(double vel) {
+        double targetV = vel;
         targetVel = vel;
-        largeFlywheelPID.setGoal(new KineticState(0, targetVel));
+        if (targetVel + targetAdjust < 0){
+            targetV = 0;
+        }else{
+            targetV = targetVel + targetAdjust;
+        }
+        largeFlywheelPID.setGoal(new KineticState(0, targetV));
     }
 
 
@@ -129,8 +159,8 @@ public class Flywheel implements Component {
         // setting constraints on our motor power so its not above 1 and not below 0
         if (targetVel != 0) {
             if (correct > 0) {
-                if (correct >= 1) {
-                    correct = 1;
+                if (correct >= 0.9) {
+                    correct = 0.9;
                 }
             } else {
                 correct = 0.7 * targetVel/1300;
@@ -138,6 +168,17 @@ public class Flywheel implements Component {
         } else {
             correct = 0;
         }
+
+        /*if (correct > 0) {
+            if (correct >= 0.9) {
+                correct = 0.9;
+            }
+        }
+        if (correct <= 0){
+            correct = 0;
+        }
+        */
+
         this.setPower(correct); // set the motor power!
 
         hood.update();

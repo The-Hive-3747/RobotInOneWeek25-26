@@ -40,9 +40,27 @@ public class Aimbot implements Component{
     public Pose getCurrentPose() {
         return this.currentPose;
     }
+
     AimbotValues[] aimbotValues = { //These are all the actual values from tests on field, must be
                                     // in order of distance from least to greatest
-            new AimbotValues(16.5, 1000, 0), //vel: 850
+            new AimbotValues(16.5, 850, 0), //vel: 850
+            new AimbotValues(21.5, 950, 0), //vel: 950
+            new AimbotValues(26.5, 950, 0), //vel: 950
+            new AimbotValues(31.5, 1000, 726), //v: 950 h:727
+            new AimbotValues(36.5, 1040, 1005), //v: 950 h: 1003
+            new AimbotValues(41.5, 1040, 1248), //v: 1000 h: 1243
+            new AimbotValues(46.5, 1080, 1236), //v: 1050 h: 1237
+            new AimbotValues(51.5, 1140, 1236), //v: 1000 h: 1250
+            new AimbotValues(56.5, 1140, 1457), //v: 1050 h: 1243
+            new AimbotValues(61.5, 1180,1486), //v: 1050 h: 1264
+            new AimbotValues(69.5, 1240, 1558), //v: 1200 h: 1762
+            new AimbotValues(76.5, 1280, 1600), //v: 1250 h: 1903
+            new AimbotValues(111.5, 1440, 1835), //v: 1300 h: 1250
+            new AimbotValues(116.5, 1440, 1858), //v: 1350 h: 1400
+            new AimbotValues(121.5, 1440, 1858), //v: 1400 h: 1500
+            new AimbotValues(126.5, 1440, 1858), //v: 1450 h: 2000
+            new AimbotValues(131.5, 1440, 1858), //v: 1500 h: 2000
+            /*new AimbotValues(16.5, 1000, 0), //vel: 850
             new AimbotValues(21.5, 1000, 0), //vel: 950
             new AimbotValues(26.5, 1000, 0), //vel: 950
             new AimbotValues(31.5, 1050, 726), //v: 950 h:727
@@ -58,7 +76,7 @@ public class Aimbot implements Component{
             new AimbotValues(116.5, 1450, 1858), //v: 1350 h: 1400
             new AimbotValues(121.5, 1450, 1858), //v: 1400 h: 1500
             new AimbotValues(126.5, 1450, 1858), //v: 1450 h: 2000
-            new AimbotValues(131.5, 1450, 1858), //v: 1500 h: 2000
+            new AimbotValues(131.5, 1450, 1858), //v: 1500 h: 2000*/
     };
     public AimbotValues getAimValues(double distance){
         AimbotValues next;

@@ -106,8 +106,13 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         g2Back.whenBecomesTrue(() -> turret.zeroTurret());
         g1Back.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
-                    if (alliance == Alliance.BLUE) alliance = Alliance.RED;
-                    else alliance = Alliance.BLUE;
+                    if (alliance == Alliance.BLUE){
+                        alliance = Alliance.RED;
+                        turretLights.redAlliance();
+                    } else{
+                        alliance = Alliance.BLUE;
+                        turretLights.blueAlliance();
+                    }
 
                     turret.setAlliance(alliance);
                 });
@@ -139,6 +144,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         Button g1Right = button(() -> gamepad1.dpad_right);
         Button g1Left = button(() -> gamepad1.dpad_left);
+        Button g2LB = button(() -> gamepad2.left_bumper);
+        Button g2RB = button(() -> gamepad2.right_bumper);
         Button g1A = button(() -> gamepad1.a);
         Button g1B = button(() -> gamepad1.b);
 
@@ -225,12 +232,15 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         gUp.whenTrue(() -> flywheel.setHoodPower(0.2));
         gDown.whenTrue(() -> flywheel.setHoodPower(-0.2));
 
+        g2LB.whenBecomesTrue(() -> flywheel.decrease());
+        g2RB.whenBecomesTrue(() -> flywheel.increase());
+
         g1B.whenBecomesTrue(() -> {
             drive.setOffset(follower.getHeading());
 
         });
 
-        g1LT.whenBecomesTrue(() -> turretLights.redAlliance());
+        //g1LT.whenBecomesTrue(() -> turretLights.redAlliance());
 
     }
     @Override
@@ -265,7 +275,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         turret.setCurrentPose(follower.getPose());
         turret.update();
-        Drawing.drawOnlyCurrent(follower);
+        Drawing.drawOnlyCurrentWithTurret(follower, Math.toRadians(turret.getTurretAngle() - follower.getHeading()) + Math.toRadians(180));
         //Drawing.drawDebug(follower);
 
         if (looptime.milliseconds() > highestLooptime) {
