@@ -173,5 +173,6 @@ public class FrontRedAuto extends NextFTCOpMode {
     public void onStop() {
         OpModeTransfer.currentPose = PedroComponent.follower().getPose();
         OpModeTransfer.alliance = Alliance.RED;
+        OpModeTransfer.hasBeenTransferred = true;
     }
 }

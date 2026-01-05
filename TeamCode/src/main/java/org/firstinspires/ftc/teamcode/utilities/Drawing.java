@@ -19,6 +19,7 @@ import com.pedropathing.util.PoseHistory;
 public class Drawing {
     public static final double ROBOT_RADIUS = 8.5;// woah
     public static final double TURRET_RADIUS = 4.25;
+    public static final double TURRET_GOAL_RADIUS = 2.25;
     private static final FieldManager panelsField = PanelsField.INSTANCE.getField();
 
     private static final Style robotLook = new Style(
@@ -26,6 +27,9 @@ public class Drawing {
     );
     private static final Style turretLook = new Style(
             "","#ffba0a", 0.75
+    );
+    private static final Style turretGoalLook = new Style(
+            "","#e4a0f7", 0.75
     );
     private static final Style historyLook = new Style(
             "", "#4CAF50", 0.75
@@ -94,7 +98,26 @@ public class Drawing {
         Vector v = pose.getHeadingAsUnitVector();
         v.setMagnitude(v.getMagnitude() * TURRET_RADIUS);
         double x1 = pose.getX() + v.getXComponent() / 2, y1 = pose.getY() + v.getYComponent() / 2;
-        double x2 = pose.getX() + v.getXComponent() * 5, y2 = pose.getY() + v.getYComponent() * 5;
+        double x2 = pose.getX() + v.getXComponent() * 20, y2 = pose.getY() + v.getYComponent() * 20;
+
+        panelsField.setStyle(style);
+        panelsField.moveCursor(x1, y1);
+        panelsField.line(x2, y2);
+    }
+
+    public static void drawTurretGoal(Pose pose, Style style) {
+        if (pose == null || Double.isNaN(pose.getX()) || Double.isNaN(pose.getY()) || Double.isNaN(pose.getHeading())) {
+            return;
+        }
+
+        panelsField.setStyle(style);
+        panelsField.moveCursor(pose.getX(), pose.getY());
+        panelsField.circle(TURRET_GOAL_RADIUS);
+
+        Vector v = pose.getHeadingAsUnitVector();
+        v.setMagnitude(v.getMagnitude() * TURRET_GOAL_RADIUS);
+        double x1 = pose.getX() + v.getXComponent() / 2, y1 = pose.getY() + v.getYComponent() / 2;
+        double x2 = pose.getX() + v.getXComponent() * 8, y2 = pose.getY() + v.getYComponent() * 8;
 
         panelsField.setStyle(style);
         panelsField.moveCursor(x1, y1);
@@ -112,6 +135,10 @@ public class Drawing {
 
     public static void drawTurret(Pose pose) {
         drawTurret(pose, turretLook);
+    }
+
+    public static void drawTurretGoal(Pose pose) {
+        drawTurretGoal(pose, turretGoalLook);
     }
 
     /**
@@ -195,6 +222,17 @@ public class Drawing {
         try {
             drawRobot(follower.getPose());
             drawTurret(new Pose(follower.getPose().getX(), follower.getPose().getY(), heading));
+            sendPacket();
+        } catch (Exception e) {
+            throw new RuntimeException("Drawing failed " + e);
+        }
+    }
+
+    public static void drawOnlyCurrentWithTurretAndGoal(Follower follower, double turretHeading, double turretGoalHeading) {
+        try {
+            drawRobot(follower.getPose());
+            drawTurretGoal(new Pose(follower.getPose().getX(), follower.getPose().getY(), turretGoalHeading));
+            drawTurret(new Pose(follower.getPose().getX(), follower.getPose().getY(), turretHeading));
             sendPacket();
         } catch (Exception e) {
             throw new RuntimeException("Drawing failed " + e);

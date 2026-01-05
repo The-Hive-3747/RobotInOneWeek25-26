@@ -2,6 +2,10 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import static dev.nextftc.bindings.Bindings.button;
 
+import com.bylazar.graph.GraphManager;
+import com.bylazar.graph.PanelsGraph;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -16,6 +20,8 @@ import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.*;
 
+import com.bylazar.telemetry.PanelsTelemetry;
+
 //Use the customized Drawing class, not the default
 //import org.firstinspires.ftc.teamcode.pathing.Drawing;
 import org.firstinspires.ftc.teamcode.subsystems.TurretLights;
@@ -28,10 +34,8 @@ import org.firstinspires.ftc.teamcode.subsystems.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Relocalization;
 import org.firstinspires.ftc.teamcode.subsystems.Turret;
-import org.firstinspires.ftc.teamcode.utilities.PrismLightValues;
 import org.firstinspires.ftc.teamcode.vision.limelight.LimelightComponent;
 import org.firstinspires.ftc.teamcode.utilities.Drawing;
-import com.bylazar.telemetry.PanelsTelemetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,6 +79,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     private GoBildaPrismDriver prism;
     Follower follower;
     public Alliance alliance;
+    TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+    GraphManager graphManager = PanelsGraph.INSTANCE.getManager();
     double botDistance;
 
     @Override
@@ -117,6 +123,11 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                     turret.setAlliance(alliance);
                 });
         looptime = new ElapsedTime();
+
+        if (OpModeTransfer.hasBeenTransferred == false) {
+            turret.zeroTurret();
+        }
+
 
     }
     @Override
@@ -275,12 +286,25 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         turret.setCurrentPose(follower.getPose());
         turret.update();
-        Drawing.drawOnlyCurrentWithTurret(follower, Math.toRadians(turret.getTurretAngle() - follower.getHeading()) + Math.toRadians(180));
+        Drawing.drawOnlyCurrentWithTurretAndGoal(follower,
+                Math.toRadians(turret.getTurretAngle()) + follower.getHeading() + Math.toRadians(180),
+                Math.toRadians(turret.getTurretGoalNotInLimits()) + follower.getHeading() + Math.toRadians(180)
+        );
         //Drawing.drawDebug(follower);
 
         if (looptime.milliseconds() > highestLooptime) {
             highestLooptime = looptime.milliseconds();
         }
+
+        graphManager.addData("flywheel velocity", flywheel.getVel());
+        graphManager.addData("flywheel goal velocity", flywheel.getFlywheelGoal());
+        graphManager.addData("flywheel power", flywheel.getPower());
+        graphManager.update();
+
+        panelsTelemetry.addData("flywheel velocity", flywheel.getVel());
+        panelsTelemetry.addData("flywheel goal velocity", flywheel.getFlywheelGoal());
+        panelsTelemetry.addData("flywheel power", flywheel.getPower());
+        panelsTelemetry.update();
 
         telemetry.addData("looptime (ms)", looptime.milliseconds());
         telemetry.addData("highest looptime (ms)", highestLooptime);
@@ -290,5 +314,10 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         telemetry.addData("Is Flywheel on: ", FLYWHEEL_ON);
         telemetry.addData("Is Transfer on: ", isTransferOn);
         telemetry.update();
+    }
+
+    @Override
+    public void onStop() {
+        OpModeTransfer.hasBeenTransferred = false;
     }
 }

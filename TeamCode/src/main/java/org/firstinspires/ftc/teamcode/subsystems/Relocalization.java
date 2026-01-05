@@ -15,7 +15,8 @@ Limelight3A limelight;
 @Override
     public void preInit() {
     limelight = ActiveOpMode.hardwareMap().get(Limelight3A.class, "limelight");
-    limelight.start();
+    //limelight.start();
+    limelight.shutdown();
 
 }
     public void update() {

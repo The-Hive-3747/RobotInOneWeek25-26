@@ -29,9 +29,7 @@ public class Flywheel implements Component {
     Hood hood;
 
     double autoTargetVel = 1040;
-    public static double kP = 0.06;//0.02//0.55
-    public static double kS = 0.00011;
-    public static double kD = 0.0;
+    public static double FLYWHEEL_PID_KP = 0.06, FLYWHEEL_PID_KV = 0.12, FLYWHEEL_PID_KS = 0.02, FLYWHEEL_PID_KD = 0.01, FLYWHEEL_PID_KI = 0.0;
     double targetAdjust = 0;
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
@@ -48,8 +46,6 @@ public class Flywheel implements Component {
 
 
         flywheelBottom.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-
         flywheelBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
@@ -59,8 +55,8 @@ public class Flywheel implements Component {
 
         // a control system is NextFTC's way to build.. control systems!
         largeFlywheelPID = ControlSystem.builder()
-                //.basicFF(0, 0, kS) // we use a FeedForward (which pushes hard)
-                .velPid(kP) // and a velocity PID (for fine tuning)
+                .basicFF(FLYWHEEL_PID_KV, 0, FLYWHEEL_PID_KS) // we use a FeedForward (which pushes hard)
+                .velPid(FLYWHEEL_PID_KP, FLYWHEEL_PID_KI, FLYWHEEL_PID_KD) // and a velocity PID (for fine tuning)
                 .build(); // and build the control system!
 
         targetVel = 0; // setting a target velocity of 0 so that the robot doesnt blow up on start
@@ -155,16 +151,21 @@ public class Flywheel implements Component {
                 new KineticState(0, flywheelVel) // a KineticState is NextFTC's way of storing position, velocity, and acceleration all in one variable
         );
 
-
         // setting constraints on our motor power so its not above 1 and not below 0
         if (targetVel != 0) {
+
+            if (correct < 0) {
+                correct = 0;
+            }
+            correct = Math.min(0.9, correct);
+            /*
             if (correct > 0) {
                 if (correct >= 0.9) {
                     correct = 0.9;
                 }
             } else {
                 correct = 0.7 * targetVel/1300;
-            }
+            }*/
         } else {
             correct = 0;
         }
@@ -186,6 +187,14 @@ public class Flywheel implements Component {
         ActiveOpMode.telemetry().addData("flywheel power", correct);
         ActiveOpMode.telemetry().addData("flywheel vel", flywheelVel);
         ActiveOpMode.telemetry().addData("flywheel target vel", targetVel);
+    }
+
+    /**
+     *
+     * @return flywheel goal velocity, in rpm
+     */
+    public double getFlywheelGoal() {
+        return largeFlywheelPID.getGoal().getVelocity();
     }
 
 

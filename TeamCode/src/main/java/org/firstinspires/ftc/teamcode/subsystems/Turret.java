@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
 
 import dev.nextftc.control.ControlSystem;
@@ -23,70 +24,41 @@ public class Turret implements Component {
     DcMotorEx turret;
     TouchSensor limitSwitch;
     Pose currentPose;
-    ElapsedTime resetTimer = new ElapsedTime();
-    boolean resetStarted = false;
-    boolean hasBeenReset = false;
-    private double LEFT_STOP_DEG = -102.0;
-    private double RESET_TIME_MS = 2000;
-    private double RESET_TO_ZERO_MS = 4000;
     public enum turretState {
         OFF,
         FORWARD,
         AUTO,
-        ZEROING
     }
     turretState currentState = turretState.AUTO;
     Alliance alliance;
-    private double goalAngle, goalX, goalY, turretPower, turretGoal, heading;
+    private double fieldCentricGoalAngle, goalX, goalY, turretPower, turretGoalNotInLimits, heading;
     private KineticState ZERO_ANGLE = new KineticState(0);
 
-    public static double TURRET_PID_KP = 0.058, TURRET_PID_KD = 0.01, TURRET_PID_KS = 0.1, TURRET_PID_KI = 0.0;
+    public static double TURRET_PID_KP = 0.038, TURRET_PID_KD = 0.01, TURRET_PID_KS = 0.12, TURRET_PID_KI = 0.0;
     private final double LEFT_TURRET_LIMIT = -110, RIGHT_TURRET_LIMIT = 110;//Left:-100, right:130
-    private double TURRET_POWER_LIMIT = 0.9, TURRET_ANGLE_DEADZONE = 0.5;
+    private double TURRET_POWER_LIMIT = 0.9, TURRET_ANGLE_DEADZONE = 1;
     // 180 deg in ticks
     public static double TURRET_TICKS_TO_DEGREES = 11579.0/180.0;//90/6100;
     ControlSystem turretPID;
-    @Configurable
-    class StaticFeedforward implements FeedforwardElement {
-        double ks = 0.1;
-        public StaticFeedforward(double KStatic){
-            ks = KStatic;
-        }
-        public void setKs(double KStatic) {
-            ks = KStatic;
-        }
-        @Override
-        public double calculate(KineticState Reference){
-            return ks;
-        }
-        @Override
-        public void reset(){
-
-        }
-    }
 
     @Override
     public void preInit() {
         limitSwitch = ActiveOpMode.hardwareMap().get(TouchSensor.class, "limitSwitch");
         turret = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "turret");
+    }
+
+    @Override
+    public void postInit() {
         currentState = turretState.AUTO;
         turretPID = ControlSystem.builder()
                 .posPid(TURRET_PID_KP, TURRET_PID_KI, TURRET_PID_KD)
-                .feedforward(new StaticFeedforward(TURRET_PID_KS))
                 .build();
-        turretGoal = 0;
+        turretGoalNotInLimits = 0;
     }
-
 
     public void zeroTurret() {
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-    }
-
-    public void resetTurret(){
-        currentState = turretState.ZEROING;
-        resetStarted = false;
-        resetTimer.reset();
     }
 
     public void update() {
@@ -100,10 +72,11 @@ public class Turret implements Component {
             // this is when the TurretState is Off
             turretPower = 0;
         }
-        if (Math.abs(getTurretAngle() - turretGoal) < TURRET_ANGLE_DEADZONE) {
+        if (Math.abs(this.getTurretAngle() - this.getTurretGoal()) < TURRET_ANGLE_DEADZONE) {
             turretPower = 0;
         }else if (turretState.OFF != currentState){
             turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
+            turretPower = turretPower + TURRET_PID_KS * Math.signum(turretPower);
         }
 
         /*if (limitSwitch.isPressed()) {
@@ -123,17 +96,13 @@ public class Turret implements Component {
             turretPower = 0;
         }*/
 
-        // Need to do this because our encoder and motor are reversed
-        // TODO: FLIP ENCODER MECHANICALLY SO THAT THEY MATCH UP
-        turretPower *= -1;
-
-
         turret.setPower(turretPower);
 
-        ActiveOpMode.telemetry().addData("turret state", currentState);
-        ActiveOpMode.telemetry().addData("turret goal", turretPID.getGoal().component1());
-        //ActiveOpMode.telemetry().addData("turret power", turretPower);
-        ActiveOpMode.telemetry().addData("turret angle", this.getTurretAngle());
+        ActiveOpMode.telemetry().addData("TURRET state", currentState);
+        ActiveOpMode.telemetry().addData("TURRET goal", turretPID.getGoal().component1());
+        ActiveOpMode.telemetry().addData("TURRET power", turretPower);
+        ActiveOpMode.telemetry().addData("TURRET angle", this.getTurretAngle());
+        //ActiveOpMode.telemetry().addData("turret voltage draw", turret.getCurrent(CurrentUnit.MILLIAMPS));
     }
 
     /**
@@ -141,9 +110,9 @@ public class Turret implements Component {
      */
     public KineticState getAutoAimGoalAngle() {
         if (currentPose != null) {
-            goalAngle = -Math.atan2((goalY - this.currentPose.getY()), (goalX - this.currentPose.getX())); // IN RADS
-            turretGoal = normalizeAngle(goalAngle + this.currentPose.getHeading() + Math.PI);
-            return new KineticState(this.putInTurretLimits(Math.toDegrees(turretGoal)));
+            fieldCentricGoalAngle = Math.atan2((goalY - this.currentPose.getY()), (goalX - this.currentPose.getX())); // IN RADS
+            turretGoalNotInLimits = Math.toDegrees(normalizeAngle(fieldCentricGoalAngle - this.currentPose.getHeading() + Math.PI));
+            return new KineticState(this.putInTurretLimits(turretGoalNotInLimits));
         } else {
             return ZERO_ANGLE;
         }
@@ -199,6 +168,22 @@ public class Turret implements Component {
         return ((double) turret.getCurrentPosition()) / TURRET_TICKS_TO_DEGREES;
     }
 
+    /**
+     *
+     * @return current turret goal NOT in physical limits. in degrees
+     */
+    public double getTurretGoalNotInLimits() {
+        return turretGoalNotInLimits;
+    }
+
+    /**
+     *
+     * @return current turret goal IN physical limits. in degrees
+     */
+    public double getTurretGoal() {
+        return turretPID.getGoal().getPosition();
+    }
+
     public static double normalizeAngle(double angleRad) {
         // Ensure the angle is within the (-π, π] range
         angleRad %= (2 * Math.PI); // Take the modulo with 2π
@@ -218,10 +203,10 @@ public class Turret implements Component {
     public void setAlliance(Alliance all) {
         this.alliance = all;
         if (this.alliance == Alliance.RED) {
-            goalX = 144;
+            goalX = 142;
             goalY = 144;
         } else {
-            goalX = 0;
+            goalX = 2;
             goalY = 144;
         }
     }
