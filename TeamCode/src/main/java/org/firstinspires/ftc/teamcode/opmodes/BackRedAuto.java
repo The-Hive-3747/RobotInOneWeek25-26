@@ -161,7 +161,7 @@ public class BackRedAuto extends NextFTCOpMode {
     }
     @Override
     public void onUpdate() {
-        turret.setCurrentPose(PedroComponent.follower().getPose());
+        turret.setCurrentPose(PedroComponent.follower().getPose(), PedroComponent.follower().getVelocity());
         turret.update();
 
         telemetry.addData("pose", PedroComponent.follower().getPose());

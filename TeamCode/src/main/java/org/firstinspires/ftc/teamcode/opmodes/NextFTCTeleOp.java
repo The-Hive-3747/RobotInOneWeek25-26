@@ -2,8 +2,9 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import static dev.nextftc.bindings.Bindings.button;
 
-import com.bylazar.graph.GraphManager;
-import com.bylazar.graph.PanelsGraph;
+//import com.bylazar.graph.GraphManager;
+//import com.bylazar.graph.GraphManager;
+//import com.bylazar.graph.PanelsGraph;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
@@ -11,6 +12,7 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -24,6 +26,7 @@ import com.bylazar.telemetry.PanelsTelemetry;
 
 //Use the customized Drawing class, not the default
 //import org.firstinspires.ftc.teamcode.pathing.Drawing;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.subsystems.TurretLights;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
 import org.firstinspires.ftc.teamcode.utilities.GoBildaPrismDriver;
@@ -66,12 +69,15 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     double FLYWHEEL_VEL;//= 1300; // IN RPM
     double HOOD_POS;
     double INTAKE_POWER = 0.9;
+    double INTAKE_SHOOTING_POWER = 0.7;
+    double THREE_BALL_CURRENT = 6500.0;
     private boolean FLYWHEEL_ON = false;
     private boolean isIntakeOn = false;
     private boolean isIntakeReversed = false;
     private boolean isTransferOn = false;
+    private boolean got3Balls = false;
     int FLYWHEEL_STEP = 50;
-    private DcMotor intakeMotor;
+    private DcMotorEx intakeMotor;
     private Servo flipper;
     private double FIRE_POWER = 0.9;
     private double slowModeMultiplier = 1;
@@ -80,7 +86,10 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     Follower follower;
     public Alliance alliance;
     TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
-    GraphManager graphManager = PanelsGraph.INSTANCE.getManager();
+
+    Button g2A;
+
+    //GraphManager graphManager = PanelsGraph.INSTANCE.getManager();
     double botDistance;
 
     @Override
@@ -90,7 +99,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         follower.setStartingPose(OpModeTransfer.currentPose);
         follower.update();
 
-        intakeMotor = hardwareMap.get(DcMotor.class, "transfer");
+        intakeMotor = hardwareMap.get(DcMotorEx.class, "transfer");
         flipper = hardwareMap.get(Servo.class, "flipper");
         leftFireServo = hardwareMap.get(CRServo.class, "left_firewheel");
         sideWheelServo = hardwareMap.get(CRServo.class, "side-wheel");
@@ -124,9 +133,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 });
         looptime = new ElapsedTime();
 
-        if (OpModeTransfer.hasBeenTransferred == false) {
-            turret.zeroTurret();
-        }
+
 
 
     }
@@ -138,6 +145,11 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     public void onStartButtonPressed() {
         //follower.startTeleOpDrive();
 
+        if (OpModeTransfer.hasBeenTransferred == false) {
+            turret.zeroTurret();
+            flywheel.resetHoodEncoder();
+        }
+
         turret.setAlliance(alliance);
         aimbot.setAlliance(alliance);
 
@@ -146,7 +158,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g2X = button(() -> gamepad2.x);
         Button g2Y = button(() -> gamepad2.y);
         Button g2B = button(() -> gamepad2.b);
-        Button g2A = button(() -> gamepad2.a);
+        g2A = button(() -> gamepad2.a);
         Button g2RT = button(() -> gamepad2.right_trigger > 0.1);
 
         Button gUp = button(() -> gamepad2.dpad_up || gamepad1.dpad_up);
@@ -228,20 +240,23 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 });
 
 
-        g2B.whenTrue(() ->
-            flipper.setPosition(0.1)
-            )
+        g2B.whenTrue(() -> {
+                got3Balls = false;
+                intakeMotor.setPower(INTAKE_SHOOTING_POWER);
+                flipper.setPosition(0.1);
+                })
                 .whenBecomesFalse(() -> flipper.setPosition(0.52));
 
 
 
         gUpOrDown.whenBecomesFalse(() -> {
                     flywheel.setHoodPower(0);
-                    flywheel.resetHoodEncoder();
+                    //flywheel.resetHoodEncoder();
                 });
 
-        gUp.whenTrue(() -> flywheel.setHoodPower(0.2));
-        gDown.whenTrue(() -> flywheel.setHoodPower(-0.2));
+        gUp.whenBecomesTrue(() -> flywheel.increaseHood());
+        gDown.whenBecomesTrue(() -> flywheel.decreaseHood()
+        );
 
         g2LB.whenBecomesTrue(() -> flywheel.decrease());
         g2RB.whenBecomesTrue(() -> flywheel.increase());
@@ -260,7 +275,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         looptime.reset();
         follower.update();
 
-        aimbot.setCurrentPose(follower.getPose());
+        aimbot.setCurrentPose(follower.getPose(), follower.getVelocity());
         aimbot.update();
         FLYWHEEL_VEL = aimbot.getAimbotValues().velocity;
         HOOD_POS = aimbot.getAimbotValues().hoodPos;
@@ -269,6 +284,17 @@ public class NextFTCTeleOp extends NextFTCOpMode {
             flywheel.setTargetVel(FLYWHEEL_VEL);
         } else {
             flywheel.setTargetVel(0);
+        }
+
+        if(intakeMotor.getCurrent(CurrentUnit.MILLIAMPS) > THREE_BALL_CURRENT){
+            intakeMotor.setPower(0);
+            got3Balls = true;
+        }
+
+        if(flywheel.readyToShoot()){
+            turretLights.readyToShoot();
+        }else{
+            turretLights.notReadyToShoot();
         }
 
         /*double currentHeading = follower.getHeading();
@@ -284,7 +310,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         BindingManager.update();
         flywheel.update();
 
-        turret.setCurrentPose(follower.getPose());
+        turret.setCurrentPose(follower.getPose(), follower.getVelocity());
         turret.update();
         Drawing.drawOnlyCurrentWithTurretAndGoal(follower,
                 Math.toRadians(turret.getTurretAngle()) + follower.getHeading() + Math.toRadians(180),
@@ -295,17 +321,18 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         if (looptime.milliseconds() > highestLooptime) {
             highestLooptime = looptime.milliseconds();
         }
+        //graphManager.addData("flywheel velocity", flywheel.getVel());
+        //graphManager.addData("flywheel goal velocity", flywheel.getFlywheelGoal());
+        //graphManager.addData("flywheel power", flywheel.getPower());
+        //graphManager.update();
 
-        graphManager.addData("flywheel velocity", flywheel.getVel());
-        graphManager.addData("flywheel goal velocity", flywheel.getFlywheelGoal());
-        graphManager.addData("flywheel power", flywheel.getPower());
-        graphManager.update();
-
+        panelsTelemetry.addData("Intake Current (mA)", intakeMotor.getCurrent(CurrentUnit.MILLIAMPS));
         panelsTelemetry.addData("flywheel velocity", flywheel.getVel());
         panelsTelemetry.addData("flywheel goal velocity", flywheel.getFlywheelGoal());
         panelsTelemetry.addData("flywheel power", flywheel.getPower());
-        panelsTelemetry.update();
 
+
+        telemetry.addData("Intake Current (mA)", intakeMotor.getCurrent(CurrentUnit.MILLIAMPS));
         telemetry.addData("looptime (ms)", looptime.milliseconds());
         telemetry.addData("highest looptime (ms)", highestLooptime);
         telemetry.addData("pose", follower.getPose());
@@ -313,7 +340,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         telemetry.addData("Is Intake Reversed: ", isIntakeReversed);
         telemetry.addData("Is Flywheel on: ", FLYWHEEL_ON);
         telemetry.addData("Is Transfer on: ", isTransferOn);
-        telemetry.update();
+        //telemetry.update();
+        panelsTelemetry.update(telemetry);
     }
 
     @Override

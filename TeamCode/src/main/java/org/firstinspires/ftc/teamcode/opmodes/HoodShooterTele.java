@@ -235,7 +235,7 @@ LimelightComponent limelight;
 
         BindingManager.update();
         flywheel.update();
-        aimbot.setCurrentPose(follower.getPose());
+        aimbot.setCurrentPose(follower.getPose(), follower.getVelocity());
         aimbot.update();
         if (looptime.milliseconds() > highestLooptime) {
             highestLooptime = looptime.milliseconds();

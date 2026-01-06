@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
@@ -24,6 +25,7 @@ public class Turret implements Component {
     DcMotorEx turret;
     TouchSensor limitSwitch;
     Pose currentPose;
+    Vector currentVelocity;
     public enum turretState {
         OFF,
         FORWARD,
@@ -31,10 +33,10 @@ public class Turret implements Component {
     }
     turretState currentState = turretState.AUTO;
     Alliance alliance;
-    private double fieldCentricGoalAngle, goalX, goalY, turretPower, turretGoalNotInLimits, heading;
+    private double fieldCentricGoalAngle, goalX, goalY, turretPower, turretGoalNotInLimits, fieldGoalX, fieldGoalY, heading;
     private KineticState ZERO_ANGLE = new KineticState(0);
 
-    public static double TURRET_PID_KP = 0.038, TURRET_PID_KD = 0.01, TURRET_PID_KS = 0.12, TURRET_PID_KI = 0.0;
+    public static double TURRET_PID_KP = 0.030, TURRET_PID_KD = 0.01, TURRET_PID_KS = 0.08, TURRET_PID_KI = 0.0;//P:0.038
     private final double LEFT_TURRET_LIMIT = -110, RIGHT_TURRET_LIMIT = 110;//Left:-100, right:130
     private double TURRET_POWER_LIMIT = 0.9, TURRET_ANGLE_DEADZONE = 1;
     // 180 deg in ticks
@@ -110,6 +112,7 @@ public class Turret implements Component {
      */
     public KineticState getAutoAimGoalAngle() {
         if (currentPose != null) {
+
             fieldCentricGoalAngle = Math.atan2((goalY - this.currentPose.getY()), (goalX - this.currentPose.getX())); // IN RADS
             turretGoalNotInLimits = Math.toDegrees(normalizeAngle(fieldCentricGoalAngle - this.currentPose.getHeading() + Math.PI));
             return new KineticState(this.putInTurretLimits(turretGoalNotInLimits));
@@ -140,8 +143,9 @@ public class Turret implements Component {
      * @param pose: sets the current pose, used for auto-aim calculations
      *            NEEDS TO BE DONE EVERY LOOP
      */
-    public void setCurrentPose(Pose pose) {
+    public void setCurrentPose(Pose pose, Vector velocity) {
         this.currentPose = pose;
+        this.currentVelocity = velocity;
     }
 
     /**
@@ -203,11 +207,15 @@ public class Turret implements Component {
     public void setAlliance(Alliance all) {
         this.alliance = all;
         if (this.alliance == Alliance.RED) {
-            goalX = 142;
+            goalX = 144;//142
+            fieldGoalX = 144;//142
             goalY = 144;
+            fieldGoalY = 144;
         } else {
-            goalX = 2;
+            goalX = 6;//0
+            fieldGoalX = 6;//0
             goalY = 144;
+            fieldGoalY = 144;
         }
     }
 

@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -22,12 +21,14 @@ public class TurretLights {
     PrismAnimations.Solid blue4 = new PrismAnimations.Solid(Color.BLUE);
     PrismAnimations.Solid blue5 = new PrismAnimations.Solid(Color.BLUE);
     PrismAnimations.Solid blue6 = new PrismAnimations.Solid(Color.BLUE);
+    PrismAnimations.DroidScan shootNow = new PrismAnimations.DroidScan(Color.GREEN);
+    PrismAnimations.Solid noShoot = new PrismAnimations.Solid(Color.MAGENTA);
 
     HardwareMap hardwareMap;
     Telemetry telemetry;
-    int brightness = 15;
-    int setStartIndex = 0;
-    int setStopIndex = 12;
+    int brightness = 30;
+    int startIndex = 0;
+    int stopIndex = 11;
 
 
 
@@ -39,6 +40,20 @@ public class TurretLights {
         prism.setStripLength(12);
 
 
+    }
+
+    public void readyToShoot(){
+        shootNow.setStartIndex(startIndex);
+        shootNow.setStopIndex(stopIndex);
+        shootNow.setBrightness(brightness);
+        prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, shootNow);
+    }
+
+    public void notReadyToShoot(){
+        noShoot.setStartIndex(startIndex);
+        noShoot.setStartIndex(stopIndex);
+        noShoot.setBrightness(brightness);
+        prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, noShoot);
     }
 
     public void redAlliance(){

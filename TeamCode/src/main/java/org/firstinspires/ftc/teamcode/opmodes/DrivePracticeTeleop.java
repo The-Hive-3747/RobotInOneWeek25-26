@@ -234,7 +234,7 @@ public class DrivePracticeTeleop extends NextFTCOpMode {
         BindingManager.update();
         flywheel.update();
 
-        turret.setCurrentPose(follower.getPose());
+        turret.setCurrentPose(follower.getPose(), follower.getVelocity());
         turret.update();
 
         if (looptime.milliseconds() > highestLooptime) {

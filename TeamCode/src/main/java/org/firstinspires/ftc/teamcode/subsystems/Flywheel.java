@@ -29,8 +29,9 @@ public class Flywheel implements Component {
     Hood hood;
 
     double autoTargetVel = 1040;
-    public static double FLYWHEEL_PID_KP = 0.06, FLYWHEEL_PID_KV = 0.12, FLYWHEEL_PID_KS = 0.02, FLYWHEEL_PID_KD = 0.01, FLYWHEEL_PID_KI = 0.0;
+    public static double FLYWHEEL_PID_KP = 0.0001, FLYWHEEL_PID_KV = 0.0, FLYWHEEL_PID_KS = 0.0, FLYWHEEL_PID_KD = 1, FLYWHEEL_PID_KI = 0.000000000000000001;
     double targetAdjust = 0;
+    double READY_VEL_THRESHOLD = 20.0;
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
         //this needs to be forward in order to use the hood PID. correction is in set power
@@ -64,12 +65,21 @@ public class Flywheel implements Component {
         colorTimer.reset();
     }
 
+
     /**
      * self-explanatory, resets the hood encoder
      */
     public void resetHoodEncoder() {
         intakeMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
+    public void increaseHood() {
+        hood.increaseHood();
+    }
+
+    public void decreaseHood(){
+        hood.decreaseHood();
     }
 
     public void increase(){
@@ -92,6 +102,10 @@ public class Flywheel implements Component {
             targetV = targetVel + targetAdjust;
         }
         largeFlywheelPID.setGoal(new KineticState(0, targetV));
+    }
+
+    public boolean readyToShoot(){
+        return Math.abs(targetVel + targetAdjust - getVel()) <= READY_VEL_THRESHOLD;
     }
 
     /**
@@ -147,7 +161,7 @@ public class Flywheel implements Component {
         flywheelVel = this.getVel();
 
         // correct is the motor power we need to set!
-        correct = largeFlywheelPID.calculate( // calculate() lets us plug in current vals and outputs a motor power
+        correct = correct + largeFlywheelPID.calculate( // calculate() lets us plug in current vals and outputs a motor power
                 new KineticState(0, flywheelVel) // a KineticState is NextFTC's way of storing position, velocity, and acceleration all in one variable
         );
 
@@ -186,7 +200,8 @@ public class Flywheel implements Component {
 
         ActiveOpMode.telemetry().addData("flywheel power", correct);
         ActiveOpMode.telemetry().addData("flywheel vel", flywheelVel);
-        ActiveOpMode.telemetry().addData("flywheel target vel", targetVel);
+        ActiveOpMode.telemetry().addData("flywheel target vel", targetVel + targetAdjust);
+        ActiveOpMode.telemetry().addData("Adjust Target By",targetAdjust);
     }
 
     /**

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.Vector;
 
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
@@ -10,12 +11,12 @@ import org.firstinspires.ftc.teamcode.utilities.OpModeTransfer;
 
 public class Aimbot implements Component{
     Pose currentPose = OpModeTransfer.currentPose;
+    Vector currentVelocity;
     double velocity;
     double percentage;
     double hoodPos;
     double botDistance;
-    double goalX;
-    double goalY;
+    double goalX, goalY, fieldGoalX, fieldGoalY;
     Alliance alliance;
     AimbotValues currentAimValues;
 
@@ -34,8 +35,9 @@ public class Aimbot implements Component{
         ActiveOpMode.telemetry().addData("CURRENT AIM VALUES", currentAimValues.hoodPos);
     }
     
-    public void setCurrentPose(Pose pose) {
+    public void setCurrentPose(Pose pose, Vector velocity) {
         this.currentPose = pose;
+        this.currentVelocity = velocity;
     }
     public Pose getCurrentPose() {
         return this.currentPose;
@@ -43,23 +45,23 @@ public class Aimbot implements Component{
 
     AimbotValues[] aimbotValues = { //These are all the actual values from tests on field, must be
                                     // in order of distance from least to greatest
-            new AimbotValues(16.5, 850, 0), //vel: 850
-            new AimbotValues(21.5, 950, 0), //vel: 950
-            new AimbotValues(26.5, 950, 0), //vel: 950
-            new AimbotValues(31.5, 1000, 726), //v: 950 h:727
-            new AimbotValues(36.5, 1040, 1005), //v: 950 h: 1003
-            new AimbotValues(41.5, 1040, 1248), //v: 1000 h: 1243
-            new AimbotValues(46.5, 1080, 1236), //v: 1050 h: 1237
-            new AimbotValues(51.5, 1140, 1236), //v: 1000 h: 1250
-            new AimbotValues(56.5, 1140, 1457), //v: 1050 h: 1243
-            new AimbotValues(61.5, 1180,1486), //v: 1050 h: 1264
-            new AimbotValues(69.5, 1240, 1558), //v: 1200 h: 1762
-            new AimbotValues(76.5, 1280, 1600), //v: 1250 h: 1903
-            new AimbotValues(111.5, 1440, 1835), //v: 1300 h: 1250
-            new AimbotValues(116.5, 1440, 1858), //v: 1350 h: 1400
-            new AimbotValues(121.5, 1440, 1858), //v: 1400 h: 1500
-            new AimbotValues(126.5, 1440, 1858), //v: 1450 h: 2000
-            new AimbotValues(131.5, 1440, 1858), //v: 1500 h: 2000
+            new AimbotValues(16.5, 850, 0), //vel: 850//
+            new AimbotValues(21.5, 930, 0), //vel: 950//
+            new AimbotValues(26.5, 930, 0), //vel: 950//v: 950
+            new AimbotValues(31.5, 970, 726), //v: 950 h:727//v:1000
+            new AimbotValues(36.5, 1040, 980), //v: 950 h: 1003//v:1050, h:1005
+            new AimbotValues(41.5, 1040, 1248), //v: 1000 h: 1243//v:
+            new AimbotValues(46.5, 1080, 1236), //v: 1050 h: 1237//v:
+            new AimbotValues(51.5, 1100, 1236), //v: 1000 h: 1250//v:1140
+            new AimbotValues(56.5, 1110, 1437), //v: 1050 h: 1243//v:1140
+            new AimbotValues(61.5, 1140,1500), //v: 1050 h: 1264//v:1180, h:1466
+            new AimbotValues(69.5, 1200, 1560), //v: 1200 h: 1762//v:1240, h:1538
+            new AimbotValues(76.5, 1260, 1600), //v: 1250 h: 1903//v:1280, h:1580
+            new AimbotValues(111.5, 1427, 3057), //v: 1300 h: 1250//v: 1440, h:1835//h:1900//v:1410//v:1430, h:1945
+            new AimbotValues(116.5, 1439, 2880), //v: 1350 h: 1400//v: 1440, h:1835//h:1940//v:1440, h:1965
+            new AimbotValues(121.5, 1455, 2826), //v: 1400 h: 1500//v: 1440, h:1835//h:1940//v:1460, h:1965
+            new AimbotValues(126.5, 1483, 2688), //v: 1450 h: 2000//v: 1440, h:1835//h:1950//v:1460, h:1975
+            new AimbotValues(131.5, 1505, 1985), //v: 1500 h: 2000//v: 1440, h:1835//v: 1480, h:1960
             /*new AimbotValues(16.5, 1000, 0), //vel: 850
             new AimbotValues(21.5, 1000, 0), //vel: 950
             new AimbotValues(26.5, 1000, 0), //vel: 950
@@ -107,12 +109,17 @@ public class Aimbot implements Component{
         this.alliance = all;
         if (this.alliance == Alliance.RED) {
             goalX = 129; //this is the point of the middle of the front panel of the goal
+            fieldGoalX = 129;
             goalY = 129;
+            fieldGoalY = 129;
         } else {
-            goalX = 15;
+            goalX = 20;
+            fieldGoalX = 20;
             goalY = 129;
+            fieldGoalY = 129;
         }
     }
+
     public double getBotDistance() {
         //this is math for the distance from bot to goal using hypotenuse of x and y
         botDistance = Math.sqrt(Math.pow(goalX - currentPose.getX(), 2) + Math.pow(goalY - currentPose.getY(), 2));
