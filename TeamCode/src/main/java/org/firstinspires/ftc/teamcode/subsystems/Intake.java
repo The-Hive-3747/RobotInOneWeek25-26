@@ -13,6 +13,8 @@ import dev.nextftc.ftc.ActiveOpMode;
 public class Intake implements Component {
     DcMotor intakeMotor;
     double INTAKE_POWER = 0.9;
+    double INTAKE_SHOOTING_POWER = 0.9;
+    double INTAKE_FAST = 1.0;
     double FIRE_POWER = 0.9;
     CRServo leftFireServo, rightFireServo, sideWheelServo, hood;
 
@@ -28,6 +30,12 @@ public class Intake implements Component {
 
     public Command startIntake = new InstantCommand(
             () -> intakeMotor.setPower(INTAKE_POWER)
+    );
+    public Command slowIntake = new InstantCommand(
+            () -> intakeMotor.setPower(INTAKE_SHOOTING_POWER)
+    );
+    public Command fastIntake = new InstantCommand(
+            () -> intakeMotor.setPower(INTAKE_FAST)
     );
     public Command startTransfer = new InstantCommand(
             () -> {

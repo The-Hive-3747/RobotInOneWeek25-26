@@ -19,6 +19,7 @@ import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
+import kotlin.jvm.internal.Lambda;
 
 @Configurable
 public class Turret implements Component {
@@ -30,14 +31,21 @@ public class Turret implements Component {
         OFF,
         FORWARD,
         AUTO,
+        FIXED
     }
     turretState currentState = turretState.AUTO;
     Alliance alliance;
     private double fieldCentricGoalAngle, goalX, goalY, turretPower, turretGoalNotInLimits, fieldGoalX, fieldGoalY, heading;
     private KineticState ZERO_ANGLE = new KineticState(0);
+    private KineticState FIXED_ANGLE = new KineticState(-95);
+    private KineticState FIXED_LAST_ANGLE = new KineticState(-60);
+    public static double AUTON_RED_SHOOT_ANGLE = -95;
+    public static double AUTON_RED_SHOOT_ANGLE_LAST = -60;
+    public static double AUTON_BLUE_SHOOT_ANGLE_LAST = 60;
+    public static double AUTON_BLUE_SHOOT_ANGLE = 90;
 
     public static double TURRET_PID_KP = 0.030, TURRET_PID_KD = 0.01, TURRET_PID_KS = 0.08, TURRET_PID_KI = 0.0;//P:0.038
-    private final double LEFT_TURRET_LIMIT = -110, RIGHT_TURRET_LIMIT = 110;//Left:-100, right:130
+    private final double LEFT_TURRET_LIMIT = -140, RIGHT_TURRET_LIMIT = 140;//Left:-100, right:130// Left: -120, Right: 120
     private double TURRET_POWER_LIMIT = 0.9, TURRET_ANGLE_DEADZONE = 1;
     // 180 deg in ticks
     public static double TURRET_TICKS_TO_DEGREES = 11579.0/180.0;//90/6100;
@@ -70,6 +78,9 @@ public class Turret implements Component {
         } else if (currentState == turretState.FORWARD) {
             turretPID.setGoal(ZERO_ANGLE);
             //turretPower = turretPID.calculate(new KineticState(this.getTurretAngle()));
+
+        } else if (currentState == turretState.FIXED){  //This is the autonomous fixed position for shooting
+          turretPID.setGoal(FIXED_ANGLE);
         } else {
             // this is when the TurretState is Off
             turretPower = 0;
@@ -232,6 +243,24 @@ public class Turret implements Component {
                 currentState = turretState.FORWARD;
             })
             .setIsDone(() -> true);
+    //Using this state for the autonomous shooting for a fixed position
+    public Command setTurretFixed = new LambdaCommand()
+            .setStart(() -> {
+                currentState = turretState.FIXED;
+            })
+            .setIsDone(() -> true);
+    public Command setTurretFixedLast = new LambdaCommand()
+            .setStart(() -> {
+                setFixedAngle(AUTON_RED_SHOOT_ANGLE_LAST);
+            })
+            .setIsDone(() -> true);
+
+    public void setFixedAngle(double deg) {
+        FIXED_ANGLE = new KineticState(deg);
+    }
+    public void setTurretStateFixed(){
+        currentState = turretState.FIXED;
+    }
 
     public void turretStateForward() {
         switch (currentState) {

@@ -32,6 +32,8 @@ public class Flywheel implements Component {
     public static double FLYWHEEL_PID_KP = 0.0001, FLYWHEEL_PID_KV = 0.0, FLYWHEEL_PID_KS = 0.0, FLYWHEEL_PID_KD = 1, FLYWHEEL_PID_KI = 0.000000000000000001;
     double targetAdjust = 0;
     double READY_VEL_THRESHOLD = 20.0;
+    public static double AUTON_SHOOT_VEL = 1100;//1100
+    public static double AUTON_SHOOT_VEL_LAST = 1100;
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
         //this needs to be forward in order to use the hood PID. correction is in set power
@@ -237,12 +239,11 @@ public class Flywheel implements Component {
     public void enableHoodPid() {
         hood.enableHoodPID();
     }
-
-
-
     public Command startFlywheel = new InstantCommand(
             () -> this.setTargetVel(autoTargetVel)
     );
+
+
     public Command stopFlywheel = new InstantCommand(
             () -> this.setTargetVel(0)
     );
@@ -250,6 +251,7 @@ public class Flywheel implements Component {
     public Command resetShotTimer = new InstantCommand(
             () ->  shotTimer.reset()
     );
+
 
     public Command shootAllThree = new LambdaCommand()
             .setStart(() ->

@@ -19,6 +19,7 @@ public class Hood{
     private double HOOD_MAX_POS = 5000;
     private double HOOD_MIN_POS = 0;
     private double HOOD_INCREMENT = 20;
+    public static double AUTON_HOOD_POS = 1353;//1453
     private double power = 0;
     private double angle, rotations, offset, lastAngle;
     double hoodAdjust = 0.0;

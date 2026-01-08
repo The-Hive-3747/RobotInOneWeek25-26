@@ -69,7 +69,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     double FLYWHEEL_VEL;//= 1300; // IN RPM
     double HOOD_POS;
     double INTAKE_POWER = 0.9;
-    double INTAKE_SHOOTING_POWER = 0.7;
+    double INTAKE_SHOOTING_POWER = 0.65;
     double THREE_BALL_CURRENT = 6500.0;
     private boolean FLYWHEEL_ON = false;
     private boolean isIntakeOn = false;

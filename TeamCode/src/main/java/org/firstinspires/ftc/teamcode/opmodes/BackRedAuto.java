@@ -22,6 +22,9 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
+import org.firstinspires.ftc.teamcode.subsystems.Hood;
+import org.firstinspires.ftc.teamcode.subsystems.TurretLights;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
 import org.firstinspires.ftc.teamcode.utilities.Light;
 import org.firstinspires.ftc.teamcode.utilities.OpModeTransfer;
@@ -30,6 +33,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Turret;
 
+import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.groups.CommandGroup;
 import dev.nextftc.core.commands.groups.ParallelGroup;
@@ -37,6 +41,7 @@ import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
+import com.pedropathing.follower.Follower;
 import dev.nextftc.ftc.NextFTCOpMode;
 
 @Autonomous(name = "back red auto")
@@ -46,16 +51,23 @@ public class BackRedAuto extends NextFTCOpMode {
                 new PedroComponent(Constants::createFollower),
                 flywheel = new Flywheel(),
                 intake = new Intake(),
+                aimbot = new Aimbot(),
                 turret = new Turret(),
                 light = new Light()
         );
     }
     CommandGroup autonomous;
     Light light;
+    Aimbot aimbot;
     Turret turret;
     Flywheel flywheel;
+    TurretLights turretLights;
     Intake intake;
     TelemetryManager telemetryM;
+    Follower follower;
+    double FLYWHEEL_VEL;
+    double HOOD_POS;
+    boolean FLYWHEEL_ON = false;
 
 
     @Override
@@ -63,33 +75,48 @@ public class BackRedAuto extends NextFTCOpMode {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
         BackAutoPaths.alliance = Alliance.RED;
         BackAutoPaths.generatePaths(PedroComponent.follower());
-        PedroComponent.follower().setStartingPose(new Pose(startingPose.getX(), startingPose.getY(), startAngle));
+
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(new Pose(startingPose.getX(), startingPose.getY(), startAngle));
+        follower.update();
 
         turret.setAlliance(Alliance.RED);
+        aimbot.setAlliance(Alliance.RED);
+        turret.setFixedAngle(Turret.AUTON_RED_SHOOT_ANGLE);
 
-        if (BackAutoPaths.getAlliance() == Alliance.RED) {
-            light.setColor(Light.COLOR_RED);
+
+        /*if (BackAutoPaths.getAlliance() == Alliance.RED) {
+            turretLights.redAlliance();
         } else {
-            light.setColor(Light.COLOR_BLUE);
-        }
+            turretLights.blueAlliance();
+            //light.setColor(Light.COLOR_BLUE);
+        }*/
 
         autonomous = new SequentialGroup(
                 new ParallelGroup(
-                        intake.startIntake,
-                        flywheel.startFlywheel,
-                        turret.setTurretOff,
+                        //intake.startIntake,
+                        intake.fastIntake,
+                        this.startAimbotFlywheel,
+                        //flywheel.startFlywheel,
+                        //turret.setTurretOff,
+                        //turret.setTurretAuto,
+                        turret.setTurretFixed,
+
                         new FollowPath(toShootFromStart)
                 ),
-                new Delay(1.3),
+                new Delay(0.8),
                 new ParallelGroup(
-                        turret.setTurretAuto,
+                        //turret.setTurretAuto,
                         flywheel.resetShotTimer,
                         flywheel.shootAllThree,
-                        intake.startTransfer
+                        intake.startTransfer,
+                        intake.slowIntake
                 ),
                 new ParallelGroup(
                         new FollowPath(lineUpForIntake1),
-                        intake.stopTransfer
+                        intake.stopTransfer,
+                        //intake.startIntake
+                        intake.fastIntake
                 ),
                 new FollowPath(intake1),
                 new Delay(1),
@@ -101,11 +128,14 @@ public class BackRedAuto extends NextFTCOpMode {
                 new ParallelGroup(
                         flywheel.resetShotTimer,
                         flywheel.shootAllThree,
-                        intake.startTransfer
+                        intake.startTransfer,
+                        intake.slowIntake
                 ),
                 new ParallelGroup(
                         new FollowPath(lineUpForIntake2),
-                        intake.stopTransfer
+                        intake.stopTransfer,
+                        //intake.startTransfer
+                        intake.fastIntake
                 ),
                 new Delay(0.2),
                 new FollowPath(intake2),
@@ -115,21 +145,25 @@ public class BackRedAuto extends NextFTCOpMode {
                 new ParallelGroup(
                         flywheel.resetShotTimer,
                         flywheel.shootAllThree,
-                        intake.startTransfer
+                        intake.startTransfer,
+                        intake.slowIntake
                 ),
                 new ParallelGroup(
                         new FollowPath(lineUpForIntake3),
-                        intake.stopTransfer
+                        intake.stopTransfer,
+                        //intake.startIntake
+                        intake.fastIntake
                 ),
                 new Delay(0.2),
-                new FollowPath(intake3),
+                new FollowPath(intake3).and(turret.setTurretFixedLast), //setFlywheelVelFinal),
                 new Delay(0.3),
                 new FollowPath(toShootFromIntake3),
                 new Delay(0.3),
                 new ParallelGroup(
                         flywheel.resetShotTimer,
                         flywheel.shootAllThree,
-                        intake.startTransfer
+                        intake.startTransfer,
+                        intake.slowIntake
                 ),
                 new ParallelGroup(
                         new InstantCommand(
@@ -148,8 +182,8 @@ public class BackRedAuto extends NextFTCOpMode {
 
     @Override
     public void onWaitForStart() {
-        flywheel.setHoodGoalPos(1247);
-        flywheel.update();
+        //flywheel.setHoodGoalPos(1247);
+        //flywheel.update();
         telemetry.addData("pose", PedroComponent.follower().getPose());
         telemetry.update();
     }
@@ -161,10 +195,25 @@ public class BackRedAuto extends NextFTCOpMode {
     }
     @Override
     public void onUpdate() {
-        turret.setCurrentPose(PedroComponent.follower().getPose(), PedroComponent.follower().getVelocity());
+        //turret.setCurrentPose(PedroComponent.follower().getPose(), PedroComponent.follower().getVelocity());
         turret.update();
+        follower.update();
+
+        //aimbot.setCurrentPose(follower.getPose(), follower.getVelocity());
+        //aimbot.update();
+        if (FLYWHEEL_ON) {
+            FLYWHEEL_VEL = Flywheel.AUTON_SHOOT_VEL; //aimbot.getAimbotValues().velocity;
+        } else {
+            FLYWHEEL_VEL = 0;
+        }
+        HOOD_POS = Hood.AUTON_HOOD_POS; //aimbot.getAimbotValues().hoodPos;
+        flywheel.setHoodGoalPos(HOOD_POS);
+        flywheel.setTargetVel(FLYWHEEL_VEL);
+        //flywheel.setTargetVel(FLYWHEEL_VEL);
+        //flywheel.setTargetVel(0);
 
         telemetry.addData("pose", PedroComponent.follower().getPose());
+        telemetry.addData("aimbot pose", follower.getPose());
         flywheel.update();
         telemetry.update();
     }
@@ -175,4 +224,10 @@ public class BackRedAuto extends NextFTCOpMode {
         OpModeTransfer.alliance = Alliance.RED;
         OpModeTransfer.hasBeenTransferred = true;
     }
+    public Command startAimbotFlywheel = new InstantCommand(
+            () -> FLYWHEEL_ON = true
+    );
+    public Command setFlywheelVelFinal = new InstantCommand(
+            () -> FLYWHEEL_VEL = Flywheel.AUTON_SHOOT_VEL_LAST
+    );
 }
