@@ -2,14 +2,18 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import static dev.nextftc.bindings.Bindings.button;
 
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
 import org.firstinspires.ftc.teamcode.subsystems.Relocalization;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
@@ -52,21 +56,23 @@ DataLogger dataLog;
     Flywheel flywheel;
     Aimbot aimbot;
     FieldCentricDrive drive;
-LimelightComponent limelight;
+    LimelightComponent limelight;
     private ElapsedTime looptime;
     private double highestLooptime = 0;
 
     static double  FLYWHEEL_VEL = 1300; // RPM start
     double INTAKE_POWER = 0.9;
-    int FLYWHEEL_STEP = 50;
-
-    private DcMotor intakeMotor;
+    int FLYWHEEL_STEP = 20;
+    boolean fireWhenReady=false;
+    private DcMotorEx intakeMotor;
     private Servo flipper, light;
     private double FIRE_POWER = 0.9;
     private CRServo leftFireServo, sideWheelServo;
     Follower follower;
     private double color;
     public Alliance alliance;
+    TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+
 
     @Override
     public void onInit() {
@@ -75,7 +81,7 @@ LimelightComponent limelight;
         follower.update();
 
 
-        intakeMotor = hardwareMap.get(DcMotor.class, "transfer");
+        intakeMotor = hardwareMap.get(DcMotorEx.class, "transfer");
         flipper = hardwareMap.get(Servo.class, "flipper");
         leftFireServo = hardwareMap.get(CRServo.class, "left_firewheel");
         sideWheelServo = hardwareMap.get(CRServo.class, "side-wheel");
@@ -134,7 +140,7 @@ LimelightComponent limelight;
         // enable/disable flywheel at current target vel
         g1RT.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
-                    FLYWHEEL_VEL = 1300;
+                    FLYWHEEL_VEL = 1000;
                     flywheel.setTargetVel(FLYWHEEL_VEL);
                     intakeMotor.setPower(INTAKE_POWER);
                     leftFireServo.setPower(FIRE_POWER);
@@ -209,8 +215,11 @@ LimelightComponent limelight;
                 });
 
         // g2B: manual flicker
-        g2B.whenTrue(() -> flipper.setPosition(0.1))
-                .whenBecomesFalse(() -> flipper.setPosition(0.52));
+        g2B.whenTrue(() -> fireWhenReady=true)//flipper.setPosition(0.1))
+                .whenBecomesFalse(() -> {
+                    fireWhenReady=false;
+                    flipper.setPosition(0.52);
+                });//flipper.setPosition(0.52));
     }
 
     @Override
@@ -237,9 +246,20 @@ LimelightComponent limelight;
         flywheel.update();
         aimbot.setCurrentPose(follower.getPose(), follower.getVelocity());
         aimbot.update();
+        if (fireWhenReady){
+            if (flywheel.readyToShoot()){
+                flipper.setPosition(0.1);
+            } else{
+                flipper.setPosition(0.52);
+            }
+        }
         if (looptime.milliseconds() > highestLooptime) {
             highestLooptime = looptime.milliseconds();
         }
+        panelsTelemetry.addData("Intake Current (mA)", intakeMotor.getCurrent(CurrentUnit.MILLIAMPS));
+        panelsTelemetry.addData("flywheel velocity", flywheel.getVel());
+        panelsTelemetry.addData("flywheel goal velocity", flywheel.getFlywheelGoal());
+        panelsTelemetry.addData("flywheel power", flywheel.getPower());
 
         // key telemetry for tuning
         telemetry.addData("looptime (ms)", looptime.milliseconds());
@@ -253,8 +273,8 @@ LimelightComponent limelight;
         /*telemetry.addData("Target X from limelight", limelight.getTargetX());
         telemetry.addData("Target Y from limelight", limelight.getTargetY());
         telemetry.addData("Target dis from limelight", Math.sqrt(Math.pow(limelight.getTargetY(),2) + Math.pow(limelight.getTargetX(),2)));A*/
-
-        telemetry.update();
+        panelsTelemetry.update(telemetry);
+        //telemetry.update();
     }
 }
 

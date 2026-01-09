@@ -20,6 +20,7 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
 import org.firstinspires.ftc.teamcode.utilities.Light;
@@ -38,8 +39,9 @@ import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 
-@Autonomous(name = "front blue auto")
-public class FrontBlueAuto extends NextFTCOpMode {
+@Disabled
+@Autonomous(name = "front red auto")
+public class FrontRedAutoOld extends NextFTCOpMode {
     {
         addComponents(
                 new PedroComponent(Constants::createFollower),
@@ -50,8 +52,8 @@ public class FrontBlueAuto extends NextFTCOpMode {
         );
     }
     CommandGroup autonomous;
-    Turret turret;
     Light light;
+    Turret turret;
     Flywheel flywheel;
     Intake intake;
     TelemetryManager telemetryM;
@@ -60,11 +62,11 @@ public class FrontBlueAuto extends NextFTCOpMode {
     @Override
     public void onInit() {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-        FrontAutoPathsOld.alliance = Alliance.BLUE;
+        FrontAutoPathsOld.alliance = Alliance.RED;
         FrontAutoPathsOld.generatePaths(PedroComponent.follower());
         PedroComponent.follower().setStartingPose(new Pose(startingPose.getX(), startingPose.getY(), startAngle));
 
-        turret.setAlliance(Alliance.BLUE);
+        turret.setAlliance(Alliance.RED);
 
         if (FrontAutoPathsOld.getAlliance() == Alliance.RED) {
             light.setColor(Light.COLOR_RED);
@@ -143,7 +145,6 @@ public class FrontBlueAuto extends NextFTCOpMode {
         );
 
         turret.zeroTurret();
-
     }
 
     @Override
@@ -172,7 +173,7 @@ public class FrontBlueAuto extends NextFTCOpMode {
     @Override
     public void onStop() {
         OpModeTransfer.currentPose = PedroComponent.follower().getPose();
-        OpModeTransfer.alliance = Alliance.BLUE;
+        OpModeTransfer.alliance = Alliance.RED;
         OpModeTransfer.hasBeenTransferred = true;
     }
 }

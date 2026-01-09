@@ -191,6 +191,7 @@ public class BackRedAuto extends NextFTCOpMode {
     @Override
     public void onStartButtonPressed() {
         //turret.zeroTurret();
+        flywheel.resetHoodEncoder();
         autonomous.schedule();
     }
     @Override

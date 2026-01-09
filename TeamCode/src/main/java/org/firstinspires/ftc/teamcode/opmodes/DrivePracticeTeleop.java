@@ -19,7 +19,6 @@ import dev.nextftc.ftc.*;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
 import org.firstinspires.ftc.teamcode.utilities.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
-import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
 import org.firstinspires.ftc.teamcode.subsystems.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Relocalization;
@@ -177,9 +176,9 @@ public class DrivePracticeTeleop extends NextFTCOpMode {
                 });
 
         g1A.whenBecomesTrue(() -> {
-            FrontAutoPaths.alliance = alliance;
-            FrontAutoPaths.generatePaths(follower);
-            Pose resetPose = new Pose(FrontAutoPaths.startingPose.getX(), FrontAutoPaths.startingPose.getY(), FrontAutoPaths.startAngle);
+            FrontAutoPathsOld.alliance = alliance;
+            FrontAutoPathsOld.generatePaths(follower);
+            Pose resetPose = new Pose(FrontAutoPathsOld.startingPose.getX(), FrontAutoPathsOld.startingPose.getY(), FrontAutoPathsOld.startAngle);
             follower.setPose(resetPose);
         });
 

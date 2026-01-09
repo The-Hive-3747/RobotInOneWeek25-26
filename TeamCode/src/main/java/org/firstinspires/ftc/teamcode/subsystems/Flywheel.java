@@ -31,7 +31,7 @@ public class Flywheel implements Component {
     double autoTargetVel = 1040;
     public static double FLYWHEEL_PID_KP = 0.0001, FLYWHEEL_PID_KV = 0.0, FLYWHEEL_PID_KS = 0.0, FLYWHEEL_PID_KD = 1, FLYWHEEL_PID_KI = 0.000000000000000001;
     double targetAdjust = 0;
-    double READY_VEL_THRESHOLD = 20.0;
+    double READY_VEL_THRESHOLD = 40.0;
     public static double AUTON_SHOOT_VEL = 1100;//1100
     public static double AUTON_SHOOT_VEL_LAST = 1100;
     @Override
@@ -195,8 +195,9 @@ public class Flywheel implements Component {
             correct = 0;
         }
         */
-
-        this.setPower(correct); // set the motor power!
+        if(Math.abs(targetVel+targetAdjust-flywheelVel)>11) {
+            this.setPower(correct); // set the motor power!
+        }
 
         hood.update();
 
@@ -259,7 +260,7 @@ public class Flywheel implements Component {
             )
             .setUpdate(() -> {
                 currentRPM = this.getVel();
-                if (Math.abs(targetVel - currentRPM) < 200) {
+                if (Math.abs(targetVel - currentRPM) < 100) {  //was 200
                     flipper.setPosition(0.1);
                 } else {
                     flipper.setPosition(0.52);

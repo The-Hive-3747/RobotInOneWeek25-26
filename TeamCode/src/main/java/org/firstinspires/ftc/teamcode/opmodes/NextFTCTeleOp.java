@@ -22,8 +22,6 @@ import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.*;
 
-import com.bylazar.telemetry.PanelsTelemetry;
-
 //Use the customized Drawing class, not the default
 //import org.firstinspires.ftc.teamcode.pathing.Drawing;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -75,12 +73,15 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     private boolean isIntakeOn = false;
     private boolean isIntakeReversed = false;
     private boolean isTransferOn = false;
+    private boolean fireWhenReady = false;
     private boolean got3Balls = false;
     int FLYWHEEL_STEP = 50;
     private DcMotorEx intakeMotor;
     private Servo flipper;
     private double FIRE_POWER = 0.9;
     private double slowModeMultiplier = 1;
+    double FLIPPER_FIRE_POS = 0.1;
+    double FLIPPER_NO_FIRE_POS = 0.52;
     private CRServo leftFireServo, sideWheelServo;
     private GoBildaPrismDriver prism;
     Follower follower;
@@ -221,9 +222,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 });
 
         g1A.whenBecomesTrue(() -> {
-            FrontAutoPaths.alliance = alliance;
-            FrontAutoPaths.generatePaths(follower);
-            Pose resetPose = new Pose(FrontAutoPaths.startingPose.getX(), FrontAutoPaths.startingPose.getY(), FrontAutoPaths.startAngle);
+            FrontAutoPathsOld.alliance = alliance;
+            FrontAutoPathsOld.generatePaths(follower);
+            Pose resetPose = new Pose(FrontAutoPathsOld.startingPose.getX(), FrontAutoPathsOld.startingPose.getY(), FrontAutoPathsOld.startAngle);
             follower.setPose(resetPose);
         });
 
@@ -240,12 +241,21 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 });
 
 
-        g2B.whenTrue(() -> {
+        g2RT.whenTrue(() -> {
                 got3Balls = false;
                 intakeMotor.setPower(INTAKE_SHOOTING_POWER);
-                flipper.setPosition(0.1);
+                flipper.setPosition(FLIPPER_FIRE_POS);
                 })
-                .whenBecomesFalse(() -> flipper.setPosition(0.52));
+                .whenBecomesFalse(() -> flipper.setPosition(FLIPPER_NO_FIRE_POS));
+
+        g2B.whenBecomesTrue(() -> {
+            fireWhenReady = true;
+            intakeMotor.setPower(INTAKE_SHOOTING_POWER);
+            })
+                .whenBecomesFalse(() -> {
+                   fireWhenReady = false;
+                   flipper.setPosition(FLIPPER_NO_FIRE_POS);
+                });
 
 
 
@@ -312,6 +322,13 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         turret.setCurrentPose(follower.getPose(), follower.getVelocity());
         turret.update();
+        if (fireWhenReady){
+            if (flywheel.readyToShoot()){
+                flipper.setPosition(FLIPPER_FIRE_POS);
+            }else{
+                flipper.setPosition(FLIPPER_NO_FIRE_POS);
+            }
+        }
         Drawing.drawOnlyCurrentWithTurretAndGoal(follower,
                 Math.toRadians(turret.getTurretAngle()) + follower.getHeading() + Math.toRadians(180),
                 Math.toRadians(turret.getTurretGoalNotInLimits()) + follower.getHeading() + Math.toRadians(180)
