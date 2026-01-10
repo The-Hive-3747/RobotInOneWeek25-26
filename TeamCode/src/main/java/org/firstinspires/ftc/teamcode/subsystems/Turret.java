@@ -6,20 +6,16 @@ import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
-import dev.nextftc.control.feedforward.FeedforwardElement;
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
-import kotlin.jvm.internal.Lambda;
 
 @Configurable
 public class Turret implements Component {
@@ -223,8 +219,8 @@ public class Turret implements Component {
             goalY = 144;
             fieldGoalY = 144;
         } else {
-            goalX = 6;//0
-            fieldGoalX = 6;//0
+            goalX = 0;//0
+            fieldGoalX = 0;//0
             goalY = 144;
             fieldGoalY = 144;
         }
@@ -249,9 +245,15 @@ public class Turret implements Component {
                 currentState = turretState.FIXED;
             })
             .setIsDone(() -> true);
-    public Command setTurretFixedLast = new LambdaCommand()
+    public Command setTurretFixedLastRed = new LambdaCommand()
             .setStart(() -> {
                 setFixedAngle(AUTON_RED_SHOOT_ANGLE_LAST);
+            })
+            .setIsDone(() -> true);
+
+    public Command setTurretFixedLastBlue = new LambdaCommand()
+            .setStart(() -> {
+                setFixedAngle(AUTON_BLUE_SHOOT_ANGLE_LAST);
             })
             .setIsDone(() -> true);
 

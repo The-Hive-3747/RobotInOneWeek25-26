@@ -6,21 +6,18 @@ import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.intake3;
 import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake1;
 import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake2;
 import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake3;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForOpenGate;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.openGate;
 import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.park;
 import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.startAngle;
 import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.startingPose;
+import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake1;
 import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake2;
 import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake3;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromOpenGate;
 import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromStart;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
@@ -85,12 +82,14 @@ public class BackRedAuto extends NextFTCOpMode {
         turret.setFixedAngle(Turret.AUTON_RED_SHOOT_ANGLE);
 
 
-        /*if (BackAutoPaths.getAlliance() == Alliance.RED) {
+        turretLights = new TurretLights(hardwareMap, telemetry);
+
+        if (BackAutoPaths.getAlliance() == Alliance.RED) {
             turretLights.redAlliance();
         } else {
             turretLights.blueAlliance();
             //light.setColor(Light.COLOR_BLUE);
-        }*/
+        }
 
         autonomous = new SequentialGroup(
                 new ParallelGroup(
@@ -120,10 +119,7 @@ public class BackRedAuto extends NextFTCOpMode {
                 ),
                 new FollowPath(intake1),
                 new Delay(1),
-                new FollowPath(lineUpForOpenGate),
-                new FollowPath(openGate),
-                new Delay(0.5),
-                new FollowPath(toShootFromOpenGate),
+                new FollowPath(toShootFromIntake1),
                 new Delay(0.5),
                 new ParallelGroup(
                         flywheel.resetShotTimer,
@@ -155,7 +151,7 @@ public class BackRedAuto extends NextFTCOpMode {
                         intake.fastIntake
                 ),
                 new Delay(0.2),
-                new FollowPath(intake3).and(turret.setTurretFixedLast), //setFlywheelVelFinal),
+                new FollowPath(intake3), //setFlywheelVelFinal),
                 new Delay(0.3),
                 new FollowPath(toShootFromIntake3),
                 new Delay(0.3),

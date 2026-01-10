@@ -6,11 +6,10 @@ import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.intake3;
 import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForIntake1;
 import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForIntake2;
 import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForIntake3;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForOpenGate;
-import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.openGate;
 import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.park;
 import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.startAngle;
 import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.startingPose;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromIntake1;
 import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromIntake2;
 import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromIntake3;
 import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromOpenGate;
@@ -84,13 +83,14 @@ public class FrontRedAuto extends NextFTCOpMode {
         aimbot.setAlliance(Alliance.RED);
         turret.setFixedAngle(Turret.AUTON_RED_SHOOT_ANGLE);
 
+        turretLights = new TurretLights(hardwareMap, telemetry);
 
-        /*if (BackAutoPaths.getAlliance() == Alliance.RED) {
+        if (FrontAutoPaths.getAlliance() == Alliance.RED) {
             turretLights.redAlliance();
         } else {
             turretLights.blueAlliance();
             //light.setColor(Light.COLOR_BLUE);
-        }*/
+        }
 
         autonomous = new SequentialGroup(
                 new ParallelGroup(
@@ -104,7 +104,7 @@ public class FrontRedAuto extends NextFTCOpMode {
 
                         new FollowPath(toShootFromStart)
                 ),
-                new Delay(4.0),
+                new Delay(3),
                 new ParallelGroup(
                         //turret.setTurretAuto,
                         flywheel.resetShotTimer,
@@ -120,10 +120,10 @@ public class FrontRedAuto extends NextFTCOpMode {
                 ),
                 new FollowPath(intake1),
                 new Delay(1),
-                new FollowPath(lineUpForOpenGate),
-                new FollowPath(openGate),
-                new Delay(0.5),
-                new FollowPath(toShootFromOpenGate),
+                //new FollowPath(lineUpForOpenGate),
+                //new FollowPath(openGate),
+                //new Delay(0.5),
+                new FollowPath(toShootFromIntake1),
                 new Delay(0.5),
                 new ParallelGroup(
                         flywheel.resetShotTimer,
@@ -155,7 +155,7 @@ public class FrontRedAuto extends NextFTCOpMode {
                         intake.fastIntake
                 ),
                 new Delay(0.2),
-                new FollowPath(intake3).and(turret.setTurretFixedLast), //setFlywheelVelFinal),
+                new FollowPath(intake3), //setFlywheelVelFinal),
                 new Delay(0.3),
                 new FollowPath(toShootFromIntake3),
                 new Delay(0.3),

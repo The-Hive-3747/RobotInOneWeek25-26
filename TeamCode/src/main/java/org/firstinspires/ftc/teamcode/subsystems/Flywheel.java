@@ -259,6 +259,10 @@ public class Flywheel implements Component {
                     ActiveOpMode.telemetry().addLine("flywheel is shootinggg")
             )
             .setUpdate(() -> {
+                if (shotTimer.seconds() > 1.0){
+                    flipper.setPosition(0.1);
+                    return;
+                }
                 currentRPM = this.getVel();
                 if (Math.abs(targetVel - currentRPM) < 100) {  //was 200
                     flipper.setPosition(0.1);

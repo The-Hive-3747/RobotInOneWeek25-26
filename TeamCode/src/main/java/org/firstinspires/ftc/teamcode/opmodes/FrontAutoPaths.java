@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.utilities.Alliance;
 
 public class FrontAutoPaths {
     public static Pose startingPose, shootingPose, intake1StartPose, intake1EndPose, intake2StartPose, intake2EndPose, parkPose, toShootCurvePose, openGateStartPose, openGateEndPose, intake3StartPose, intake3EndPose, lastShootingPose;
-    public static PathChain toShootFromStart, lineUpForIntake1, intake1, lineUpForOpenGate, lineUpForIntake2, intake2, toShootFromIntake2, park, openGate, toShootFromOpenGate, lineUpForIntake3, intake3, toShootFromIntake3;
+    public static PathChain toShootFromStart, lineUpForIntake1, intake1, lineUpForOpenGate, toShootFromIntake1, lineUpForIntake2, intake2, toShootFromIntake2, park, openGate, toShootFromOpenGate, lineUpForIntake3, intake3, toShootFromIntake3;
     public static double shootAngle, parkAngle, startAngle, intakeAngle, lastShootAngle;
     public static Alliance alliance;
     private static Pose convert(Pose pose) {
@@ -42,10 +42,10 @@ public class FrontAutoPaths {
 
     public static void generatePaths(Follower follower) {
         if (alliance == Alliance.BLUE) {
-            startingPose = new Pose(34.16, 132.6);
+            startingPose = new Pose(32, 132.6);
             startAngle = Math.toRadians(-84.7);
         } else {
-            startingPose = new Pose(106.2, 130.7);
+            startingPose = new Pose(118.5, 131.1);
             startAngle = Math.toRadians(-96.5);
         }
         shootingPose = convert(new Pose(48, 90));
@@ -53,19 +53,27 @@ public class FrontAutoPaths {
         intake1EndPose = convert(new Pose(18, 81)); //6//x:16 y:82//x: 16 :78
         openGateStartPose = convert(new Pose(22, 74)); //78//x:35
         openGateEndPose = convert(new Pose(14, 74));//x:18
-        intake2StartPose = convert(new Pose(45, 60));//y:58//y: 61
-        intake2EndPose = convert(new Pose(15, 60));//x:8 y:58//x: 9 y:61
+        intake2StartPose = convert(new Pose(45, 59));//y:58//y: 61
+        intake2EndPose = convert(new Pose(8, 59));//x:15 x:8 y:58//x: 9 y:61
         intake3StartPose = convert(new Pose(50, 35));//y:38//y: 32
         intake3EndPose = convert(new Pose(7, 35));//x:8 y:38//y: 32
         parkPose = convert(new Pose(30, 80));
         toShootCurvePose = convert(new Pose(80,72));
         lastShootingPose = convert(new Pose(50, 106));
 
-        shootAngle = convertHeading90(Math.toRadians(40));//135//210//180//0//90//110
-        parkAngle = convertHeading180(Math.toRadians(180));
-        //startAngle = Math.toRadians(90);
-        intakeAngle = convertHeading180(Math.toRadians(180));
-        lastShootAngle = convertHeading90(Math.toRadians(0));
+        if (alliance == Alliance.RED) {
+            shootAngle = convertHeading90(Math.toRadians(40));
+            parkAngle = convertHeading180(Math.toRadians(180));
+            intakeAngle = convertHeading180(Math.toRadians(180));
+            lastShootAngle = convertHeading90(Math.toRadians(0));
+        } else {
+            shootAngle = Math.toRadians(230);
+            parkAngle = convertHeading180(Math.toRadians(180));
+            intakeAngle = convertHeading180(Math.toRadians(180));
+            lastShootAngle = Math.toRadians(-90);
+        }
+        //shootAngle = convertHeading90(Math.toRadians(40));//135//210//180//0//90//110
+
 
         toShootFromStart = follower
                 .pathBuilder()
@@ -113,6 +121,14 @@ public class FrontAutoPaths {
                 .setLinearHeadingInterpolation(Math.toRadians(-90), shootAngle)
                 .build();
 
+        toShootFromIntake1 = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierLine(intake1EndPose, shootingPose)
+                )
+                .setLinearHeadingInterpolation(intakeAngle, shootAngle)
+                .build();
+
         lineUpForIntake2 = follower
                 .pathBuilder()
                 .addPath(
@@ -157,18 +173,18 @@ public class FrontAutoPaths {
         toShootFromIntake3 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(intake3EndPose, lastShootingPose)
+                        new BezierLine(intake3EndPose, shootingPose)
                 )
-                .setLinearHeadingInterpolation(intakeAngle, lastShootAngle)
+                .setLinearHeadingInterpolation(intakeAngle, shootAngle)
                 .build();
 
 
         park = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(lastShootingPose, parkPose)
+                        new BezierLine(shootingPose, parkPose)
                 )
-                .setLinearHeadingInterpolation(lastShootAngle, parkAngle)
+                .setLinearHeadingInterpolation(shootAngle, parkAngle)
                 .build();
     }
 

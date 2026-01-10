@@ -301,11 +301,11 @@ public class NextFTCTeleOp extends NextFTCOpMode {
             got3Balls = true;
         }
 
-        if(flywheel.readyToShoot()){
+        /*if(flywheel.readyToShoot()){
             turretLights.readyToShoot();
         }else{
             turretLights.notReadyToShoot();
-        }
+        }*/
 
         /*double currentHeading = follower.getHeading();
         limelightComponent.update(currentHeading);
