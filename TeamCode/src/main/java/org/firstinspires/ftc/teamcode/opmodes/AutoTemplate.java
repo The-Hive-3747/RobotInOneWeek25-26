@@ -80,7 +80,7 @@ public class AutoTemplate extends NextFTCOpMode {
         AutoPaths.generatePaths(PedroComponent.follower());
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(startPose);
+        follower.setStartPose(startPose);
         follower.update();
 
         turret.setAlliance(alliance);
@@ -95,7 +95,8 @@ public class AutoTemplate extends NextFTCOpMode {
         } else {
             turretLights.blueAlliance();
         }
-
+        
+        if (autonomousCommands == null) {
         autonomousCommands = new SequentialGroup(
                 startIntakeFlywheelAndTurret, 
                 followPathAndShoot(toShootFromStart),
@@ -107,6 +108,7 @@ public class AutoTemplate extends NextFTCOpMode {
                 followPathAndShoot(toShootFromIntake3),
                 followPathAndPark(park) 
         );
+    }
 
         turret.zeroTurret();
     }
@@ -179,6 +181,7 @@ public class AutoTemplate extends NextFTCOpMode {
                 new FollowPath(intakePath),
                 new Delay(DELAY_AFTER_INTAKE)
     );
+  }
 
     public CommandGroup followPathAndPark(PathChain parkPath) {
       return new ParallelGroup(
@@ -196,7 +199,7 @@ public class AutoTemplate extends NextFTCOpMode {
     public CommandGroup startIntakeFlywheelAndTurret = new ParallelGroup(
                         intake.fastIntake,
                         this.startAimbotFlywheel,
-                        turret.setTurretFixed,
+                        turret.setTurretFixed
                 );
 
   }

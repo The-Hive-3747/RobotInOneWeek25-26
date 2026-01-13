@@ -31,6 +31,10 @@ public class AutoPaths {
         double newPoseX = 144-pose.getX();
         return new Pose(newPoseX, pose.getY());
     }
+    
+    private static double flipHeading180Degrees(double heading) {
+      return Math.toRadians(heading + 180);
+   }
 
     public static void setStartPose(Pose pose) {
       startingPose = pose;
@@ -64,6 +68,5 @@ public class AutoPaths {
                 .setLinearHeadingInterpolation(startAngle, shootAngle)
                 .build();
 
-            }
     }
 }   
