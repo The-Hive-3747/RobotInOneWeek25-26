@@ -1,34 +1,35 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.intake1;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.intake2;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.intake3;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake1;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake2;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake3;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.park;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.startAngle;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.startingPose;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake1;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake2;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake3;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromStart;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.intake1;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.intake2;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.intake3;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForIntake1;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForIntake2;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.lineUpForIntake3;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.park;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.startAngle;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.startingPose;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromIntake1;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromIntake2;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromIntake3;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.toShootFromStart;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
+import org.firstinspires.ftc.teamcode.pathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
+import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.Turret;
 import org.firstinspires.ftc.teamcode.subsystems.TurretLights;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
 import org.firstinspires.ftc.teamcode.utilities.Light;
 import org.firstinspires.ftc.teamcode.utilities.OpModeTransfer;
-import org.firstinspires.ftc.teamcode.pathing.Constants;
-import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
-import org.firstinspires.ftc.teamcode.subsystems.Intake;
-import org.firstinspires.ftc.teamcode.subsystems.Turret;
 
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.delays.Delay;
@@ -36,14 +37,12 @@ import dev.nextftc.core.commands.groups.CommandGroup;
 import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
-import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
-import com.pedropathing.follower.Follower;
 import dev.nextftc.ftc.NextFTCOpMode;
 
-@Autonomous(name = "back red auto")
-public class BackRedAuto extends NextFTCOpMode {
+@Autonomous(name = "front blue DELAY auto")
+public class FrontBlueDelayAuto extends NextFTCOpMode {
     {
         addComponents(
                 new PedroComponent(Constants::createFollower),
@@ -66,27 +65,28 @@ public class BackRedAuto extends NextFTCOpMode {
     double FLYWHEEL_VEL;
     double HOOD_POS;
     boolean FLYWHEEL_ON = false;
-    boolean FLIPPER_MOVE = false;
 
 
     @Override
     public void onInit() {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-        BackAutoPaths.alliance = Alliance.RED;
-        BackAutoPaths.generatePaths(PedroComponent.follower());
+        FrontAutoPaths.alliance = Alliance.BLUE;
 
         follower = Constants.createFollower(hardwareMap);
+        FrontAutoPaths.generatePaths(PedroComponent.follower());
         follower.setStartingPose(new Pose(startingPose.getX(), startingPose.getY(), startAngle));
+
         follower.update();
 
-        turret.setAlliance(Alliance.RED);
-        aimbot.setAlliance(Alliance.RED);
-        turret.setFixedAngle(Turret.AUTON_RED_SHOOT_ANGLE);
+        turret.setAlliance(Alliance.BLUE);
+        aimbot.setAlliance(Alliance.BLUE);
+        turret.setFixedAngle(Turret.AUTON_BLUE_SHOOT_ANGLE);
+
 
 
         turretLights = new TurretLights(hardwareMap, telemetry);
 
-        if (BackAutoPaths.getAlliance() == Alliance.RED) {
+        if (FrontAutoPaths.getAlliance() == Alliance.RED) {
             turretLights.redAlliance();
         } else {
             turretLights.blueAlliance();
@@ -94,6 +94,7 @@ public class BackRedAuto extends NextFTCOpMode {
         }
 
         autonomous = new SequentialGroup(
+                new Delay(5),
                 new ParallelGroup(
                         //intake.startIntake,
                         intake.fastIntake,
@@ -105,7 +106,7 @@ public class BackRedAuto extends NextFTCOpMode {
 
                         new FollowPath(toShootFromStart)
                 ),
-                new Delay(0.8),
+                new Delay(3),
                 new ParallelGroup(
                         //turret.setTurretAuto,
                         flywheel.resetShotTimer,
@@ -121,6 +122,9 @@ public class BackRedAuto extends NextFTCOpMode {
                 ),
                 new FollowPath(intake1),
                 new Delay(1),
+                //new FollowPath(lineUpForOpenGate),
+                //new FollowPath(openGate),
+                //new Delay(0.5),
                 new FollowPath(toShootFromIntake1),
                 new Delay(0.5),
                 new ParallelGroup(
@@ -155,7 +159,7 @@ public class BackRedAuto extends NextFTCOpMode {
                 new Delay(0.2),
                 new FollowPath(intake3), //setFlywheelVelFinal),
                 new Delay(0.3),
-                new FollowPath(toShootFromIntake3).and(intake.startTransfer),
+                new FollowPath(toShootFromIntake3),
                 new Delay(0.3),
                 new ParallelGroup(
                         flywheel.resetShotTimer,
@@ -214,14 +218,13 @@ public class BackRedAuto extends NextFTCOpMode {
         telemetry.addData("pose", PedroComponent.follower().getPose());
         telemetry.addData("aimbot pose", follower.getPose());
         flywheel.update();
-        intake.update();
         telemetry.update();
     }
 
     @Override
     public void onStop() {
         OpModeTransfer.currentPose = PedroComponent.follower().getPose();
-        OpModeTransfer.alliance = Alliance.RED;
+        OpModeTransfer.alliance = Alliance.BLUE;
         OpModeTransfer.hasBeenTransferred = true;
     }
     public Command startAimbotFlywheel = new InstantCommand(
@@ -230,5 +233,4 @@ public class BackRedAuto extends NextFTCOpMode {
     public Command setFlywheelVelFinal = new InstantCommand(
             () -> FLYWHEEL_VEL = Flywheel.AUTON_SHOOT_VEL_LAST
     );
-
 }

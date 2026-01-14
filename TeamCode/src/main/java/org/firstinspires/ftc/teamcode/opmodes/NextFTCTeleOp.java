@@ -216,8 +216,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 })
                 .whenBecomesFalse(() -> {
                     intakeMotor.setPower(0);
-                    sideWheelServo.setPower(0);
-                    leftFireServo.setPower(0);
+                    sideWheelServo.setPower(FIRE_POWER);
+                    leftFireServo.setPower(FIRE_POWER);
                     isIntakeReversed = false;
                 });
 

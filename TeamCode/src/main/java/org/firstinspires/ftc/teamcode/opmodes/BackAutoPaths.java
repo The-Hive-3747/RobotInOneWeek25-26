@@ -9,8 +9,8 @@ import com.pedropathing.paths.PathChain;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
 
 public class BackAutoPaths {
-    public static Pose startingPose, shootingPose, intake1StartPose, intake1EndPose, intake2StartPose, intake2EndPose, parkPose, toShootCurvePose, openGateStartPose, openGateEndPose, intake3StartPose, intake3EndPose, lastShootingPose;
-    public static PathChain toShootFromStart, lineUpForIntake1, intake1, lineUpForOpenGate, toShootFromIntake1, lineUpForIntake2, intake2, toShootFromIntake2, park, openGate, toShootFromOpenGate, lineUpForIntake3, intake3, toShootFromIntake3;
+    public static Pose startingPose, shootingPose, intake1StartPose, intake1EndPose, intake2StartPose, intake2EndPose, parkPose, toShootCurvePose, openGateStartPose, openGateEndPose, intake3StartPose, intake3EndPose, lastShootingPose, moveAutoEnd;
+    public static PathChain toShootFromStart, lineUpForIntake1, intake1, lineUpForOpenGate, toShootFromIntake1, lineUpForIntake2, intake2, toShootFromIntake2, park, openGate, toShootFromOpenGate, lineUpForIntake3, intake3, toShootFromIntake3, toEndFromStart;
     public static double shootAngle, parkAngle, startAngle, intakeAngle, lastShootAngle;
     public static Alliance alliance;
     private static Pose convert(Pose pose) {
@@ -58,6 +58,7 @@ public class BackAutoPaths {
         parkPose = convert(new Pose(30, 80));
         toShootCurvePose = convert(new Pose(80,72));
         lastShootingPose = convert(new Pose(50, 106));
+        moveAutoEnd = convert(new Pose( 10, 8.62));
 
         if (alliance == Alliance.RED) {
             shootAngle = convertHeading90(Math.toRadians(40));
@@ -177,7 +178,13 @@ public class BackAutoPaths {
                 )
                 .setLinearHeadingInterpolation(intakeAngle, shootAngle)
                 .build();
-
+        toEndFromStart = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierLine(startingPose, moveAutoEnd)
+                )
+                .setConstantHeadingInterpolation(startAngle)
+                .build();
 
         park = follower
                 .pathBuilder()

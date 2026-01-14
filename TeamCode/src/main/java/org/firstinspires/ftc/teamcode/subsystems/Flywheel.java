@@ -2,11 +2,14 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.internal.hardware.android.GpioPin;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
@@ -26,14 +29,16 @@ public class Flywheel implements Component {
     private ElapsedTime colorTimer = new ElapsedTime();
     ControlSystem largeFlywheelPID;
     Servo flipper;
+    CRServo leftFireServo, sideWheelServo;
     Hood hood;
 
     double autoTargetVel = 1040;
     public static double FLYWHEEL_PID_KP = 0.0001, FLYWHEEL_PID_KV = 0.0, FLYWHEEL_PID_KS = 0.0, FLYWHEEL_PID_KD = 1, FLYWHEEL_PID_KI = 0.000000000000000001;
     double targetAdjust = 0;
-    double READY_VEL_THRESHOLD = 40.0;
+    double READY_VEL_THRESHOLD = 50.0;
     public static double AUTON_SHOOT_VEL = 1100;//1100
     public static double AUTON_SHOOT_VEL_LAST = 1100;
+    public double FIRESERVO_POWER = 0.9;
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
         //this needs to be forward in order to use the hood PID. correction is in set power
@@ -42,6 +47,9 @@ public class Flywheel implements Component {
         flywheelTop = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "flywheelTop");
         flywheelTop.setDirection(DcMotorEx.Direction.FORWARD);
         intakeMotor = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "transfer");
+        leftFireServo = ActiveOpMode.hardwareMap().get(CRServo.class, "left_firewheel");
+        leftFireServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        sideWheelServo = ActiveOpMode.hardwareMap().get(CRServo.class, "side-wheel");
 
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheelBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -259,7 +267,7 @@ public class Flywheel implements Component {
                     ActiveOpMode.telemetry().addLine("flywheel is shootinggg")
             )
             .setUpdate(() -> {
-                if (shotTimer.seconds() > 1.0){
+                if (shotTimer.seconds() > 1.3){//1.0
                     flipper.setPosition(0.1);
                     return;
                 }
