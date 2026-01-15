@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
+import org.firstinspires.ftc.teamcode.subsystems.FlywheelWithExternalEncoder;
 import org.firstinspires.ftc.teamcode.subsystems.Relocalization;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
 import org.firstinspires.ftc.teamcode.utilities.DataLogger;
@@ -34,13 +35,13 @@ import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.NextFTCOpMode;
 
-@TeleOp(name="hood shooter tele tuning")
-public class HoodShooterTele extends NextFTCOpMode {
+@TeleOp(name="hood shooter tele with new flywheel")
+public class HoodShooterTeleWithNewFlywheel extends NextFTCOpMode {
     private static final Logger log = LoggerFactory.getLogger(HoodShooterTele.class);
 
     {
         addComponents(
-                flywheel = new Flywheel(),
+                flywheel = new FlywheelWithExternalEncoder(),
                 BindingsComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower),
                 limelight = new LimelightComponent(),
@@ -49,11 +50,11 @@ public class HoodShooterTele extends NextFTCOpMode {
                 relocalization = new Relocalization(),
                 dataLog = new DataLogger()
 
-                );
+        );
     }
-DataLogger dataLog;
+    DataLogger dataLog;
     Relocalization relocalization;
-    Flywheel flywheel;
+    FlywheelWithExternalEncoder flywheel;
     Aimbot aimbot;
     //FieldCentricDrive drive;
     LimelightComponent limelight;
@@ -62,7 +63,7 @@ DataLogger dataLog;
 
     static double  FLYWHEEL_VEL = 1300; // RPM start
     double INTAKE_POWER = 0.9;
-    int FLYWHEEL_STEP = 20;
+    int FLYWHEEL_STEP = 100;
     boolean fireWhenReady=false;
     private DcMotorEx intakeMotor;
     private Servo flipper, light;
@@ -140,7 +141,7 @@ DataLogger dataLog;
         // enable/disable flywheel at current target vel
         g1RT.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
-                    FLYWHEEL_VEL = 1000;
+                    FLYWHEEL_VEL = 3000;
                     flywheel.setTargetVel(FLYWHEEL_VEL);
                     intakeMotor.setPower(INTAKE_POWER);
                     leftFireServo.setPower(FIRE_POWER);
@@ -156,8 +157,8 @@ DataLogger dataLog;
 
         // bump flywheel target RPM up/down
         g1RB.whenBecomesTrue(() -> {
-            if (FLYWHEEL_VEL >= 1600) {
-                FLYWHEEL_VEL = 1600;
+            if (FLYWHEEL_VEL >= 6000) {
+                FLYWHEEL_VEL = 6000;
             } else {
                 FLYWHEEL_VEL = FLYWHEEL_VEL + FLYWHEEL_STEP;
             }
@@ -196,7 +197,7 @@ DataLogger dataLog;
         // g2Y: shoot toggle using flywheel vel
         g2Y.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> {
-                    FLYWHEEL_VEL = 1000;
+                    FLYWHEEL_VEL = 3000;
                     flywheel.setTargetVel(FLYWHEEL_VEL);
                 })
                 .whenBecomesFalse(() -> flywheel.setTargetVel(0.0));
@@ -260,10 +261,11 @@ DataLogger dataLog;
             highestLooptime = looptime.milliseconds();
         }
         panelsTelemetry.addData("Intake Current (mA)", intakeMotor.getCurrent(CurrentUnit.MILLIAMPS));
+        panelsTelemetry.addData("flywheel current (mA)", flywheel.getCurrent());
         panelsTelemetry.addData("flywheel velocity", flywheel.getVel());
         panelsTelemetry.addData("flywheel goal velocity", flywheel.getFlywheelGoal());
         panelsTelemetry.addData("flywheel power", flywheel.getPower());
-        panelsTelemetry.addData("flywheel vel diff IN RPM", ((flywheel.getVel()- flywheel.getFlywheelGoal())/7)*60);
+        panelsTelemetry.addData("flywheel vel diff IN RPM", flywheel.getVel()- flywheel.getFlywheelGoal());
 
         // key telemetry for tuning
         telemetry.addData("looptime (ms)", looptime.milliseconds());

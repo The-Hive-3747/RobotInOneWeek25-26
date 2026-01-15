@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.robotcore.internal.hardware.android.GpioPin;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
@@ -22,24 +21,25 @@ import dev.nextftc.ftc.ActiveOpMode;
 
 @Configurable
 // This is a component file for the flywheel / shooter.
-public class Flywheel implements Component {
+public class FlywheelWithExternalEncoder implements Component {
 
     DcMotorEx flywheelBottom, flywheelTop, intakeMotor;
     static double correct, flywheelVel, targetVel, currentRPM;
+    static int countPerRevolution = 8192;
+    public double convertedVel;
+    double currentPosition, pastPosition = 0, currentTime, pastTime = 0, deltaTime, deltaPosition;
     private ElapsedTime shotTimer = new ElapsedTime();
-    private ElapsedTime colorTimer = new ElapsedTime();
+    private ElapsedTime flywheelVelocityTimer = new ElapsedTime();
     ControlSystem largeFlywheelPID;
     Servo flipper;
     CRServo leftFireServo, sideWheelServo;
     Hood hood;
-
     double autoTargetVel = 1040;
-    public static double FLYWHEEL_PID_KP = 0.0001, FLYWHEEL_PID_KV = 0.0, FLYWHEEL_PID_KS = 0.0, FLYWHEEL_PID_KD = 1, FLYWHEEL_PID_KI = 0.000000000000000001;
+    public static double FLYWHEEL_PID_KP = 0.00035, FLYWHEEL_PID_KV = 0.000225, FLYWHEEL_PID_KS = 0.135, FLYWHEEL_PID_KD = 4, FLYWHEEL_PID_KI = 0;
     double targetAdjust = 0;
     double READY_VEL_THRESHOLD = 50.0;
     public static double AUTON_SHOOT_VEL = 1100;//1100
     public static double AUTON_SHOOT_VEL_LAST = 1100;
-    public double FIRESERVO_POWER = 0.9;
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
         //this needs to be forward in order to use the hood PID. correction is in set power
@@ -57,8 +57,9 @@ public class Flywheel implements Component {
         flywheelTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
 
-        flywheelBottom.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flywheelBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        flywheelTop.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flywheelTop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
 
         flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
         hood = new Hood(intakeMotor);
@@ -73,7 +74,7 @@ public class Flywheel implements Component {
 
         targetVel = 0; // setting a target velocity of 0 so that the robot doesnt blow up on start
 
-        colorTimer.reset();
+        flywheelVelocityTimer.reset();
     }
 
 
@@ -129,13 +130,21 @@ public class Flywheel implements Component {
         flywheelTop.setPower(power);
     }
 
+    /**
+     *
+     * @return double: current in milliamps
+     */
+    public double getCurrent() {
+        return flywheelTop.getCurrent(CurrentUnit.MILLIAMPS) + flywheelBottom.getCurrent(CurrentUnit.MILLIAMPS);
+    }
+
 
     /**
      *
      * @return motor power
      */
     public double getPower() {
-        return flywheelBottom.getPower();
+        return flywheelTop.getPower();
 
     }
 
@@ -145,7 +154,24 @@ public class Flywheel implements Component {
      * @return gets flywheel motor velocity
      */
     public double getVel() {
-        return (flywheelBottom.getVelocity());
+        // unfortunately the encoder we're using is extremely chopped and reads random negative values
+        // when using flywheelTop.getVelocity().
+        // instead, we're manually calculating the flywheel velocity by getting the distance & time
+        // delta distance / delta time = velocity
+        // (delta means difference between)
+
+        currentTime = flywheelVelocityTimer.seconds();
+        currentPosition = flywheelTop.getCurrentPosition();
+        deltaPosition = currentPosition - pastPosition;
+        deltaTime = currentTime - pastTime;
+
+        //convertedVel = (flywheelTop.getVelocity()/countPerRevolution) * 60; //to convert to RPM (60 for seconds)
+        convertedVel = ((deltaPosition / deltaTime)/countPerRevolution) * 60; //to convert to RPM (60 for seconds)
+
+        pastPosition = currentPosition;
+        pastTime = currentTime;
+
+        return convertedVel;
     }
 
 
@@ -172,38 +198,20 @@ public class Flywheel implements Component {
         flywheelVel = this.getVel();
 
         // correct is the motor power we need to set!
-        correct = correct + largeFlywheelPID.calculate( // calculate() lets us plug in current vals and outputs a motor power
+        correct = largeFlywheelPID.calculate( // calculate() lets us plug in current vals and outputs a motor power
                 new KineticState(0, flywheelVel) // a KineticState is NextFTC's way of storing position, velocity, and acceleration all in one variable
         );
 
         // setting constraints on our motor power so its not above 1 and not below 0
         if (targetVel != 0) {
-
             if (correct < 0) {
                 correct = 0;
             }
             correct = Math.min(0.9, correct);
-            /*
-            if (correct > 0) {
-                if (correct >= 0.9) {
-                    correct = 0.9;
-                }
-            } else {
-                correct = 0.7 * targetVel/1300;
-            }*/
         } else {
             correct = 0;
         }
 
-        /*if (correct > 0) {
-            if (correct >= 0.9) {
-                correct = 0.9;
-            }
-        }
-        if (correct <= 0){
-            correct = 0;
-        }
-        */
         if(Math.abs(targetVel+targetAdjust-flywheelVel)>11) {
             this.setPower(correct); // set the motor power!
         }
@@ -222,14 +230,6 @@ public class Flywheel implements Component {
      */
     public double getFlywheelGoal() {
         return largeFlywheelPID.getGoal().getVelocity();
-    }
-
-    /**
-     *
-     * @return double: current in milliamps
-     */
-    public double getCurrent() {
-        return flywheelTop.getCurrent(CurrentUnit.MILLIAMPS) + flywheelBottom.getCurrent(CurrentUnit.MILLIAMPS);
     }
 
 
