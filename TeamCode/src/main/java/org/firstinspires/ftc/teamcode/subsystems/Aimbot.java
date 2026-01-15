@@ -45,23 +45,23 @@ public class Aimbot implements Component{
 
     AimbotValues[] aimbotValues = { //These are all the actual values from tests on field, must be
                                     // in order of distance from least to greatest
-            new AimbotValues(16.5, 960, 0), //vel: 850//
-            new AimbotValues(21.5, 960, 0), //vel: 950//
-            new AimbotValues(26.5, 960, 0), //vel: 950//v: 950
-            new AimbotValues(31.5, 960, 0), //v: 950 h:727//v:1000
-            new AimbotValues(36.5, 960, 0), //v: 950 h: 1003//v:1050, h:1005
-            new AimbotValues(41.5, 1000, 0), //v: 1000 h: 1243//v:
-            new AimbotValues(46.5, 1020, 500), //v: 1050 h: 1237//v:
-            new AimbotValues(51.5, 1040, 1000), //v: 1000 h: 1250//v:1140
-            new AimbotValues(56.5, 1060, 1500), //v: 1050 h: 1243//v:1140
-            new AimbotValues(61.5, 1100, 2250), //v: 1050 h: 1264//v:1180, h:1466
-            new AimbotValues(69.5, 1140, 2500), //v: 1200 h: 1762//v:1240, h:1538
-            new AimbotValues(76.5, 1120, 2750), //v: 1250 h: 1903//v:1280, h:1580
-            new AimbotValues(111.5, 1300, 2250), //v: 1300 h: 1250//v: 1440, h:1835//h:1900//v:1410//v:1430, h:1945
-            new AimbotValues(116.5, 1360, 2500), //v: 1350 h: 1400//v: 1440, h:1835//h:1940//v:1440, h:1965
-            new AimbotValues(121.5, 1380, 2500), //v: 1400 h: 1500//v: 1440, h:1835//h:1940//v:1460, h:1965
-            new AimbotValues(126.5, 1380, 2000), //v: 1450 h: 2000//v: 1440, h:1835//h:1950//v:1460, h:1975
-            new AimbotValues(131.5, 1420, 1750), //v: 1500 h: 2000//v: 1440, h:1835//v: 1480, h:1960
+            new AimbotValues(16.5, 2057, 0), //vel: 850//
+            new AimbotValues(21.5, 2057, 0), //vel: 950//
+            new AimbotValues(26.5, 2057, 0), //vel: 950//v: 950
+            new AimbotValues(31.5, 2057, 0), //v: 950 h:727//v:1000
+            new AimbotValues(36.5, 2157, 0), //v: 950 h: 1003//v:1050, h:1005
+            new AimbotValues(41.5, 2242, 0), //v: 1000 h: 1243//v:
+            new AimbotValues(46.5, 2285, 500), //v: 1050 h: 1237//v:
+            new AimbotValues(51.5, 2322, 1000), //v: 1000 h: 1250//v:1140
+            new AimbotValues(56.5, 2371, 1500), //v: 1050 h: 1243//v:1140
+            new AimbotValues(61.5, 2456, 1750), //v: 1050 h: 1264//v:1180, h:1466
+            new AimbotValues(69.5, 2542, 2100), //v: 1200 h: 1762//v:1240, h:1538
+            new AimbotValues(76.5, 2542, 2200), //v: 1250 h: 1903//v:1280, h:1580
+            new AimbotValues(111.5, 2985, 2250), //v: 1300 h: 1250//v: 1440, h:1835//h:1900//v:1410//v:1430, h:1945
+            new AimbotValues(116.5, 3014, 2500), //v: 1350 h: 1400//v: 1440, h:1835//h:1940//v:1440, h:1965
+            new AimbotValues(121.5, 3057, 2500), //v: 1400 h: 1500//v: 1440, h:1835//h:1940//v:1460, h:1965
+            new AimbotValues(126.5, 3057, 2000), //v: 1450 h: 2000//v: 1440, h:1835//h:1950//v:1460, h:1975
+            new AimbotValues(131.5, 3142, 1750), //v: 1500 h: 2000//v: 1440, h:1835//v: 1480, h:1960
 
             /*new AimbotValues(16.5, 850, 0), //vel: 850//
             new AimbotValues(21.5, 1050, 518), //vel: 950//
