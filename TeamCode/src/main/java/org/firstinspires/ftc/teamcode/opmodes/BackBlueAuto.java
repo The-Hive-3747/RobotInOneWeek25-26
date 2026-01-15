@@ -36,6 +36,7 @@ import dev.nextftc.core.commands.groups.CommandGroup;
 import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
+import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import com.pedropathing.follower.Follower;
@@ -65,6 +66,7 @@ public class BackBlueAuto extends NextFTCOpMode {
     double FLYWHEEL_VEL;
     double HOOD_POS;
     boolean FLYWHEEL_ON = false;
+    boolean FLIPPER_MOVE = false;
 
 
     @Override
@@ -153,7 +155,7 @@ public class BackBlueAuto extends NextFTCOpMode {
                 new Delay(0.2),
                 new FollowPath(intake3), //setFlywheelVelFinal),
                 new Delay(0.3),
-                new FollowPath(toShootFromIntake3),
+                new FollowPath(toShootFromIntake3).and(intake.startTransfer),
                 new Delay(0.3),
                 new ParallelGroup(
                         flywheel.resetShotTimer,
@@ -212,6 +214,7 @@ public class BackBlueAuto extends NextFTCOpMode {
         telemetry.addData("pose", PedroComponent.follower().getPose());
         telemetry.addData("aimbot pose", follower.getPose());
         flywheel.update();
+        intake.update();
         telemetry.update();
     }
 
@@ -224,7 +227,6 @@ public class BackBlueAuto extends NextFTCOpMode {
     public Command startAimbotFlywheel = new InstantCommand(
             () -> FLYWHEEL_ON = true
     );
-    public Command setFlywheelVelFinal = new InstantCommand(
-            () -> FLYWHEEL_VEL = Flywheel.AUTON_SHOOT_VEL_LAST
-    );
+
+
 }

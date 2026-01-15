@@ -230,7 +230,4 @@ public class FrontBlueAuto extends NextFTCOpMode {
     public Command startAimbotFlywheel = new InstantCommand(
             () -> FLYWHEEL_ON = true
     );
-    public Command setFlywheelVelFinal = new InstantCommand(
-            () -> FLYWHEEL_VEL = Flywheel.AUTON_SHOOT_VEL_LAST
-    );
 }

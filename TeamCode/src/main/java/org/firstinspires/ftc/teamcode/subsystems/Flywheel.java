@@ -34,12 +34,11 @@ public class Flywheel implements Component {
     Servo flipper;
     CRServo leftFireServo, sideWheelServo;
     Hood hood;
-    double autoTargetVel = 1040;
-    public static double FLYWHEEL_PID_KP = 0.00053, FLYWHEEL_PID_KV = 0.000205, FLYWHEEL_PID_KS = 0.135, FLYWHEEL_PID_KD = 1.5, FLYWHEEL_PID_KI = 0;
+    double autoTargetVel = 2250; //UPDATED TO RPM
+    public static double FLYWHEEL_PID_KP = 0.002655, FLYWHEEL_PID_KV = 0.000365, FLYWHEEL_PID_KS = 0.135, FLYWHEEL_PID_KD = 1, FLYWHEEL_PID_KI = 0;
     double targetAdjust = 0;
-    double READY_VEL_THRESHOLD = 50.0;
-    public static double AUTON_SHOOT_VEL = 1100;//1100
-    public static double AUTON_SHOOT_VEL_LAST = 1100;
+    double READY_VEL_THRESHOLD = 200; // UPDATED TO RPM
+    public static double AUTON_SHOOT_VEL = 2250; //UPDATED TO RPM
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
         //this needs to be forward in order to use the hood PID. correction is in set power
@@ -212,9 +211,10 @@ public class Flywheel implements Component {
             correct = 0;
         }
 
-        if(Math.abs(targetVel+targetAdjust-flywheelVel)>11) {
-            this.setPower(correct); // set the motor power!
-        }
+        //if(Math.abs(targetVel+targetAdjust-flywheelVel)>11) {
+        //    this.setPower(correct); // set the motor power!
+        //}
+        this.setPower(correct);
 
         hood.update();
 
@@ -272,16 +272,13 @@ public class Flywheel implements Component {
 
 
     public Command shootAllThree = new LambdaCommand()
-            .setStart(() ->
-                    ActiveOpMode.telemetry().addLine("flywheel is shootinggg")
-            )
             .setUpdate(() -> {
-                if (shotTimer.seconds() > 1.3){//1.0
+                if (shotTimer.seconds() > 1.7){//1.5 1.3 1.0
                     flipper.setPosition(0.1);
                     return;
                 }
                 currentRPM = this.getVel();
-                if (Math.abs(targetVel - currentRPM) < 100) {  //was 200
+                if (this.readyToShoot()) {  //was 200
                     flipper.setPosition(0.1);
                 } else {
                     flipper.setPosition(0.52);
@@ -290,5 +287,5 @@ public class Flywheel implements Component {
             .setStop(interrupted -> {
                 flipper.setPosition(0.52);
             })
-            .setIsDone(() -> (shotTimer.seconds() > 2));
+            .setIsDone(() -> (shotTimer.seconds() > 2.3)); //2.2 2
 }

@@ -70,6 +70,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     double INTAKE_SHOOTING_POWER = 0.65;
     double THREE_BALL_CURRENT = 6500.0;
     private boolean FLYWHEEL_ON = false;
+    private boolean wasReadyToShoot = false;
     private boolean isIntakeOn = false;
     private boolean isIntakeReversed = false;
     private boolean isTransferOn = false;
@@ -243,6 +244,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         g2RT.whenTrue(() -> {
                 got3Balls = false;
+                fireWhenReady = false;
                 intakeMotor.setPower(INTAKE_SHOOTING_POWER);
                 flipper.setPosition(FLIPPER_FIRE_POS);
                 })
@@ -301,11 +303,13 @@ public class NextFTCTeleOp extends NextFTCOpMode {
             got3Balls = true;
         }
 
-        /*if(flywheel.readyToShoot()){
+        if(flywheel.readyToShoot() && !wasReadyToShoot){
             turretLights.readyToShoot();
-        }else{
+            wasReadyToShoot = true;
+        } else if (wasReadyToShoot) {
+            wasReadyToShoot = false;
             turretLights.notReadyToShoot();
-        }*/
+        }
 
         /*double currentHeading = follower.getHeading();
         limelightComponent.update(currentHeading);
