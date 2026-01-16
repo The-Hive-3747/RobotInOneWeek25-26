@@ -35,7 +35,7 @@ public class Turret implements Component {
     private KineticState ZERO_ANGLE = new KineticState(0);
     private KineticState FIXED_ANGLE = new KineticState(-95);
     private KineticState FIXED_LAST_ANGLE = new KineticState(-60);
-    public static double AUTON_RED_SHOOT_ANGLE = -95;
+    public static double AUTON_RED_SHOOT_ANGLE = -94; //-92 -95
     public static double AUTON_RED_SHOOT_ANGLE_LAST = -60;
     public static double AUTON_BLUE_SHOOT_ANGLE_LAST = 60;
     public static double AUTON_BLUE_SHOOT_ANGLE = 90;

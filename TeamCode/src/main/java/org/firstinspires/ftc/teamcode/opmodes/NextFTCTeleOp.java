@@ -51,11 +51,11 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 BindingsComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower),
                 aimbot = new Aimbot(),
-                turret = new Turret(),
-                limelight = new Relocalization()
+                turret = new Turret()
+                //limelight = new Relocalization()
         );
     }
-    Relocalization limelight;
+    //Relocalization limelight;
     Turret turret;
     FieldCentricDrive drive;
     Aimbot aimbot;
@@ -88,6 +88,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     Follower follower;
     public Alliance alliance;
     TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+    public ElapsedTime lightTimer = new ElapsedTime();
 
     Button g2A;
 
@@ -121,8 +122,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g2Options = button(() -> gamepad2.options);
         g2Options.whenBecomesTrue(() -> flywheel.resetHoodEncoder());
         g2Back.whenBecomesTrue(() -> turret.zeroTurret());
-        g1Back.toggleOnBecomesTrue()
-                .whenBecomesTrue(() -> {
+        g1Back.whenBecomesTrue(() -> {
                     if (alliance == Alliance.BLUE){
                         alliance = Alliance.RED;
                         turretLights.redAlliance();
@@ -130,17 +130,21 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                         alliance = Alliance.BLUE;
                         turretLights.blueAlliance();
                     }
-
                     turret.setAlliance(alliance);
                 });
         looptime = new ElapsedTime();
 
-
+        if (alliance == Alliance.BLUE){
+            turretLights.redAlliance();
+        } else{
+            turretLights.blueAlliance();
+        }
 
 
     }
     @Override
     public void onWaitForStart() {
+
     }
 
     @Override
@@ -303,12 +307,14 @@ public class NextFTCTeleOp extends NextFTCOpMode {
             got3Balls = true;
         }
 
-        if(flywheel.readyToShoot() && !wasReadyToShoot){
+        if(flywheel.readyToShoot() && !wasReadyToShoot && lightTimer.seconds() > 1.0 && flywheel.getVel() != 0){
             turretLights.readyToShoot();
             wasReadyToShoot = true;
-        } else if (wasReadyToShoot) {
+            lightTimer.reset();
+        } else if (!flywheel.readyToShoot() && wasReadyToShoot && lightTimer.seconds() > 1.0) {
             wasReadyToShoot = false;
             turretLights.notReadyToShoot();
+            lightTimer.reset();
         }
 
         /*double currentHeading = follower.getHeading();
@@ -320,7 +326,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
               Pose limelightPose = new Pose(limelightComponent.getRobotX(),limelightComponent.getRobotY(),limelightComponent.getRobotHeading());
             }
        }*/
-        limelight.update();
+        //limelight.update();
         BindingManager.update();
         flywheel.update();
 

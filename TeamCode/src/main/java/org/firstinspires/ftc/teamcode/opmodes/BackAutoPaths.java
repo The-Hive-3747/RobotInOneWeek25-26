@@ -42,7 +42,7 @@ public class BackAutoPaths {
 
     public static void generatePaths(Follower follower) {
         if (alliance == Alliance.BLUE) {
-            startingPose = new Pose(63.25, 7.085); // X AND Y ARE UPDATED TO THE REAL WORLD
+            startingPose = new Pose(63.25, 7.585); // X AND Y ARE UPDATED TO THE REAL WORLD
         } else {
             startingPose = new Pose(80.75, 7.085); // X AND Y ARE UPDATED TO THE REAL WORLD
         }

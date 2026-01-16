@@ -34,11 +34,11 @@ public class Flywheel implements Component {
     Servo flipper;
     CRServo leftFireServo, sideWheelServo;
     Hood hood;
-    double autoTargetVel = 2250; //UPDATED TO RPM
-    public static double FLYWHEEL_PID_KP = 0.002655, FLYWHEEL_PID_KV = 0.000365, FLYWHEEL_PID_KS = 0.135, FLYWHEEL_PID_KD = 1, FLYWHEEL_PID_KI = 0;
+    double autoTargetVel = 2200; //UPDATED TO RPM
+    public static double FLYWHEEL_PID_KP = 0.002655, FLYWHEEL_PID_KV = 0.000245, FLYWHEEL_PID_KS = 0.135, FLYWHEEL_PID_KD = 1, FLYWHEEL_PID_KI = 0;
     double targetAdjust = 0;
     double READY_VEL_THRESHOLD = 200; // UPDATED TO RPM
-    public static double AUTON_SHOOT_VEL = 2250; //UPDATED TO RPM
+    public static double AUTON_SHOOT_VEL = 2200; //UPDATED TO RPM
     @Override
     public void postInit() { // this runs AFTER the init, it runs just once
         //this needs to be forward in order to use the hood PID. correction is in set power

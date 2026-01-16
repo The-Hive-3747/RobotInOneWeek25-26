@@ -42,23 +42,23 @@ public class FrontAutoPaths {
 
     public static void generatePaths(Follower follower) {
         if (alliance == Alliance.BLUE) {
-            startingPose = new Pose(32, 132.6); // X AND Y ARE UPDATED TO THE REAL WORLD
+            startingPose = new Pose(34.5, 131.5); // X AND Y ARE UPDATED TO THE REAL WORLD
             startAngle = Math.toRadians(-84.7);
         } else {
-            startingPose = new Pose(118.5, 131.1); // X AND Y ARE UPDATED TO THE REAL WORLD
+            startingPose = new Pose(110.5, 131.5); // X AND Y ARE UPDATED TO THE REAL WORLD
             startAngle = Math.toRadians(-96.5);
         }
-        shootingPose = convert(new Pose(48, 90));
-        intake1StartPose = convert(new Pose(44, 84.5)); //y:81 34//y:82//x: 47 y:78
-        intake1EndPose = convert(new Pose(17.5, 84.5)); //6//x:16 y:82//x: 16 :78
+        shootingPose = convert(new Pose(54.25, 88.75));
+        intake1StartPose = convert(new Pose(51.25, 79.75)); //y:81 34//y:82//x: 47 y:78
+        intake1EndPose = convert(new Pose(24.25, 79.75)); //6//x:16 y:82//x: 16 :78
         openGateStartPose = convert(new Pose(22, 74)); //78//x:35
         openGateEndPose = convert(new Pose(14, 74));//x:18
-        intake2StartPose = convert(new Pose(44, 59));//y:58//y: 61
-        intake2EndPose = convert(new Pose(9, 59));//x:15 x:8 y:58//x: 9 y:61
-        intake3StartPose = convert(new Pose(44, 36));//y:38//y: 32
-        intake3EndPose = convert(new Pose(9, 36));//x:8 y:38//y: 32
-        parkPose = convert(new Pose(30, 80));
-        toShootCurvePose = convert(new Pose(80,72));
+        intake2StartPose = convert(new Pose(51.25, 57.75));//y:58//y: 61
+        intake2EndPose = convert(new Pose(14.25, 57.75));//x:15 x:8 y:58//x: 9 y:61
+        intake3StartPose = convert(new Pose(56.25, 33.75));//y:38//y: 32
+        intake3EndPose = convert(new Pose(14.25, 33.75));//x:8 y:38//y: 32
+        parkPose = convert(new Pose(36.25, 78.25));
+        toShootCurvePose = convert(new Pose(86.25,70.75));
         lastShootingPose = convert(new Pose(50, 106));
         moveAutoEnd = convert(new Pose( 10, 8.62));
 
@@ -193,32 +193,5 @@ public class FrontAutoPaths {
                 )
                 .setLinearHeadingInterpolation(shootAngle, parkAngle)
                 .build();
-    }
-
-    public PathChain getToShootFromStart() { return toShootFromStart; }
-    public PathChain getLineUpForIntake1() { return lineUpForIntake1; }
-
-    public static PathChain getIntake1() {
-        return intake1;
-    }
-
-    public static PathChain getLineUpForIntake2() {
-        return lineUpForIntake2;
-    }
-
-    public static PathChain getIntake2() {
-        return intake2;
-    }
-
-    public static PathChain getOpenGate() {
-        return openGate;
-    }
-
-    public static PathChain getToShootFromIntake2() {
-        return toShootFromIntake2;
-    }
-
-    public static PathChain getPark() {
-        return park;
     }
 }
