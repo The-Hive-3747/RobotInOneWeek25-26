@@ -45,7 +45,7 @@ public class HoodShooterTele extends NextFTCOpMode {
                 //drive = new FieldCentricDrive(),
                 aimbot = new Aimbot(),
                 relocalization = new Relocalization(),
-                dataLog = new DataLogger()
+                dataLog = new DataLogger(telemetry)
 
         );
     }

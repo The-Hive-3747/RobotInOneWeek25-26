@@ -2,12 +2,19 @@ package org.firstinspires.ftc.teamcode.utilities;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 
+
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
 
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl;
 
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
 
@@ -15,27 +22,68 @@ public class DataLogger implements Component{
 
     DcMotorEx flywheelBottom, intake;
     CRServo hood;
+    Servo flipper;
     Pose currentPose = OpModeTransfer.currentPose;
-    double botDistance;
     Alliance alliance;
-    double goalX;
-    double goalY;
-
-
+    String logEntry;
+    double goalX, goalY, botDistance, flywheelVelocity, hoodPos;
+    Pose botPosition;
+    double timeShooting;
+    private Telemetry.Log dataLogger;
+    private ElapsedTime flipperTime;
+    private boolean isFlipperOn;
+    private Telemetry telemetry;
+    public DataLogger(Telemetry telemetry){
+        this.telemetry = telemetry;
+    }
     @Override
     public void postInit() {
         flywheelBottom = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "flywheelBottom");
         intake = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "transfer");
+        flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
+
+        dataLogger = telemetry.log();
+        flipperTime = new ElapsedTime();
     }
 
     public void update() {
-        ActiveOpMode.telemetry().addData("Bot Position",this.currentPose); //need to put follower in current pose in update of opmode
-        ActiveOpMode.telemetry().addData("Distance to Goal",this.getBotDistance());
-        ActiveOpMode.telemetry().addData("Flywheel vel",flywheelBottom.getVelocity());
+        botPosition = this.currentPose;
+        botDistance = this.getBotDistance();
+        flywheelVelocity = flywheelBottom.getVelocity();
+        hoodPos = -intake.getCurrentPosition();
+
+        ActiveOpMode.telemetry().addData("Bot Position",botPosition); //need to put follower in current pose in update of opmode
+        ActiveOpMode.telemetry().addData("Distance to Goal",botDistance);
+        ActiveOpMode.telemetry().addData("Flywheel vel",flywheelVelocity);
         ActiveOpMode.telemetry().addData("Flywheel goal vel","uhh");
-        ActiveOpMode.telemetry().addData("hood pos", -intake.getCurrentPosition()); //hood encoder is on intake
-        ActiveOpMode.telemetry().addData("time shooting","");
+        ActiveOpMode.telemetry().addData("hood pos", hoodPos); //hood encoder is on intake
+        ActiveOpMode.telemetry().addData("last time shooting","timeShooting");
         ActiveOpMode.telemetry().update();
+
+        if (flipper.getPosition()==0.1 && !isFlipperOn) {
+            flipperTime.reset();
+            isFlipperOn = true;
+
+        }
+        else if (flipper.getPosition()!=0.1 && isFlipperOn) {
+            timeShooting = flipperTime.milliseconds();
+            logEntry = String.format(
+                    "%.1f, %.1f, %.1f, %.1f %.1f, %.1f\n",
+                    botPosition.getX(),
+                    botPosition.getY(),
+                    botDistance,
+                    flywheelVelocity,
+                    hoodPos,
+                    timeShooting
+                    );
+            isFlipperOn = false;
+        }
+
+
+
+
+
+
 
     }
 

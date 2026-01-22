@@ -27,6 +27,7 @@ import dev.nextftc.ftc.*;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.subsystems.TurretLights;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
+import org.firstinspires.ftc.teamcode.utilities.DataLogger;
 import org.firstinspires.ftc.teamcode.utilities.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.utilities.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
@@ -51,11 +52,13 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 BindingsComponent.INSTANCE,
                 new PedroComponent(Constants::createFollower),
                 aimbot = new Aimbot(),
-                turret = new Turret()
+                turret = new Turret(),
                 //limelight = new Relocalization()
+                dataLogger = new DataLogger(telemetry)
         );
     }
     //Relocalization limelight;
+    DataLogger dataLogger;
     Turret turret;
     FieldCentricDrive drive;
     Aimbot aimbot;
@@ -75,6 +78,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     private boolean isIntakeReversed = false;
     private boolean isTransferOn = false;
     private boolean fireWhenReady = false;
+    private boolean isFlipperOn = false;
     private boolean got3Balls = false;
     int FLYWHEEL_STEP = 50;
     private DcMotorEx intakeMotor;
@@ -251,8 +255,12 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 fireWhenReady = false;
                 intakeMotor.setPower(INTAKE_SHOOTING_POWER);
                 flipper.setPosition(FLIPPER_FIRE_POS);
+                isFlipperOn = true;
                 })
-                .whenBecomesFalse(() -> flipper.setPosition(FLIPPER_NO_FIRE_POS));
+                .whenBecomesFalse(() -> {
+                    flipper.setPosition(FLIPPER_NO_FIRE_POS);
+                    isFlipperOn = false;
+                });
 
         g2B.whenBecomesTrue(() -> {
             fireWhenReady = true;
@@ -290,6 +298,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         drive.update(follower.getHeading(), slowModeMultiplier);
         looptime.reset();
         follower.update();
+        //dataLogger.update();
 
         aimbot.setCurrentPose(follower.getPose(), follower.getVelocity());
         aimbot.update();
