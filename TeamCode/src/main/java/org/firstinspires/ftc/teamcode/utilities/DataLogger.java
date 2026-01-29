@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.utilities;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 
-
 import dev.nextftc.core.components.Component;
 import dev.nextftc.ftc.ActiveOpMode;
 
@@ -12,11 +11,13 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl;
-
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class DataLogger implements Component{
 
@@ -29,20 +30,22 @@ public class DataLogger implements Component{
     double goalX, goalY, botDistance, flywheelVelocity, hoodPos;
     Pose botPosition;
     double timeShooting;
-    private Telemetry.Log dataLogger;
     private ElapsedTime flipperTime;
     private boolean isFlipperOn;
     private Telemetry telemetry;
+    private FileWriter dataWriter;
+    private File dataLog;
     public DataLogger(Telemetry telemetry){
         this.telemetry = telemetry;
     }
+
     @Override
     public void postInit() {
         flywheelBottom = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "flywheelBottom");
         intake = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "transfer");
         flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
 
-        dataLogger = telemetry.log();
+        createCSVFile();
         flipperTime = new ElapsedTime();
     }
 
@@ -67,15 +70,21 @@ public class DataLogger implements Component{
         }
         else if (flipper.getPosition()!=0.1 && isFlipperOn) {
             timeShooting = flipperTime.milliseconds();
-            logEntry = String.format(
-                    "%.1f, %.1f, %.1f, %.1f %.1f, %.1f\n",
-                    botPosition.getX(),
-                    botPosition.getY(),
-                    botDistance,
-                    flywheelVelocity,
-                    hoodPos,
-                    timeShooting
-                    );
+            try {
+                dataWriter.write(String.format(
+                        "%.1f, %.1f, %.1f, %.1f %.1f, %.1f\n",
+                        botPosition.getX(),
+                        botPosition.getY(),
+                        botDistance,
+                        flywheelVelocity,
+                        hoodPos,
+                        timeShooting
+                        ));
+                dataWriter.flush();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            //logEntry.writeLine();
             isFlipperOn = false;
         }
 
@@ -104,6 +113,19 @@ public class DataLogger implements Component{
     }
     public void setCurrentPose(Pose pose) {
         this.currentPose = pose;
+    }
+    public void createCSVFile() {
+        try {
+            File directory = new File("/sdcard/AimbotLog");
+            if (!directory.exists()) {
+                directory.mkdirs(); //if the directory doesn't exist, it creates the directories
+            }
+            dataLog = new File(directory, "dataLogger.csv");
+
+            dataWriter = new FileWriter(dataLog, true);
+        } catch (IOException e) { //if error shows up
+            telemetry.addData("Error", "Failed to create CSV:" + e.getMessage());
+        }
     }
 
 

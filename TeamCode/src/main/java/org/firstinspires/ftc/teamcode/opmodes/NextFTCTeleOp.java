@@ -298,7 +298,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         drive.update(follower.getHeading(), slowModeMultiplier);
         looptime.reset();
         follower.update();
-        //dataLogger.update();
+        dataLogger.update();
 
         aimbot.setCurrentPose(follower.getPose(), follower.getVelocity());
         aimbot.update();

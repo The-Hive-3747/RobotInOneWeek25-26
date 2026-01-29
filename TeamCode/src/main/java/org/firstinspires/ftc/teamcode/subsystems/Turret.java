@@ -49,7 +49,7 @@ public class Turret implements Component {
 
     @Override
     public void preInit() {
-        limitSwitch = ActiveOpMode.hardwareMap().get(TouchSensor.class, "limitSwitch");
+        //limitSwitch = ActiveOpMode.hardwareMap().get(TouchSensor.class, "limitSwitch");
         turret = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "turret");
     }
 
