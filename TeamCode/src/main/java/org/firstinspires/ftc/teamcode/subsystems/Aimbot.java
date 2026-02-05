@@ -98,6 +98,9 @@ public class Aimbot implements Component{
             new AimbotValues(126.5, 1450, 1858), //v: 1450 h: 2000
             new AimbotValues(131.5, 1450, 1858), //v: 1500 h: 2000*/
     };
+    public double getAimVelocity() { return currentAimValues.velocity;}
+    public double getAimHoodPos() { return currentAimValues.hoodPos;}
+
     public AimbotValues getAimValues(double distance){
         AimbotValues next;
         AimbotValues last;
@@ -126,8 +129,8 @@ public class Aimbot implements Component{
     public void setAlliance(Alliance all) {
         this.alliance = all;
         if (this.alliance == Alliance.RED) {
-            goalX = 129; //this is the point of the middle of the front panel of the goal
-            fieldGoalX = 129;
+            goalX = 120; //this is the point of the middle of the front panel of the goal
+            fieldGoalX = 120;
             goalY = 129;
             fieldGoalY = 129;
         } else {

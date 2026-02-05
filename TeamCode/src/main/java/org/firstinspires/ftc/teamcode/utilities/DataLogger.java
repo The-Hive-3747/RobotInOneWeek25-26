@@ -12,6 +12,10 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.utilities.BotStats;
+import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
+
+
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl;
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
 
@@ -35,10 +39,16 @@ public class DataLogger implements Component{
     private Telemetry telemetry;
     private FileWriter dataWriter;
     private File dataLog;
+    public double aimbotVel, aimbotHood, turretAngle;
     public DataLogger(Telemetry telemetry){
         this.telemetry = telemetry;
     }
-
+    public BotStats botStats(double aimVel, double aimHoodAng, double turretAng) {
+        this.aimbotVel = aimVel;
+        this.aimbotHood = aimHoodAng;
+        this.turretAngle = turretAng;
+        return new BotStats(aimVel, aimHoodAng, turretAng);
+    }
     @Override
     public void postInit() {
         flywheelBottom = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "flywheelBottom");
@@ -72,9 +82,10 @@ public class DataLogger implements Component{
             timeShooting = flipperTime.milliseconds();
             try {
                 dataWriter.write(String.format(
-                        "%.1f, %.1f, %.1f, %.1f %.1f, %.1f\n",
+                        "%.1f, %.1f, %.1f, %.1f, %.1f %.1f, %.1f\n",
                         botPosition.getX(),
                         botPosition.getY(),
+                        botPosition.getHeading(),
                         botDistance,
                         flywheelVelocity,
                         hoodPos,

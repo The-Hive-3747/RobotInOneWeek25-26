@@ -38,12 +38,12 @@ public class FrontBlueAuto extends NextFTCOpMode {
                 flywheel = new Flywheel(),
                 intake = new Intake(),
                 aimbot = new Aimbot(),
-                turret = new Turret(),
-                light = new Light()
+                turret = new Turret()
+                //light = new Light()
         );
     }
     CommandGroup autonomous;
-    Light light;
+    //Light light;
     Aimbot aimbot;
     Turret turret;
     Flywheel flywheel;
