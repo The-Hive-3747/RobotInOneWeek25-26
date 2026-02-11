@@ -9,6 +9,7 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -53,7 +54,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 new PedroComponent(Constants::createFollower),
                 aimbot = new Aimbot(),
                 turret = new Turret(),
-                //limelight = new Relocalization()
+                limelight = new Relocalization(),
+                //limelightComponent = new LimelightComponent(),
                 dataLogger = new DataLogger(telemetry)
         );
     }
@@ -62,11 +64,12 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     Turret turret;
     FieldCentricDrive drive;
     Aimbot aimbot;
+    Relocalization limelight;
     Flywheel  flywheel;
     TurretLights turretLights;
     private ElapsedTime looptime;
     private double highestLooptime = 0;
-    private LimelightComponent limelightComponent;
+    //private LimelightComponent limelightComponent;
     double FLYWHEEL_VEL;//= 1300; // IN RPM
     double HOOD_POS;
     double INTAKE_POWER = 0.9;
@@ -111,6 +114,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         leftFireServo = hardwareMap.get(CRServo.class, "left_firewheel");
         sideWheelServo = hardwareMap.get(CRServo.class, "side-wheel");
         prism = hardwareMap.get(GoBildaPrismDriver.class,"prism");
+        //limelight = new Relocalization();
+        limelight.preInit();
+        //limelightComponent = hardwareMap.get(LimelightComponent.class, "limelight");
         sideWheelServo.setDirection(CRServo.Direction.REVERSE);
         leftFireServo.setDirection(CRServo.Direction.REVERSE);
 
@@ -290,6 +296,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         });
 
+
         //g1LT.whenBecomesTrue(() -> turretLights.redAlliance());
 
     }
@@ -335,6 +342,12 @@ public class NextFTCTeleOp extends NextFTCOpMode {
               Pose limelightPose = new Pose(limelightComponent.getRobotX(),limelightComponent.getRobotY(),limelightComponent.getRobotHeading());
             }
        }*/
+
+        limelight.update();
+        if(limelight.isDataFresh()){
+            follower.setPose(limelight.getPedroPose());
+        }
+
         //limelight.update();
         BindingManager.update();
         flywheel.update();
@@ -368,6 +381,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         panelsTelemetry.addData("flywheel power", flywheel.getPower());
 
 
+        telemetry.addData("Limelight fresh",limelight.isDataFresh());
         telemetry.addData("Intake Current (mA)", intakeMotor.getCurrent(CurrentUnit.MILLIAMPS));
         telemetry.addData("looptime (ms)", looptime.milliseconds());
         telemetry.addData("highest looptime (ms)", highestLooptime);

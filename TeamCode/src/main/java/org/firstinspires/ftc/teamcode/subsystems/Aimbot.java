@@ -22,7 +22,6 @@ public class Aimbot implements Component{
 
     public void preInit() {
 
-
     }
     public void postInit() {
         AimbotValues currentAimValues = getAimValues(botDistance);
