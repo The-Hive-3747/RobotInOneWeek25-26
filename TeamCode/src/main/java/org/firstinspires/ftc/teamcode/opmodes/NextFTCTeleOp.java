@@ -68,6 +68,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     Flywheel  flywheel;
     TurretLights turretLights;
     private ElapsedTime looptime;
+    private ElapsedTime relocalizeTimer = new ElapsedTime();
+    private double relocalizeBreak = 5000;
     private double highestLooptime = 0;
     //private LimelightComponent limelightComponent;
     double FLYWHEEL_VEL;//= 1300; // IN RPM
@@ -83,6 +85,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     private boolean fireWhenReady = false;
     private boolean isFlipperOn = false;
     private boolean got3Balls = false;
+    private boolean isRelocalized = false;
     int FLYWHEEL_STEP = 50;
     private DcMotorEx intakeMotor;
     private Servo flipper;
@@ -344,8 +347,15 @@ public class NextFTCTeleOp extends NextFTCOpMode {
        }*/
 
         limelight.update();
-        if(limelight.isDataFresh()){
+        if(limelight.isDataFresh() && !isRelocalized){
             follower.setPose(limelight.getPedroPose());
+            relocalizeTimer.reset();
+            isRelocalized = true;
+        }
+        if(isRelocalized){
+            if(relocalizeTimer.milliseconds() >= relocalizeBreak){
+                isRelocalized = false;
+            }
         }
 
         //limelight.update();
