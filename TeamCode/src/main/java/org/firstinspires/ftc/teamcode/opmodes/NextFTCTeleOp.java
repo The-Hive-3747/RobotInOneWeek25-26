@@ -69,7 +69,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     TurretLights turretLights;
     private ElapsedTime looptime;
     private ElapsedTime relocalizeTimer = new ElapsedTime();
-    private double relocalizeBreak = 5000;
+    private double relocalizeBreak = 1000;
     private double highestLooptime = 0;
     //private LimelightComponent limelightComponent;
     double FLYWHEEL_VEL;//= 1300; // IN RPM
@@ -160,6 +160,20 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
     }
 
+    public void relocalizeButton(){
+        limelight.update();
+        if(limelight.isDataFresh() && !isRelocalized){
+            follower.setPose(new Pose(limelight.getPedroPose().getX(), limelight.getPedroPose().getY(), limelight.getPedroPose().getHeading()));
+            relocalizeTimer.reset();
+            isRelocalized = true;
+        }
+        if(isRelocalized) {
+            if (relocalizeTimer.milliseconds() >= relocalizeBreak) {
+                isRelocalized = false;
+            }
+        }
+    }
+
     @Override
     public void onStartButtonPressed() {
         //follower.startTeleOpDrive();
@@ -196,7 +210,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g1RT = button(() -> gamepad1.right_trigger > 0.1);
 
 
-        //Button g1X = button(() -> gamepad1.x);
+        Button g1X = button(() -> gamepad1.x);
 
         //g1X.whenBecomesTrue(() -> odoTurret.resetTurret());
 
@@ -299,6 +313,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         });
 
+        g1X.whenBecomesTrue(() -> relocalizeButton());
+
 
         //g1LT.whenBecomesTrue(() -> turretLights.redAlliance());
 
@@ -346,17 +362,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
             }
        }*/
 
-        limelight.update();
-        if(limelight.isDataFresh() && !isRelocalized){
-            follower.setPose(limelight.getPedroPose());
-            relocalizeTimer.reset();
-            isRelocalized = true;
-        }
-        if(isRelocalized){
-            if(relocalizeTimer.milliseconds() >= relocalizeBreak){
-                isRelocalized = false;
-            }
-        }
+
 
         //limelight.update();
         BindingManager.update();

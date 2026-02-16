@@ -22,7 +22,7 @@ public class Relocalization implements Component{
     //1 meter = 39.37 inches
     double METERS_TO_INCHES = 39.37;
     Limelight3A limelight;
-    int maxFreshness = 100;
+    int maxFreshness = 20;
     LLResult result;
     Pose botPosePedro;
     public double x = 0;
@@ -58,9 +58,9 @@ public class Relocalization implements Component{
         if (botPose != null) {
             // 72 is what we have to add in order to get to Pedro Coordinates manually
             x = botPose.getPosition().y * METERS_TO_INCHES + 72;
-            y = botPose.getPosition().x * METERS_TO_INCHES + 72;
-            //90 is what we have to use in order to convert the heading to Pedro Coordinates manually
-            heading = botPose.getOrientation().getYaw() - Math.toRadians(90);
+            y = -botPose.getPosition().x * METERS_TO_INCHES + 72;
+            // 90 is what we have to use in order to convert the heading to Pedro Coordinates manually
+            heading = Math.toRadians(botPose.getOrientation().getYaw() - 90);
             botPosePedro = new Pose(x, y, heading);
 
             ActiveOpMode.telemetry().addData("Bot X", x);
