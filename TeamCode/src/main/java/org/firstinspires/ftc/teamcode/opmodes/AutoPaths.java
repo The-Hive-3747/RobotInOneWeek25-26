@@ -44,6 +44,36 @@ public class AutoPaths {
         return alliance;
     }
 
+    public static PathChain generatePath(Pose pose1, Pose pose2) {
+        return follower
+                .pathBuilder()
+                .addPath(
+                        new BezierLine(pose1, pose2)
+                )
+                .setLinearHeadingInterpolation(pose1.heading, pose2.heading)
+                .build();
+    }
+
+    public static PathChain generatePath(Pose pose1, Pose pose2, double heading) {
+        return follower
+                .pathBuilder()
+                .addPath(
+                        new BezierLine(pose1, pose2)
+                )
+                .setConstantHeadingInterpolation(heading)
+                .build();
+    }
+
+    public static PathChain generatePath(Pose pose1, Pose pose2, double heading1, double heading2) {
+        return follower
+                .pathBuilder()
+                .addPath(
+                        new BezierLine(pose1, pose2)
+                )
+                .setLinearHeadingInterpolation(heading1, heading2)
+                .build();
+    }
+
 
     public static void generatePaths(Follower follower) {
         if (startingPose == null) {
