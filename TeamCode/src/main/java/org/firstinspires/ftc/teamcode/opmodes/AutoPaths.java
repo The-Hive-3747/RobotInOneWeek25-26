@@ -13,6 +13,7 @@ public class AutoPaths {
     public static PathChain toShootFromStart, lineUpForIntake1, intake1, lineUpForOpenGate, toShootFromIntake1, lineUpForIntake2, intake2, toShootFromIntake2, park, openGate, toShootFromOpenGate, lineUpForIntake3, intake3, toShootFromIntake3;
     public static double shootAngle, parkAngle, startAngle, intakeAngle, lastShootAngle;
     public static Alliance alliance;
+    public static Follower follower;
 
     /**
      * Flips a Pose over the center line.
@@ -45,8 +46,7 @@ public class AutoPaths {
     }
 
     public static PathChain generatePath(Pose pose1, Pose pose2) {
-        return follower
-                .pathBuilder()
+        return follower.pathBuilder()
                 .addPath(
                         new BezierLine(pose1, pose2)
                 )
@@ -55,8 +55,7 @@ public class AutoPaths {
     }
 
     public static PathChain generatePath(Pose pose1, Pose pose2, double heading) {
-        return follower
-                .pathBuilder()
+        return follower.pathBuilder()
                 .addPath(
                         new BezierLine(pose1, pose2)
                 )
@@ -65,8 +64,7 @@ public class AutoPaths {
     }
 
     public static PathChain generatePath(Pose pose1, Pose pose2, double heading1, double heading2) {
-        return follower
-                .pathBuilder()
+        return follower.pathBuilder()
                 .addPath(
                         new BezierLine(pose1, pose2)
                 )
@@ -76,6 +74,8 @@ public class AutoPaths {
 
 
     public static void generatePaths(Follower follower) {
+        this.follower = follower;
+        
         if (startingPose == null) {
           if (alliance == Alliance.BLUE) {
             startingPose = new Pose(foo);
@@ -87,16 +87,8 @@ public class AutoPaths {
         // DEFINE POSES HERE
         shootingPose = new Pose(foo);
 
-
         // GENERATE PATHS HERE
-
-        toShootFromStart = follower
-                .pathBuilder()
-                .addPath(
-                        new BezierLine(startingPose, shootingPose)
-                )
-                .setLinearHeadingInterpolation(startAngle, shootAngle)
-                .build();
+        toShootFromStart = generatePath(startingPose, shootingPose, startAngle, shootAngle);
 
     }
 }   
