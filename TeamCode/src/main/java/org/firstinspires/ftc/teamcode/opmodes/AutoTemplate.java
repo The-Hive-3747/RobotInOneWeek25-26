@@ -73,24 +73,24 @@ public class AutoTemplate extends NextFTCOpMode {
 
     @Override
     public void onInit() {
+        follower = Constants.createFollower(hardwareMap);
+
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
         AutoPaths.alliance = alliance;
-        AutoPaths.setStartingPose(startPose);
-        AutoPaths.generatePaths(PedroComponent.follower());
+        AutoPaths.setStartPose(startPose);
+        AutoPaths.generatePaths(follower);
 
-        follower = Constants.createFollower(hardwareMap);
-        follower.setStartPose(startPose);
+        follower.setStartingPose(startPose);
         follower.update();
 
         turret.setAlliance(alliance);
         aimbot.setAlliance(alliance);
         turret.setFixedAngle(Turret.AUTON_RED_SHOOT_ANGLE);
 
-
         turretLights = new TurretLights(hardwareMap, telemetry);
 
-        if (BackAutoPaths.getAlliance() == Alliance.RED) {
+        if (alliance == Alliance.RED) {
             turretLights.redAlliance();
         } else {
             turretLights.blueAlliance();
