@@ -1,23 +1,10 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.intake1;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.intake2;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.intake3;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake1;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake2;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake3;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.park;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.startAngle;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.startingPose;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake1;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake2;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake3;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromStart;
+import static org.firstinspires.ftc.teamcode.opmodes.AutoPaths.*;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
@@ -39,9 +26,11 @@ import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.paths.PathChain;
+
 import dev.nextftc.ftc.NextFTCOpMode;
 
-public class AutoTemplate extends NextFTCOpMode {
+public abstract class AutoTemplate extends NextFTCOpMode {
     {
         addComponents(
                 new PedroComponent(Constants::createFollower),
@@ -52,9 +41,9 @@ public class AutoTemplate extends NextFTCOpMode {
                 light = new Light()
         );
     }
-    public protected CommandGroup autonomousCommands;
-    public protected Alliance alliance = Alliance.BLUE;
-    public protected Pose startPose = new Pose(72, 72, 90);
+    protected CommandGroup autonomousCommands;
+    protected Alliance alliance = Alliance.BLUE;
+    protected Pose startPose = new Pose(72, 72, 90);
     Light light;
     Aimbot aimbot;
     Turret turret;
@@ -68,8 +57,7 @@ public class AutoTemplate extends NextFTCOpMode {
     double DELAY_BEFORE_SHOT = 0.3, DELAY_AFTER_INTAKE = 1; 
     boolean FLYWHEEL_ON = false;
 
-    
-
+    public abstract void preInit();
 
     @Override
     public void onInit() {
@@ -97,18 +85,21 @@ public class AutoTemplate extends NextFTCOpMode {
         }
         
         if (autonomousCommands == null) {
-        autonomousCommands = new SequentialGroup(
-                startIntakeFlywheelAndTurret, 
-                followPathAndShoot(toShootFromStart),
+            autonomousCommands = new SequentialGroup(
+                startIntakeFlywheelAndTurret(),
+                new FollowPath(toShootFromStart),
+                new Delay(DELAY_BEFORE_SHOT),
+                shootAllThree(),
                 followPathAndIntake(lineUpForIntake1, intake1),
                 followPathAndShoot(toShootFromIntake1),
                 followPathAndIntake(lineUpForIntake2, intake2),
                 followPathAndShoot(toShootFromIntake2),
                 followPathAndIntake(lineUpForIntake3, intake3),
                 followPathAndShoot(toShootFromIntake3),
-                followPathAndPark(park) 
-        );
-    }
+                stopIntakeFlywheelAndTurret(),
+                new FollowPath(park) 
+            );
+        }
 
         turret.zeroTurret();
     }
@@ -150,14 +141,14 @@ public class AutoTemplate extends NextFTCOpMode {
         OpModeTransfer.alliance = Alliance.RED;
         OpModeTransfer.hasBeenTransferred = true;
     }
-    public Command startAimbotFlywheel = new InstantCommand(
+    protected Command startAimbotFlywheel = new InstantCommand(
             () -> FLYWHEEL_ON = true
     );
-    public Command setFlywheelVelFinal = new InstantCommand(
+    protected Command setFlywheelVelFinal = new InstantCommand(
             () -> FLYWHEEL_VEL = Flywheel.AUTON_SHOOT_VEL_LAST
     );
     
-    public CommandGroup followPathAndShoot(PathChain pathToFollow) {
+    protected CommandGroup followPathAndShoot(PathChain pathToFollow) {
       return new SequentialGroup(
         new FollowPath(pathToFollow),
         new Delay(DELAY_BEFORE_SHOT),
@@ -169,9 +160,18 @@ public class AutoTemplate extends NextFTCOpMode {
         )
     );
   }
+  
+  protected CommandGroup shootAllThree() {
+      return new ParallelGroup(
+              flywheel.resetShotTimer,
+              flywheel.shootAllThree,
+              intake.startTransfer,
+              intake.slowIntake
+      );
+  }
 
 
-    public CommandGroup followPathAndIntake(PathChain lineUpPath, PathChain intakePath) {
+    protected CommandGroup followPathAndIntake(PathChain lineUpPath, PathChain intakePath) {
       return new SequentialGroup(
         new ParallelGroup(
                         new FollowPath(lineUpPath),
@@ -183,7 +183,7 @@ public class AutoTemplate extends NextFTCOpMode {
     );
   }
 
-    public CommandGroup followPathAndPark(PathChain parkPath) {
+     CommandGroup stopIntakeFlywheelAndTurret() {
       return new ParallelGroup(
                         new InstantCommand(
                                 () -> flywheel.setHoodGoalPos(0)
@@ -191,17 +191,16 @@ public class AutoTemplate extends NextFTCOpMode {
                         turret.setTurretForward,
                         flywheel.stopFlywheel,
                         intake.stopIntake,
-                        intake.stopTransfer,
-                        new FollowPath(parkPath)
+                        intake.stopTransfer
                 );
     }
 
-    public CommandGroup startIntakeFlywheelAndTurret = new ParallelGroup(
+    protected CommandGroup startIntakeFlywheelAndTurret() {
+        return new ParallelGroup(
                         intake.fastIntake,
                         this.startAimbotFlywheel,
                         turret.setTurretFixed
                 );
 
   }
-
 }
