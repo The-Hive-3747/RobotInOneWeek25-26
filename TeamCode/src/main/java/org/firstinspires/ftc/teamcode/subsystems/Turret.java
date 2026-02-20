@@ -40,6 +40,7 @@ public class Turret implements Component {
     public static double AUTON_BLUE_SHOOT_ANGLE_LAST = 60;
     public static double AUTON_BLUE_SHOOT_ANGLE = 90;
     public boolean hasBeenReset = false;
+    public boolean turretPressedAndReset = false;
 
     public static double TURRET_PID_KP = 0.030, TURRET_PID_KD = 0.01, TURRET_PID_KS = 0.08, TURRET_PID_KI = 0.0;//P:0.038
     private final double LEFT_TURRET_LIMIT = -140, RIGHT_TURRET_LIMIT = 140;//Left:-100, right:130// Left: -120, Right: 120
@@ -89,10 +90,11 @@ public class Turret implements Component {
             turretPower = turretPower + TURRET_PID_KS * Math.signum(turretPower);
         }
 
-        if (limitSwitch.isPressed()) {
+        if (limitSwitch.isPressed() && turret.getVelocity()>0) {
             if (!hasBeenReset) {
                 this.zeroTurret();
                 hasBeenReset = true;
+                turretPressedAndReset = true;
             }
         } else if (hasBeenReset) {
             hasBeenReset = false;
@@ -112,6 +114,12 @@ public class Turret implements Component {
         ActiveOpMode.telemetry().addData("TURRET goal", turretPID.getGoal().component1());
         ActiveOpMode.telemetry().addData("TURRET power", turretPower);
         ActiveOpMode.telemetry().addData("TURRET angle", this.getTurretAngle());
+        ActiveOpMode.telemetry().addData("TURRET lim pressed", hasBeenReset);
+        ActiveOpMode.telemetry().addData("TURRET lim has been pressed", turretPressedAndReset);
+        ActiveOpMode.telemetry().addData("TURRET vel", turret.getVelocity());
+
+
+
         //ActiveOpMode.telemetry().addData("turret voltage draw", turret.getCurrent(CurrentUnit.MILLIAMPS));
     }
 
@@ -261,6 +269,9 @@ public class Turret implements Component {
     public void setFixedAngle(double deg) {
         FIXED_ANGLE = new KineticState(deg);
     }
+    public void setTurretStateoff(){ currentState = turretState.OFF;}
+    public void setTurretStateAuto(){ currentState = turretState.AUTO;}
+
     public void setTurretStateFixed(){
         currentState = turretState.FIXED;
     }

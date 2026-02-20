@@ -133,8 +133,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         alliance = OpModeTransfer.alliance;
         Button g1Back = button(() -> gamepad1.back);
         Button g2Back = button(() -> gamepad2.back);
-        Button g2Options = button(() -> gamepad2.options);
-        g2Options.whenBecomesTrue(() -> flywheel.resetHoodEncoder());
+        Button g1DDown = button(() -> gamepad1.dpad_down);
+        g1DDown.whenBecomesTrue(() -> flywheel.resetHoodEncoder());
         g2Back.whenBecomesTrue(() -> turret.zeroTurret());
         g1Back.whenBecomesTrue(() -> {
                     if (alliance == Alliance.BLUE){
@@ -205,19 +205,23 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g2RB = button(() -> gamepad2.right_bumper);
         Button g1A = button(() -> gamepad1.a);
         Button g1B = button(() -> gamepad1.b);
+        Button g1X = button(() -> gamepad1.x);
 
         Button g1LT = button(() -> gamepad1.left_trigger > 0.1);
         Button g2LT = button(() -> gamepad2.left_trigger > 0.1);
         Button g1RT = button(() -> gamepad1.right_trigger > 0.1);
 
 
-        Button g1X = button(() -> gamepad1.x);
 
         //g1X.whenBecomesTrue(() -> odoTurret.resetTurret());
 
         g1Right.whenBecomesTrue(() -> turret.turretStateForward());
 
         g1Left.whenBecomesTrue(() -> turret.turretStateBackward());
+
+        g1X.toggleOnBecomesTrue()
+                        .whenBecomesTrue(() -> turret.setTurretStateoff())
+                        .whenBecomesFalse(() -> turret.setTurretStateAuto());
 
         g1RT.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> slowModeMultiplier = 0.5)
