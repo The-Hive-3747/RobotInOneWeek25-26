@@ -20,7 +20,7 @@ import dev.nextftc.ftc.ActiveOpMode;
 @Configurable
 public class Turret implements Component {
     DcMotorEx turret;
-    TouchSensor limitSwitch;
+    private TouchSensor limitSwitch;
     Pose currentPose;
     Vector currentVelocity;
     public enum turretState {
@@ -39,6 +39,7 @@ public class Turret implements Component {
     public static double AUTON_RED_SHOOT_ANGLE_LAST = -60;
     public static double AUTON_BLUE_SHOOT_ANGLE_LAST = 60;
     public static double AUTON_BLUE_SHOOT_ANGLE = 90;
+    public boolean hasBeenReset = false;
 
     public static double TURRET_PID_KP = 0.030, TURRET_PID_KD = 0.01, TURRET_PID_KS = 0.08, TURRET_PID_KI = 0.0;//P:0.038
     private final double LEFT_TURRET_LIMIT = -140, RIGHT_TURRET_LIMIT = 140;//Left:-100, right:130// Left: -120, Right: 120
@@ -49,7 +50,7 @@ public class Turret implements Component {
 
     @Override
     public void preInit() {
-        //limitSwitch = ActiveOpMode.hardwareMap().get(TouchSensor.class, "limitSwitch");
+        limitSwitch = ActiveOpMode.hardwareMap().get(TouchSensor.class, "limitSwitch");
         turret = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "turret");
     }
 
@@ -88,14 +89,14 @@ public class Turret implements Component {
             turretPower = turretPower + TURRET_PID_KS * Math.signum(turretPower);
         }
 
-        /*if (limitSwitch.isPressed()) {
+        if (limitSwitch.isPressed()) {
             if (!hasBeenReset) {
                 this.zeroTurret();
                 hasBeenReset = true;
             }
         } else if (hasBeenReset) {
             hasBeenReset = false;
-        }*/
+        }
 
         // limit the turret power to our Turret Power Limit
         turretPower = Math.min(TURRET_POWER_LIMIT, turretPower);

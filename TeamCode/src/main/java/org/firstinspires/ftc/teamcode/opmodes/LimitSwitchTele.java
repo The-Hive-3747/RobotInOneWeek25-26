@@ -44,11 +44,13 @@ public class LimitSwitchTele extends NextFTCOpMode {
         limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
     }
 
+
     @Override
     public void onUpdate() {
         if (!limitSwitch.isPressed()) {
             hasBeenPressed = true;
         }
+
 
         telemetry.addData("switch", limitSwitch.getValue());
         telemetry.addData("hasbeenpress", hasBeenPressed);
