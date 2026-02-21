@@ -33,7 +33,6 @@ public class AutoPaths {
         
         // DEFINE POSES HERE
         shootingPose = new Pose(54.25, 88.75, Math.toRadians(40));
-
         intake1StartPose = new Pose(51.25, 79.75); //y:81 34//y:82//x: 47 y:78
         intake1EndPose = new Pose(24.25, 79.75); //6//x:16 y:82//x: 16 :78
         openGateStartPose = new Pose(22, 74); //78//x:35
