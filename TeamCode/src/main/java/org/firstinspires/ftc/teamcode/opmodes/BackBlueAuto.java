@@ -42,8 +42,8 @@ import dev.nextftc.extensions.pedro.PedroComponent;
 import com.pedropathing.follower.Follower;
 import dev.nextftc.ftc.NextFTCOpMode;
 
-@Autonomous(name = "back red auto")
-public class BackRedAuto extends NextFTCOpMode {
+@Autonomous(name = "back blue auto")
+public class BackBlueAuto extends NextFTCOpMode {
     {
         addComponents(
                 new PedroComponent(Constants::createFollower),
@@ -72,16 +72,16 @@ public class BackRedAuto extends NextFTCOpMode {
     @Override
     public void onInit() {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-        BackAutoPaths.alliance = Alliance.RED;
+        BackAutoPaths.alliance = Alliance.BLUE;
         BackAutoPaths.generatePaths(PedroComponent.follower());
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose(startingPose.getX(), startingPose.getY(), startAngle));
         follower.update();
 
-        turret.setAlliance(Alliance.RED);
-        aimbot.setAlliance(Alliance.RED);
-        turret.setFixedAngle(Turret.AUTON_RED_SHOOT_ANGLE);
+        turret.setAlliance(Alliance.BLUE);
+        aimbot.setAlliance(Alliance.BLUE);
+        turret.setFixedAngle(Turret.AUTON_BLUE_SHOOT_ANGLE);
 
 
         turretLights = new TurretLights(hardwareMap, telemetry);
@@ -221,7 +221,7 @@ public class BackRedAuto extends NextFTCOpMode {
     @Override
     public void onStop() {
         OpModeTransfer.currentPose = PedroComponent.follower().getPose();
-        OpModeTransfer.alliance = Alliance.RED;
+        OpModeTransfer.alliance = Alliance.BLUE;
         OpModeTransfer.hasBeenTransferred = true;
     }
     public Command startAimbotFlywheel = new InstantCommand(

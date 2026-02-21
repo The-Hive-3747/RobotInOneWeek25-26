@@ -15,7 +15,7 @@ import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.hardware.impl.MotorEx;
 
 
-@Disabled
+//@Disabled
 @TeleOp(name= "motor test")
 public class motorTest extends NextFTCOpMode {
     {
@@ -56,6 +56,16 @@ public class motorTest extends NextFTCOpMode {
     public void onUpdate() {
         telemetry.addData("turret ticks", (turret.getCurrentPosition()*90)/6100);
         telemetry.update();
+        if (gamepad1.left_trigger > 0.1) {
+            leftFireServo.setPower(0.9);
+        } else {
+            leftFireServo.setPower(0);
+        }
+        if (gamepad1.right_trigger > 0.1) {
+            sideWheelServo.setPower(0.9);
+        } else {
+            sideWheelServo.setPower(0);
+        }
         if (gamepad1.dpad_up) {
             turret.setPower(0.5); } else {
             turret.setPower(0);

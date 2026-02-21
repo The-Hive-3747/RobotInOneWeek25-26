@@ -9,11 +9,13 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import dev.nextftc.bindings.BindingManager;
@@ -27,6 +29,7 @@ import dev.nextftc.ftc.*;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.subsystems.TurretLights;
 import org.firstinspires.ftc.teamcode.utilities.Alliance;
+import org.firstinspires.ftc.teamcode.utilities.DataLogger;
 import org.firstinspires.ftc.teamcode.utilities.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.utilities.OpModeTransfer;
 import org.firstinspires.ftc.teamcode.pathing.Constants;
@@ -52,29 +55,38 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 new PedroComponent(Constants::createFollower),
                 aimbot = new Aimbot(),
                 turret = new Turret(),
-                limelight = new Relocalization()
+                limelight = new Relocalization(),
+                //limelightComponent = new LimelightComponent(),
+                dataLogger = new DataLogger(telemetry)
         );
     }
-    Relocalization limelight;
+    //Relocalization limelight;
+    DataLogger dataLogger;
     Turret turret;
     FieldCentricDrive drive;
     Aimbot aimbot;
+    Relocalization limelight;
     Flywheel  flywheel;
     TurretLights turretLights;
     private ElapsedTime looptime;
+    private ElapsedTime relocalizeTimer = new ElapsedTime();
+    private double relocalizeBreak = 1000;
     private double highestLooptime = 0;
-    private LimelightComponent limelightComponent;
+    //private LimelightComponent limelightComponent;
     double FLYWHEEL_VEL;//= 1300; // IN RPM
     double HOOD_POS;
     double INTAKE_POWER = 0.9;
     double INTAKE_SHOOTING_POWER = 0.65;
     double THREE_BALL_CURRENT = 6500.0;
     private boolean FLYWHEEL_ON = false;
+    private boolean wasReadyToShoot = false;
     private boolean isIntakeOn = false;
     private boolean isIntakeReversed = false;
     private boolean isTransferOn = false;
     private boolean fireWhenReady = false;
+    private boolean isFlipperOn = false;
     private boolean got3Balls = false;
+    private boolean isRelocalized = false;
     int FLYWHEEL_STEP = 50;
     private DcMotorEx intakeMotor;
     private Servo flipper;
@@ -87,6 +99,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
     Follower follower;
     public Alliance alliance;
     TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+    public ElapsedTime lightTimer = new ElapsedTime();
 
     Button g2A;
 
@@ -105,6 +118,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         leftFireServo = hardwareMap.get(CRServo.class, "left_firewheel");
         sideWheelServo = hardwareMap.get(CRServo.class, "side-wheel");
         prism = hardwareMap.get(GoBildaPrismDriver.class,"prism");
+        //limelight = new Relocalization();
+        limelight.preInit();
+        //limelightComponent = hardwareMap.get(LimelightComponent.class, "limelight");
         sideWheelServo.setDirection(CRServo.Direction.REVERSE);
         leftFireServo.setDirection(CRServo.Direction.REVERSE);
 
@@ -117,11 +133,10 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         alliance = OpModeTransfer.alliance;
         Button g1Back = button(() -> gamepad1.back);
         Button g2Back = button(() -> gamepad2.back);
-        Button g2Options = button(() -> gamepad2.options);
-        g2Options.whenBecomesTrue(() -> flywheel.resetHoodEncoder());
+        Button g1DDown = button(() -> gamepad1.dpad_down);
+        g1DDown.whenBecomesTrue(() -> flywheel.resetHoodEncoder());
         g2Back.whenBecomesTrue(() -> turret.zeroTurret());
-        g1Back.toggleOnBecomesTrue()
-                .whenBecomesTrue(() -> {
+        g1Back.whenBecomesTrue(() -> {
                     if (alliance == Alliance.BLUE){
                         alliance = Alliance.RED;
                         turretLights.redAlliance();
@@ -129,17 +144,35 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                         alliance = Alliance.BLUE;
                         turretLights.blueAlliance();
                     }
-
                     turret.setAlliance(alliance);
                 });
         looptime = new ElapsedTime();
 
-
+        if (alliance == Alliance.BLUE){
+            turretLights.redAlliance();
+        } else{
+            turretLights.blueAlliance();
+        }
 
 
     }
     @Override
     public void onWaitForStart() {
+
+    }
+
+    public void relocalizeButton(){
+        limelight.update();
+        if(limelight.isDataFresh() && !isRelocalized){
+            follower.setPose(new Pose(limelight.getPedroPose().getX(), limelight.getPedroPose().getY(), limelight.getPedroPose().getHeading()));
+            relocalizeTimer.reset();
+            isRelocalized = true;
+        }
+        if(isRelocalized) {
+            if (relocalizeTimer.milliseconds() >= relocalizeBreak) {
+                isRelocalized = false;
+            }
+        }
     }
 
     @Override
@@ -172,19 +205,23 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         Button g2RB = button(() -> gamepad2.right_bumper);
         Button g1A = button(() -> gamepad1.a);
         Button g1B = button(() -> gamepad1.b);
+        Button g1X = button(() -> gamepad1.x);
 
         Button g1LT = button(() -> gamepad1.left_trigger > 0.1);
         Button g2LT = button(() -> gamepad2.left_trigger > 0.1);
         Button g1RT = button(() -> gamepad1.right_trigger > 0.1);
 
 
-        //Button g1X = button(() -> gamepad1.x);
 
         //g1X.whenBecomesTrue(() -> odoTurret.resetTurret());
 
         g1Right.whenBecomesTrue(() -> turret.turretStateForward());
 
         g1Left.whenBecomesTrue(() -> turret.turretStateBackward());
+
+        g1X.toggleOnBecomesTrue()
+                        .whenBecomesTrue(() -> turret.setTurretStateoff())
+                        .whenBecomesFalse(() -> turret.setTurretStateAuto());
 
         g1RT.toggleOnBecomesTrue()
                 .whenBecomesTrue(() -> slowModeMultiplier = 0.5)
@@ -216,8 +253,8 @@ public class NextFTCTeleOp extends NextFTCOpMode {
                 })
                 .whenBecomesFalse(() -> {
                     intakeMotor.setPower(0);
-                    sideWheelServo.setPower(0);
-                    leftFireServo.setPower(0);
+                    sideWheelServo.setPower(FIRE_POWER);
+                    leftFireServo.setPower(FIRE_POWER);
                     isIntakeReversed = false;
                 });
 
@@ -243,10 +280,15 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         g2RT.whenTrue(() -> {
                 got3Balls = false;
+                fireWhenReady = false;
                 intakeMotor.setPower(INTAKE_SHOOTING_POWER);
                 flipper.setPosition(FLIPPER_FIRE_POS);
+                isFlipperOn = true;
                 })
-                .whenBecomesFalse(() -> flipper.setPosition(FLIPPER_NO_FIRE_POS));
+                .whenBecomesFalse(() -> {
+                    flipper.setPosition(FLIPPER_NO_FIRE_POS);
+                    isFlipperOn = false;
+                });
 
         g2B.whenBecomesTrue(() -> {
             fireWhenReady = true;
@@ -276,6 +318,9 @@ public class NextFTCTeleOp extends NextFTCOpMode {
 
         });
 
+        g1X.whenBecomesTrue(() -> relocalizeButton());
+
+
         //g1LT.whenBecomesTrue(() -> turretLights.redAlliance());
 
     }
@@ -284,6 +329,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         drive.update(follower.getHeading(), slowModeMultiplier);
         looptime.reset();
         follower.update();
+        dataLogger.update();
 
         aimbot.setCurrentPose(follower.getPose(), follower.getVelocity());
         aimbot.update();
@@ -301,11 +347,15 @@ public class NextFTCTeleOp extends NextFTCOpMode {
             got3Balls = true;
         }
 
-        /*if(flywheel.readyToShoot()){
+        if(flywheel.readyToShoot() && !wasReadyToShoot && lightTimer.seconds() > 1.0 && flywheel.getVel() != 0){
             turretLights.readyToShoot();
-        }else{
+            wasReadyToShoot = true;
+            lightTimer.reset();
+        } else if (!flywheel.readyToShoot() && wasReadyToShoot && lightTimer.seconds() > 1.0) {
+            wasReadyToShoot = false;
             turretLights.notReadyToShoot();
-        }*/
+            lightTimer.reset();
+        }
 
         /*double currentHeading = follower.getHeading();
         limelightComponent.update(currentHeading);
@@ -316,7 +366,10 @@ public class NextFTCTeleOp extends NextFTCOpMode {
               Pose limelightPose = new Pose(limelightComponent.getRobotX(),limelightComponent.getRobotY(),limelightComponent.getRobotHeading());
             }
        }*/
-        limelight.update();
+
+
+
+        //limelight.update();
         BindingManager.update();
         flywheel.update();
 
@@ -349,6 +402,7 @@ public class NextFTCTeleOp extends NextFTCOpMode {
         panelsTelemetry.addData("flywheel power", flywheel.getPower());
 
 
+        telemetry.addData("Limelight fresh",limelight.isDataFresh());
         telemetry.addData("Intake Current (mA)", intakeMotor.getCurrent(CurrentUnit.MILLIAMPS));
         telemetry.addData("looptime (ms)", looptime.milliseconds());
         telemetry.addData("highest looptime (ms)", highestLooptime);

@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.SwitchableLight;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import dev.nextftc.ftc.ActiveOpMode;
@@ -29,6 +30,7 @@ public class EncoderTester extends NextFTCOpMode {
         intakeMotor = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "transfer");
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "intakeColor");
         distanceSensor = hardwareMap.get(DistanceSensor.class,"intakeColor");
+
 
         flywheelTop.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flywheelBottom.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -54,7 +56,8 @@ public class EncoderTester extends NextFTCOpMode {
         telemetry.addData("Blue",colors.blue);
         telemetry.addData("flywheelBottom", flywheelBottom.getCurrentPosition());
         telemetry.addData("flywheelTop", flywheelTop.getCurrentPosition());
-        telemetry.addData("flywheelBottom vel", flywheelBottom.getVelocity());
+        telemetry.addData("flywheel external vel", flywheelBottom.getVelocity());
+        telemetry.addData("flywheel external vel W CONVERSION",  ((double) flywheelTop.getVelocity()*60)/8192); // 8192 is CPR
         telemetry.addData("flywheelTop vel", flywheelTop.getVelocity());
         telemetry.addData("intakeMotor", intakeMotor.getCurrentPosition());
         telemetry.addData("turret", turret.getCurrentPosition());

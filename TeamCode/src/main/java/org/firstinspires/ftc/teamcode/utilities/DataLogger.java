@@ -8,34 +8,102 @@ import dev.nextftc.ftc.ActiveOpMode;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.utilities.BotStats;
+import org.firstinspires.ftc.teamcode.subsystems.Aimbot;
+
+
+import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl;
 import org.firstinspires.ftc.teamcode.subsystems.Hood;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class DataLogger implements Component{
 
     DcMotorEx flywheelBottom, intake;
     CRServo hood;
+    Servo flipper;
     Pose currentPose = OpModeTransfer.currentPose;
-    double botDistance;
     Alliance alliance;
-    double goalX;
-    double goalY;
-
-
+    String logEntry;
+    double goalX, goalY, botDistance, flywheelVelocity, hoodPos;
+    Pose botPosition;
+    double timeShooting;
+    private ElapsedTime flipperTime;
+    private boolean isFlipperOn;
+    private Telemetry telemetry;
+    private FileWriter dataWriter;
+    private File dataLog;
+    public double aimbotVel, aimbotHood, turretAngle;
+    public DataLogger(Telemetry telemetry){
+        this.telemetry = telemetry;
+    }
+    public BotStats botStats(double aimVel, double aimHoodAng, double turretAng) {
+        this.aimbotVel = aimVel;
+        this.aimbotHood = aimHoodAng;
+        this.turretAngle = turretAng;
+        return new BotStats(aimVel, aimHoodAng, turretAng);
+    }
     @Override
     public void postInit() {
         flywheelBottom = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "flywheelBottom");
         intake = ActiveOpMode.hardwareMap().get(DcMotorEx.class, "transfer");
+        flipper = ActiveOpMode.hardwareMap().get(Servo.class, "flipper");
+
+        createCSVFile();
+        flipperTime = new ElapsedTime();
     }
 
     public void update() {
-        ActiveOpMode.telemetry().addData("Bot Position",this.currentPose); //need to put follower in current pose in update of opmode
-        ActiveOpMode.telemetry().addData("Distance to Goal",this.getBotDistance());
-        ActiveOpMode.telemetry().addData("Flywheel vel",flywheelBottom.getVelocity());
+        botPosition = this.currentPose;
+        botDistance = this.getBotDistance();
+        flywheelVelocity = flywheelBottom.getVelocity();
+        hoodPos = -intake.getCurrentPosition();
+
+        ActiveOpMode.telemetry().addData("Bot Position",botPosition); //need to put follower in current pose in update of opmode
+        ActiveOpMode.telemetry().addData("Distance to Goal",botDistance);
+        ActiveOpMode.telemetry().addData("Flywheel vel",flywheelVelocity);
         ActiveOpMode.telemetry().addData("Flywheel goal vel","uhh");
-        ActiveOpMode.telemetry().addData("hood pos", -intake.getCurrentPosition()); //hood encoder is on intake
-        ActiveOpMode.telemetry().addData("time shooting","");
+        ActiveOpMode.telemetry().addData("hood pos", hoodPos); //hood encoder is on intake
+        ActiveOpMode.telemetry().addData("last time shooting","timeShooting");
         ActiveOpMode.telemetry().update();
+
+        if (flipper.getPosition()==0.1 && !isFlipperOn) {
+            flipperTime.reset();
+            isFlipperOn = true;
+
+        }
+        else if (flipper.getPosition()!=0.1 && isFlipperOn) {
+            timeShooting = flipperTime.milliseconds();
+            try {
+                dataWriter.write(String.format(
+                        "%.1f, %.1f, %.1f, %.1f, %.1f %.1f, %.1f\n",
+                        botPosition.getX(),
+                        botPosition.getY(),
+                        botPosition.getHeading(),
+                        botDistance,
+                        flywheelVelocity,
+                        hoodPos,
+                        timeShooting
+                        ));
+                dataWriter.flush();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            //logEntry.writeLine();
+            isFlipperOn = false;
+        }
+
+
+
+
+
+
 
     }
 
@@ -56,6 +124,19 @@ public class DataLogger implements Component{
     }
     public void setCurrentPose(Pose pose) {
         this.currentPose = pose;
+    }
+    public void createCSVFile() {
+        try {
+            File directory = new File("/sdcard/AimbotLog");
+            if (!directory.exists()) {
+                directory.mkdirs(); //if the directory doesn't exist, it creates the directories
+            }
+            dataLog = new File(directory, "dataLogger.csv");
+
+            dataWriter = new FileWriter(dataLog, true);
+        } catch (IOException e) { //if error shows up
+            telemetry.addData("Error", "Failed to create CSV:" + e.getMessage());
+        }
     }
 
 

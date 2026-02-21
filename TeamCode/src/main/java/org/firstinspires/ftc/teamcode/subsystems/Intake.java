@@ -56,6 +56,8 @@ public class Intake implements Component {
 
 
     public void update() {
+        ActiveOpMode.telemetry().addData("left firewheel power", leftFireServo.getPower());
+        ActiveOpMode.telemetry().addData("sidewheel power", sideWheelServo.getPower());
 
     }
 }

@@ -1,18 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.intake1;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.intake2;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.intake3;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake1;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake2;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.lineUpForIntake3;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.park;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.startAngle;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.startingPose;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake1;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake2;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromIntake3;
-import static org.firstinspires.ftc.teamcode.opmodes.BackAutoPaths.toShootFromStart;
+import static org.firstinspires.ftc.teamcode.opmodes.FrontAutoPaths.*;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
@@ -42,8 +30,8 @@ import dev.nextftc.extensions.pedro.PedroComponent;
 import com.pedropathing.follower.Follower;
 import dev.nextftc.ftc.NextFTCOpMode;
 
-@Autonomous(name = "back red auto")
-public class BackRedAuto extends NextFTCOpMode {
+@Autonomous(name = "front red auto")
+public class FrontRedAuto extends NextFTCOpMode {
     {
         addComponents(
                 new PedroComponent(Constants::createFollower),
@@ -72,8 +60,8 @@ public class BackRedAuto extends NextFTCOpMode {
     @Override
     public void onInit() {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-        BackAutoPaths.alliance = Alliance.RED;
-        BackAutoPaths.generatePaths(PedroComponent.follower());
+        FrontAutoPaths.alliance = Alliance.RED;
+        FrontAutoPaths.generatePaths(PedroComponent.follower());
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose(startingPose.getX(), startingPose.getY(), startAngle));
@@ -86,7 +74,7 @@ public class BackRedAuto extends NextFTCOpMode {
 
         turretLights = new TurretLights(hardwareMap, telemetry);
 
-        if (BackAutoPaths.getAlliance() == Alliance.RED) {
+        if (FrontAutoPaths.getAlliance() == Alliance.RED) {
             turretLights.redAlliance();
         } else {
             turretLights.blueAlliance();
